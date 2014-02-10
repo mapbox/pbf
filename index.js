@@ -1,18 +1,17 @@
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Protobuf;
+'use strict';
+
+var ieee754 = require('ieee754');
+
+module.exports = Protobuf;
+function Protobuf(buf) {
+    this.buf = buf;
+    this.length = buf.length;
+    this.pos = 0;
 }
 
-function Protobuf(buf, pos) {
-    if (Buffer.isBuffer(buf)) {
-        this.buf = buf;
-    } else {
-        this.buf = new Buffer(buf || 128);
-    }
-    this.pos = pos || 0;
-    this.length = this.buf.length;
-}
-
-// === READING =================================================================
+Protobuf.prototype.destroy = function() {
+    this.buf = null;
+};
 
 Protobuf.prototype.readUInt32 = function() {
     var val = this.readUInt32LE(this.pos);
@@ -27,7 +26,7 @@ Protobuf.prototype.readUInt64 = function() {
 };
 
 Protobuf.prototype.readDouble = function() {
-    var val = this.buf.readDoubleLE(this.pos);
+    var val = ieee754.read(this.buf, this.pos, false, 52, 8);
     this.pos += 8;
     return val;
 };
@@ -53,6 +52,7 @@ Protobuf.prototype.readVarint = function() {
     } else {
         this.skip(0);
         return 0;
+        // throw new Error("TODO: Handle 6+ byte varints");
     }
 };
 
@@ -63,36 +63,34 @@ Protobuf.prototype.readSVarint = function() {
     return ((num >> 1) ^ -(num & 1));
 };
 
-if (typeof module !== 'undefined' && module.exports) {
-    Protobuf.prototype.readString = function() {
-        var bytes = this.readVarint();
-        var str = this.buf.toString('utf8', this.pos, this.pos + bytes);
-        this.pos += bytes;
-        return str;
-    };
-} else {
-    Protobuf.prototype.readString = function() {
-        var bytes = this.readVarint();
-        // TODO: bounds checking
-        var chr = String.fromCharCode;
-        var b = this.buf;
-        var p = this.pos;
-        var end = this.pos;
-        var str = '';
-        while (p < end) {
-            if (b[p] <= 0x7F) str += chr(b[p++]);
-            else if (b[p] <= 0xBF) throw new Error('Invalid UTF-8 codepoint: ' + b[p]);
-            else if (b[p] <= 0xDF) str += chr((b[p++] & 0x1F) << 6 | (b[p++] & 0x3F));
-            else if (b[p] <= 0xEF) str += chr((b[p++] & 0x1F) << 12 | (b[p++] & 0x3F) << 6 | (b[p++] & 0x3F));
-            else if (b[p] <= 0xF7) p += 4; // We can't handle these codepoints in JS, so skip.
-            else if (b[p] <= 0xFB) p += 5;
-            else if (b[p] <= 0xFD) p += 6;
-            else throw new Error('Invalid UTF-8 codepoint: ' + b[p]);
-        }
-        this.pos += bytes;
-        return str;
-    };
-}
+Protobuf.prototype.readString = function() {
+    var bytes = this.readVarint();
+    // TODO: bounds checking
+    var chr = String.fromCharCode;
+    var b = this.buf;
+    var p = this.pos;
+    var end = this.pos + bytes;
+    var str = '';
+    while (p < end) {
+        if (b[p] <= 0x7F) str += chr(b[p++]);
+        else if (b[p] <= 0xBF) throw new Error('Invalid UTF-8 codepoint: ' + b[p]);
+        else if (b[p] <= 0xDF) str += chr((b[p++] & 0x1F) << 6 | (b[p++] & 0x3F));
+        else if (b[p] <= 0xEF) str += chr((b[p++] & 0x1F) << 12 | (b[p++] & 0x3F) << 6 | (b[p++] & 0x3F));
+        else if (b[p] <= 0xF7) p += 4; // We can't handle these codepoints in JS, so skip.
+        else if (b[p] <= 0xFB) p += 5;
+        else if (b[p] <= 0xFD) p += 6;
+        else throw new Error('Invalid UTF-8 codepoint: ' + b[p]);
+    }
+    this.pos += bytes;
+    return str;
+};
+
+Protobuf.prototype.readBuffer = function() {
+    var bytes = this.readVarint();
+    var buffer = this.buf.subarray(this.pos, this.pos + bytes);
+    this.pos += bytes;
+    return buffer;
+};
 
 Protobuf.prototype.readPacked = function(type) {
     // TODO: bounds checking
@@ -117,218 +115,3 @@ Protobuf.prototype.skip = function(val) {
     }
 };
 
-// Generic read function
-Protobuf.prototype.read = function(spec, end) {
-    var ref, tag;
-    var obj = {};
-    for (tag in spec) {
-        ref = spec[tag];
-        if ('default' in ref) {
-            obj[ref.name] = ref['default'];
-        }
-
-        if ('repeated' in ref || 'packed' in ref) {
-            obj[ref.name] = [];
-        }
-    }
-
-    var begin = this.pos;
-    if (typeof end == 'undefined') {
-        var bytes = this.readVarint();
-        end = this.pos + bytes;
-    }
-
-    while (this.pos < end) {
-        var val = this.readVarint();
-        tag = val >> 3;
-        ref = spec[tag];
-        if (ref) {
-            if (ref.packed) {
-                obj[ref.name] = this.readPacked(ref.type);
-            }
-            else if (ref.repeated) {
-                if (!obj[ref.name]) obj[ref.name] = [];
-                obj[ref.name].push(this['read' + ref.type]());
-            } else {
-                obj[ref.name] = this['read' + ref.type]();
-            }
-        } else {
-            console.warn('Skipping tag:' + (tag) + ' type:' + (val & 3) + ' pos:' + this.pos);
-            this.skip(val);
-        }
-    }
-
-    if (this._debug) {
-        obj._begin = begin;
-        obj._end = end;
-        obj._bytes = obj._end - obj._begin;
-    }
-
-    for (tag in spec) {
-        ref = spec[tag];
-        if (!(ref.name in obj) && ('required' in ref)) {
-            throw new Error('Field ' + ref.name + ' is required');
-        }
-    }
-
-    return obj;
-};
-
-// === WRITING =================================================================
-
-Protobuf.Varint = 0;
-Protobuf.Int64 = 1;
-Protobuf.Message = 2;
-Protobuf.String = 2;
-Protobuf.Packed = 2;
-Protobuf.Int32 = 5;
-
-Protobuf.prototype.writeTag = function(tag, type) {
-    this.writeVarint((tag << 3) | type);
-};
-
-Protobuf.prototype.writeUInt32 = function(val) {
-    while (this.length < this.pos + 4) this.realloc();
-    this.buf.writeUInt32LE(val, this.pos);
-    this.pos += 4;
-};
-
-Protobuf.prototype.writeTaggedUInt32 = function(tag, val) {
-    this.writeTag(tag, Protobuf.Int32);
-    this.writeUInt32(val);
-};
-
-Protobuf.prototype.writeUInt64 = function(val) {
-    while (this.length < this.pos + 8) this.realloc();
-    this.buf.writeUInt64LE(val, this.pos);
-    this.pos += 8;
-};
-
-Protobuf.prototype.writeTaggedUInt64 = function(tag, val) {
-    this.writeTag(tag, Protobuf.Int64);
-    this.writeUInt64(val);
-};
-
-Protobuf.prototype.writeVarint = function(val) {
-    if (val <= 0x7f) {
-        while (this.length < this.pos + 1) this.realloc();
-        this.buf[this.pos++] = val;
-    } else if (val <= 0x3fff) {
-        while (this.length < this.pos + 2) this.realloc();
-        this.buf[this.pos++] = 0x80 | ((val >> 0) & 0x7f);
-        this.buf[this.pos++] = ((val >> 7) & 0x7f);
-    } else if (val <= 0x1ffffff) {
-        while (this.length < this.pos + 3) this.realloc();
-        this.buf[this.pos++] = 0x80 | ((val >> 0) & 0x7f);
-        this.buf[this.pos++] = 0x80 | ((val >> 7) & 0x7f);
-        this.buf[this.pos++] = ((val >> 14) & 0x7f);
-    } else if (val <= 0xfffffff) {
-        while (this.length < this.pos + 4) this.realloc();
-        this.buf[this.pos++] = 0x80 | ((val >> 0) & 0x7f);
-        this.buf[this.pos++] = 0x80 | ((val >> 7) & 0x7f);
-        this.buf[this.pos++] = 0x80 | ((val >> 14) & 0x7f);
-        this.buf[this.pos++] = ((val >> 21) & 0x7f);
-    } else if (val <= 0x7FFFFFFFF) {
-        // TODO: This fails in JS
-        while (this.length < this.pos + 5) this.realloc();
-        this.buf[this.pos++] = 0x80 | ((val >> 0) & 0x7f);
-        this.buf[this.pos++] = 0x80 | ((val >> 7) & 0x7f);
-        this.buf[this.pos++] = 0x80 | ((val >> 14) & 0x7f);
-        this.buf[this.pos++] = 0x80 | ((val >> 21) & 0x7f);
-        this.buf[this.pos++] = ((val >> 28) & 0x7f);
-    } else {
-        throw new Error("TODO: Handle 6+ byte varints (" + val + ")");
-    }
-};
-
-Protobuf.prototype.writeTaggedVarint = function(tag, val) {
-    this.writeTag(tag, Protobuf.Varint);
-    this.writeVarint(val);
-};
-
-Protobuf.prototype.writeBoolean = function(val) {
-    this.writeVarint(Boolean(val));
-};
-
-Protobuf.prototype.writeTaggedBoolean = function(tag, val) {
-    this.writeTaggedVarint(Boolean(val));
-};
-
-Protobuf.prototype.writeString = function(str) {
-    str = String(str);
-    var bytes = Buffer.byteLength(str);
-    this.writeVarint(bytes);
-    while (this.length < this.pos + bytes) this.realloc();
-    this.buf.write(str, this.pos);
-    this.pos += bytes;
-};
-
-Protobuf.prototype.writeTaggedString = function(tag, str) {
-    this.writeTag(tag, Protobuf.String);
-    this.writeString(str);
-};
-
-Protobuf.prototype.writeDouble = function(val) {
-    while (this.length < this.pos + 8) this.realloc();
-    this.buf.writeDoubleLE(val, this.pos);
-    this.pos += 8;
-};
-
-Protobuf.prototype.writeTaggedDouble = function(tag, val) {
-    this.writeTag(tag, Protobuf.Int64);
-    this.writeDouble(val);
-};
-
-Protobuf.prototype.writeBuffer = function(buffer) {
-    var bytes = buffer.length;
-    this.writeVarint(bytes);
-    while (this.length < this.pos + bytes) this.realloc();
-    buffer.copy(this.buf, this.pos);
-    this.pos += bytes;
-};
-
-Protobuf.prototype.writeTaggedBuffer = function(tag, buffer) {
-    this.writeTag(tag, Protobuf.Message);
-    this.writeBuffer(buffer);
-};
-
-Protobuf.prototype.writeMessage = function(tag, protobuf) {
-    var buffer = protobuf.finish();
-    this.writeTag(tag, Protobuf.Message);
-    this.writeBuffer(buffer);
-};
-
-Protobuf.prototype.writeRepeated = function(type, tag, items) {
-    for (var i = 0; i < items.length; i++) {
-        this['write' + type](tag, items[i]);
-    }
-};
-
-Protobuf.prototype.writePacked = function(type, tag, items) {
-    if (!items.length) return;
-
-    var message = new Protobuf();
-    message.buf.fill(0x42);
-    for (var i = 0; i < items.length; i++) {
-        message['write' + type](items[i]);
-    }
-    var data = message.finish();
-
-    this.writeTag(tag, Protobuf.Packed);
-    this.writeBuffer(data);
-};
-
-Protobuf.prototype.writePackedVarints = function(tag, items) {
-    this.writePacked('Varint', tag, items);
-};
-
-Protobuf.prototype.realloc = function() {
-    var buf = new Buffer(this.buf.length * 2);
-    this.buf.copy(buf);
-    this.buf = buf;
-    this.length = this.buf.length;
-};
-
-Protobuf.prototype.finish = function() {
-    return this.buf.slice(0, this.pos);
-};
