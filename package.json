@@ -4,7 +4,7 @@
   "description": "a protocol buffer implementation in javascript",
   "main": "index.js",
   "scripts": {
-    "test": "tap"
+    "test": "tap test/index.js"
   },
   "repository": {
     "type": "git",
@@ -20,5 +20,12 @@
   "bugs": {
     "url": "https://github.com/mapbox/pbf/issues"
   },
-  "homepage": "https://github.com/mapbox/pbf"
+  "homepage": "https://github.com/mapbox/pbf",
+  "dependencies": {
+    "ieee754": "~1.1.2"
+  },
+  "devDependencies": {
+    "tape": "~2.4.2",
+    "tap": "~0.4.8"
+  }
 }
