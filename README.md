@@ -1,7 +1,9 @@
 # pbf
 
+[![build status](https://secure.travis-ci.org/mapbox/pbf.png)](http://travis-ci.org/mapbox/pbf) [![Coverage Status](https://coveralls.io/repos/mapbox/pbf/badge.png)](https://coveralls.io/r/mapbox/pbf)
+
 A [protocol buffers](http://code.google.com/p/protobuf/) implementation in
-JavaScript.
+JavaScript for node and browsers.
 
 ## install
 
@@ -10,6 +12,12 @@ JavaScript.
 ## api
 
 ### `Protobuf(buf, pos)`
+
+```js
+var Pbf = require('pbf');
+var protobuffer = new Pbf(buffer);
+var varInt = protobuffer.readVarInt();
+```
 
 Reading
 
@@ -23,22 +31,3 @@ Reading
 * readSVarint
 * readString
 * readPacked
-
-Writing
-
-* writeTag
-* writeUInt32
-* writeUInt32LE
-* writeUInt64
-* writeUInt64LE
-* writePacked
-* writePackedVarints
-* writeDoubleLE
-* writeDouble
-* writeTaggedBuffer
-* writeTaggedString
-* writeTaggedBoolean
-* writeTaggedUInt64
-* writeTaggedUInt32
-* writeTaggedVarint
-* writeRepeated

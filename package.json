@@ -4,7 +4,8 @@
   "description": "a protocol buffer implementation in javascript",
   "main": "index.js",
   "scripts": {
-    "test": "tap test/index.js"
+    "test": "tape test/index.js",
+    "cov": "istanbul cover test/index.js  && coveralls < ./coverage/lcov.info"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,8 @@
   },
   "devDependencies": {
     "tape": "~2.4.2",
-    "tap": "~0.4.8"
+    "istanbul": "~0.2.11",
+    "brfs": "1.0.1",
+    "coveralls": "~2.10.1"
   }
 }
