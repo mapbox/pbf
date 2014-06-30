@@ -18,3 +18,21 @@ test('readVarInt', function(t) {
     buf.destroy();
     t.end();
 });
+
+test('readDouble', function(t) {
+    var buffer = new Buffer(8);
+    buffer.writeDoubleBE(42, 0);
+    var buf = new Pbf(buffer);
+    t.equal(buf.readDouble(), 42);
+    t.end();
+});
+
+test('readUInt32', function(t) {
+    var buffer = new Buffer(16);
+    buffer.writeUInt32LE(42, 0);
+    buffer.writeUInt32LE(24, 4);
+    var buf = new Pbf(buffer);
+    t.equal(buf.readUInt32(), 42);
+    t.equal(buf.readUInt32(), 24);
+    t.end();
+});

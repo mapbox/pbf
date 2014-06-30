@@ -14,13 +14,13 @@ Protobuf.prototype.destroy = function() {
 };
 
 Protobuf.prototype.readUInt32 = function() {
-    var val = this.readUInt32LE(this.pos);
+    var val = this.buf.readUInt32LE(this.pos);
     this.pos += 4;
     return val;
 };
 
 Protobuf.prototype.readUInt64 = function() {
-    var val = this.readUInt64LE(this.pos);
+    var val = this.buf.readUInt64LE(this.pos);
     this.pos += 8;
     return val;
 };
