@@ -9,6 +9,13 @@ function Protobuf(buf) {
     this.pos = 0;
 }
 
+Protobuf.Varint = 0;
+Protobuf.Int64 = 1;
+Protobuf.Message = 2;
+Protobuf.String = 2;
+Protobuf.Packed = 2;
+Protobuf.Int32 = 5;
+
 Protobuf.prototype.destroy = function() {
     this.buf = null;
 };
@@ -50,7 +57,7 @@ Protobuf.prototype.readVarint = function() {
         this.pos += 5;
         return ((this.buf[pos] & 0x7f) | (this.buf[pos + 1] & 0x7f) << 7 | (this.buf[pos + 2] & 0x7f) << 14 | (this.buf[pos + 3]) << 21) + (this.buf[pos + 4] * 268435456);
     } else {
-        this.skip(0);
+        this.skip(Protobuf.Varint);
         return 0;
         // throw new Error("TODO: Handle 6+ byte varints");
     }
@@ -107,10 +114,10 @@ Protobuf.prototype.skip = function(val) {
     // TODO: bounds checking
     var type = val & 0x7;
     switch (type) {
-        /* varint */ case 0: while (this.buf[this.pos++] > 0x7f); break;
-        /* 64 bit */ case 1: this.pos += 8; break;
-        /* length */ case 2: var bytes = this.readVarint(); this.pos += bytes; break;
-        /* 32 bit */ case 5: this.pos += 4; break;
+        /* varint */ case Protobuf.Varint: while (this.buf[this.pos++] > 0x7f); break;
+        /* 64 bit */ case Protobuf.Int64: this.pos += 8; break;
+        /* length */ case Protobuf.Message: var bytes = this.readVarint(); this.pos += bytes; break;
+        /* 32 bit */ case Protobuf.Int32: this.pos += 4; break;
         default: throw new Error('Unimplemented type: ' + type);
     }
 };
