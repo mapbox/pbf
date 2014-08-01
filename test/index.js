@@ -21,7 +21,7 @@ test('readVarInt', function(t) {
 
 test('readDouble', function(t) {
     var buffer = new Buffer(8);
-    buffer.writeDoubleBE(42, 0);
+    buffer.writeDoubleLE(42, 0);
     var buf = new Pbf(buffer);
     t.equal(buf.readDouble(), 42);
     t.end();
