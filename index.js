@@ -29,6 +29,24 @@ var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
 
 // === READING =================================================================
 
+Protobuf.prototype.read = function(readField, end) {
+    var buf = this.buf;
+    end = end || buf.length;
+
+    while (this.pos < end) {
+        var val = this.readVarint(),
+            tag = val >> 3,
+            startPos = this.pos;
+        readField(tag);
+        if (this.pos === startPos) this.skip(val);
+    }
+};
+
+Protobuf.prototype.readMessage = function(readField) {
+    var bytes = this.readVarint();
+    this.read(readField, this.pos + bytes);
+}
+
 Protobuf.prototype.readUInt32 = function() {
     var val = this.buf.readUInt32LE(this.pos);
     this.pos += 4;
