@@ -26,9 +26,11 @@
     "ieee754": "~1.1.2"
   },
   "devDependencies": {
-    "tape": "~2.4.2",
-    "istanbul": "~0.2.11",
+    "benchmark": "^1.0.0",
     "brfs": "1.0.1",
-    "coveralls": "~2.10.1"
+    "coveralls": "~2.10.1",
+    "istanbul": "~0.2.11",
+    "tape": "~2.4.2",
+    "vector-tile": "^0.1.3"
   }
 }
