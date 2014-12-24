@@ -182,10 +182,8 @@ Protobuf.prototype.writeTaggedUInt32 = function(tag, val) {
 };
 
 Protobuf.prototype.writeVarint = function(val) {
-    val = Number(val);
-    if (isNaN(val)) {
-        val = 0;
-    }
+    val = +val;
+    if (isNaN(val)) val = 0;
 
     if (val <= 0x7f) {
         this.realloc(1);

@@ -9,7 +9,6 @@ var suite = new Benchmark.Suite(),
 readTile(); // output any errors before running the suite
 readTile(false, true);
 
-
 suite
 .add('read tile with geometries', function() {
     readTile(true);
@@ -19,6 +18,12 @@ suite
 })
 .add('read tile with packed geometries load', function() {
     readTile(false, true);
+})
+.add('write varints', function () {
+    var buf = new Pbf(new Buffer([]));
+    for (var i = 1; i <= 30; i++) {
+        buf.writeVarint(1 << i);
+    }
 })
 .on('cycle', function(event) {
     console.log(String(event.target));
