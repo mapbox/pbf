@@ -18,7 +18,6 @@ take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers)
 var Pbf = require('pbf');
 var pbf = new Pbf(buffer);
 
-
 while (pbf.pos < pbf.length) {
     var val = pbf.readVarint(),
         tag = val >> 3,
