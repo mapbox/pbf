@@ -6,6 +6,8 @@ var Pbf = require('../'),
 var suite = new Benchmark.Suite(),
     data = fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf');
 
+readTile(); // output any errors before running the suite
+
 suite
 .add('read tile with geometries', function() {
     readTile(true);

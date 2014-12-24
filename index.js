@@ -118,13 +118,17 @@ Protobuf.prototype.readPacked = function(type) {
 Protobuf.prototype.skip = function(val) {
     // TODO: bounds checking
     var type = val & 0x7;
-    switch (type) {
-        /* varint */ case Protobuf.Varint: while (this.buf[this.pos++] > 0x7f); break;
-        /* 64 bit */ case Protobuf.Int64: this.pos += 8; break;
-        /* length */ case Protobuf.Message: var bytes = this.readVarint(); this.pos += bytes; break;
-        /* 32 bit */ case Protobuf.Int32: this.pos += 4; break;
-        default: throw new Error('Unimplemented type: ' + type);
-    }
+
+    if (type === Protobuf.Varint) {
+        while (this.buf[this.pos++] > 0x7f);
+
+    } else if (type === Protobuf.Message) {
+        var bytes = this.readVarint();
+        this.pos += bytes;
+
+    } else if (type === Protobuf.Int32) this.pos += 4;
+    else if (type === Protobuf.Int64) this.pos += 8;
+    else throw new Error('Unimplemented type: ' + type);
 };
 
 // === WRITING =================================================================
