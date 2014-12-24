@@ -207,7 +207,7 @@ Protobuf.prototype.writeVarint = function(val) {
         while (val > 0) {
             var b = val & 0x7f;
             val = Math.floor(val / 128);
-            if (val > 0) b |= 0x80
+            if (val > 0) b |= 0x80;
             this.realloc(1);
             this.buf[this.pos++] = b;
         }

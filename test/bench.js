@@ -37,7 +37,7 @@ function readTile(loadGeom, loadPacked) {
 
     for (var id in vt.layers) {
         var layer = vt.layers[id];
-        for (i = 0; i < layer.length; i++) {
+        for (var i = 0; i < layer.length; i++) {
             var feature = layer.feature(i);
             if (loadGeom) feature.loadGeometry();
             if (loadPacked) {
