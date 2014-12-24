@@ -159,8 +159,9 @@ Protobuf.prototype.writePacked = function(type, tag, items) {
     if (!items.length) return;
 
     var message = new Protobuf();
+    var write = message['write' + type];
     for (var i = 0; i < items.length; i++) {
-        message['write' + type](items[i]);
+        write.call(this, items[i]);
     }
     var data = message.finish();
 
