@@ -143,6 +143,7 @@ Protobuf.prototype.writeTag = function(tag, type) {
 
 Protobuf.prototype.realloc = function(min) {
     var length = this.buf.length;
+    if (!length) length = 1;
     while (length < this.pos + min) length *= 2;
     if (length != this.buf.length) {
         var buf = new Buffer(length);
