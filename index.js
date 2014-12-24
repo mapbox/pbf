@@ -1,16 +1,13 @@
 'use strict';
 
-var ieee754 = require('ieee754');
-
 module.exports = Protobuf;
+
+var Buffer = typeof Buffer !== 'undefined' ? Buffer : require('./buffer');
+
 function Protobuf(buf) {
-    this.buf = buf;
+    this.buf = buf instanceof Buffer ? buf : Buffer._augment(buf);
     this.pos = 0;
 }
-
-var isNode = typeof Buffer !== 'undefined',
-    Buffer = isNode ? Buffer : Uint8Array,
-    bufferSlice = isNode ? Buffer.prototype.slice : Buffer.prototype.subarray;
 
 Protobuf.prototype = {
     get length() { return this.buf.length; }
@@ -42,13 +39,13 @@ Protobuf.prototype.readUInt64 = function() {
 };
 
 Protobuf.prototype.readFloat = function() {
-    var val = ieee754.read(this.buf, this.pos, true, 23, 4);
+    var val = this.buf.readFloatLE(this.pos);
     this.pos += 4;
     return val;
 };
 
 Protobuf.prototype.readDouble = function() {
-    var val = ieee754.read(this.buf, this.pos, true, 52, 8);
+    var val = this.buf.readDoubleLE(this.pos);
     this.pos += 8;
     return val;
 };
@@ -92,30 +89,16 @@ Protobuf.prototype.readBoolean = function() {
 };
 
 Protobuf.prototype.readString = function() {
-    var bytes = this.readVarint();
+    var bytes = this.readVarint(),
+        str = this.buf.toString('utf8', this.pos, this.pos + bytes);
     // TODO: bounds checking
-    var chr = String.fromCharCode;
-    var b = this.buf;
-    var p = this.pos;
-    var end = this.pos + bytes;
-    var str = '';
-    while (p < end) {
-        if (b[p] <= 0x7F) str += chr(b[p++]);
-        else if (b[p] <= 0xBF) throw new Error('Invalid UTF-8 codepoint: ' + b[p]);
-        else if (b[p] <= 0xDF) str += chr((b[p++] & 0x1F) << 6 | (b[p++] & 0x3F));
-        else if (b[p] <= 0xEF) str += chr((b[p++] & 0x1F) << 12 | (b[p++] & 0x3F) << 6 | (b[p++] & 0x3F));
-        else if (b[p] <= 0xF7) p += 4; // We can't handle these codepoints in JS, so skip.
-        else if (b[p] <= 0xFB) p += 5;
-        else if (b[p] <= 0xFD) p += 6;
-        else throw new Error('Invalid UTF-8 codepoint: ' + b[p]);
-    }
     this.pos += bytes;
     return str;
 };
 
 Protobuf.prototype.readBuffer = function() {
     var bytes = this.readVarint();
-    var buffer = bufferSlice.call(this.buf, this.pos, this.pos + bytes);
+    var buffer = this.buf.slice(this.pos, this.pos + bytes);
     this.pos += bytes;
     return buffer;
 };
@@ -171,7 +154,7 @@ Protobuf.prototype.realloc = function(min) {
 };
 
 Protobuf.prototype.finish = function() {
-    return bufferSlice.call(this.buf, 0, this.pos);
+    return this.buf.slice(0, this.pos);
 };
 
 Protobuf.prototype.writePacked = function(type, tag, items) {
