@@ -45,22 +45,24 @@ Protobuf.prototype.readDouble = function() {
 
 Protobuf.prototype.readVarint = function() {
     // TODO: bounds checking
-    var pos = this.pos;
-    if (this.buf[pos] <= 0x7f) {
+    var pos = this.pos,
+        buf = this.buf;
+
+    if (buf[pos] <= 0x7f) {
         this.pos++;
-        return this.buf[pos];
-    } else if (this.buf[pos + 1] <= 0x7f) {
+        return buf[pos];
+    } else if (buf[pos + 1] <= 0x7f) {
         this.pos += 2;
-        return (this.buf[pos] & 0x7f) | (this.buf[pos + 1] << 7);
-    } else if (this.buf[pos + 2] <= 0x7f) {
+        return (buf[pos] & 0x7f) | (buf[pos + 1] << 7);
+    } else if (buf[pos + 2] <= 0x7f) {
         this.pos += 3;
-        return (this.buf[pos] & 0x7f) | (this.buf[pos + 1] & 0x7f) << 7 | (this.buf[pos + 2]) << 14;
-    } else if (this.buf[pos + 3] <= 0x7f) {
+        return (buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2]) << 14;
+    } else if (buf[pos + 3] <= 0x7f) {
         this.pos += 4;
-        return (this.buf[pos] & 0x7f) | (this.buf[pos + 1] & 0x7f) << 7 | (this.buf[pos + 2] & 0x7f) << 14 | (this.buf[pos + 3]) << 21;
-    } else if (this.buf[pos + 4] <= 0x7f) {
+        return (buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2] & 0x7f) << 14 | (buf[pos + 3]) << 21;
+    } else if (buf[pos + 4] <= 0x7f) {
         this.pos += 5;
-        return ((this.buf[pos] & 0x7f) | (this.buf[pos + 1] & 0x7f) << 7 | (this.buf[pos + 2] & 0x7f) << 14 | (this.buf[pos + 3]) << 21) + (this.buf[pos + 4] * 268435456);
+        return ((buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2] & 0x7f) << 14 | (buf[pos + 3]) << 21) + (buf[pos + 4] * 268435456);
     } else {
         this.skip(Protobuf.Varint);
         return 0;
@@ -120,7 +122,8 @@ Protobuf.prototype.skip = function(val) {
     var type = val & 0x7;
 
     if (type === Protobuf.Varint) {
-        while (this.buf[this.pos++] > 0x7f);
+        var buf = this.buf;
+        while (buf[this.pos++] > 0x7f);
 
     } else if (type === Protobuf.Message) {
         var bytes = this.readVarint();
