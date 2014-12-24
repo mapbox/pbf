@@ -2,10 +2,10 @@
 
 module.exports = Protobuf;
 
-var Buffer = typeof Buffer !== 'undefined' ? Buffer : require('./buffer');
+var Buffer = typeof window !== 'undefined' ? require('./buffer') : global.Buffer;
 
 function Protobuf(buf) {
-    this.buf = buf instanceof Buffer ? buf : Buffer._augment(buf);
+    this.buf = buf instanceof Uint8Array ? Buffer.wrap(buf) : buf;
     this.pos = 0;
 }
 
@@ -139,16 +139,13 @@ Protobuf.prototype.writeTag = function(tag, type) {
 };
 
 Protobuf.prototype.realloc = function(min) {
-    var oldLength = this.buf.length,
-        length = oldLength || 1;
+    var length = this.length || 1;
 
     while (length < this.pos + min) length *= 2;
 
-    if (length != oldLength) {
-        var buf = new Protobuf.Buffer(length);
-        for (var i = 0; i < oldLength; i++) {
-            buf[i] = this.buf[i];
-        }
+    if (length != this.length) {
+        var buf = new Buffer(length);
+        this.buf.copy(buf);
         this.buf = buf;
     }
 };
