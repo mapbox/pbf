@@ -8,6 +8,10 @@ function Protobuf(buf) {
     this.pos = 0;
 }
 
+var isNode = typeof Buffer !== 'undefined',
+    Buffer = isNode ? Buffer : Uint8Array,
+    bufferSlice = isNode ? Buffer.prototype.slice : Buffer.prototype.subarray;
+
 Protobuf.prototype = {
     get length() { return this.buf.length; }
 };
@@ -111,7 +115,7 @@ Protobuf.prototype.readString = function() {
 
 Protobuf.prototype.readBuffer = function() {
     var bytes = this.readVarint();
-    var buffer = this.buf.subarray(this.pos, this.pos + bytes);
+    var buffer = bufferSlice.call(this.buf, this.pos, this.pos + bytes);
     this.pos += bytes;
     return buffer;
 };
@@ -152,18 +156,22 @@ Protobuf.prototype.writeTag = function(tag, type) {
 };
 
 Protobuf.prototype.realloc = function(min) {
-    var length = this.buf.length;
-    if (!length) length = 1;
+    var oldLength = this.buf.length,
+        length = oldLength || 1;
+
     while (length < this.pos + min) length *= 2;
-    if (length != this.buf.length) {
-        var buf = new Buffer(length);
-        this.buf.copy(buf);
+
+    if (length != oldLength) {
+        var buf = new Protobuf.Buffer(length);
+        for (var i = 0; i < oldLength; i++) {
+            buf[i] = this.buf[i];
+        }
         this.buf = buf;
     }
 };
 
 Protobuf.prototype.finish = function() {
-    return this.buf.slice(0, this.pos);
+    return bufferSlice.call(this.buf, 0, this.pos);
 };
 
 Protobuf.prototype.writePacked = function(type, tag, items) {
