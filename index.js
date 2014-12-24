@@ -37,6 +37,12 @@ Protobuf.prototype.readUInt64 = function() {
     return val;
 };
 
+Protobuf.prototype.readFloat = function() {
+    var val = ieee754.read(this.buf, this.pos, true, 23, 4);
+    this.pos += 4;
+    return val;
+};
+
 Protobuf.prototype.readDouble = function() {
     var val = ieee754.read(this.buf, this.pos, true, 52, 8);
     this.pos += 8;
@@ -75,6 +81,10 @@ Protobuf.prototype.readSVarint = function() {
     if (num > 2147483647) throw new Error('TODO: Handle numbers >= 2^30');
     // zigzag encoding
     return ((num >> 1) ^ -(num & 1));
+};
+
+Protobuf.prototype.readBoolean = function() {
+    return Boolean(this.readVarint());
 };
 
 Protobuf.prototype.readString = function() {
