@@ -8,6 +8,13 @@ test('initialization', function(t) {
     t.end();
 });
 
+test('realloc', function(t) {
+    var buf = new Pbf(new Buffer([]));
+    buf.realloc(5);
+    t.equal(buf.length, 8);
+    t.end();
+});
+
 test('readVarInt', function(t) {
     var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/3165.vector.pbf'));
     t.equal(buf.length, 28056);

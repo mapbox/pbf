@@ -45,22 +45,24 @@ Protobuf.prototype.readDouble = function() {
 
 Protobuf.prototype.readVarint = function() {
     // TODO: bounds checking
-    var pos = this.pos;
-    if (this.buf[pos] <= 0x7f) {
+    var pos = this.pos,
+        buf = this.buf;
+
+    if (buf[pos] <= 0x7f) {
         this.pos++;
-        return this.buf[pos];
-    } else if (this.buf[pos + 1] <= 0x7f) {
+        return buf[pos];
+    } else if (buf[pos + 1] <= 0x7f) {
         this.pos += 2;
-        return (this.buf[pos] & 0x7f) | (this.buf[pos + 1] << 7);
-    } else if (this.buf[pos + 2] <= 0x7f) {
+        return (buf[pos] & 0x7f) | (buf[pos + 1] << 7);
+    } else if (buf[pos + 2] <= 0x7f) {
         this.pos += 3;
-        return (this.buf[pos] & 0x7f) | (this.buf[pos + 1] & 0x7f) << 7 | (this.buf[pos + 2]) << 14;
-    } else if (this.buf[pos + 3] <= 0x7f) {
+        return (buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2]) << 14;
+    } else if (buf[pos + 3] <= 0x7f) {
         this.pos += 4;
-        return (this.buf[pos] & 0x7f) | (this.buf[pos + 1] & 0x7f) << 7 | (this.buf[pos + 2] & 0x7f) << 14 | (this.buf[pos + 3]) << 21;
-    } else if (this.buf[pos + 4] <= 0x7f) {
+        return (buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2] & 0x7f) << 14 | (buf[pos + 3]) << 21;
+    } else if (buf[pos + 4] <= 0x7f) {
         this.pos += 5;
-        return ((this.buf[pos] & 0x7f) | (this.buf[pos + 1] & 0x7f) << 7 | (this.buf[pos + 2] & 0x7f) << 14 | (this.buf[pos + 3]) << 21) + (this.buf[pos + 4] * 268435456);
+        return ((buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2] & 0x7f) << 14 | (buf[pos + 3]) << 21) + (buf[pos + 4] * 268435456);
     } else {
         this.skip(Protobuf.Varint);
         return 0;
@@ -109,8 +111,9 @@ Protobuf.prototype.readPacked = function(type) {
     var bytes = this.readVarint();
     var end = this.pos + bytes;
     var array = [];
+    var read = this['read' + type];
     while (this.pos < end) {
-        array.push(this['read' + type]());
+        array.push(read.call(this));
     }
     return array;
 };
@@ -118,13 +121,18 @@ Protobuf.prototype.readPacked = function(type) {
 Protobuf.prototype.skip = function(val) {
     // TODO: bounds checking
     var type = val & 0x7;
-    switch (type) {
-        /* varint */ case Protobuf.Varint: while (this.buf[this.pos++] > 0x7f); break;
-        /* 64 bit */ case Protobuf.Int64: this.pos += 8; break;
-        /* length */ case Protobuf.Message: var bytes = this.readVarint(); this.pos += bytes; break;
-        /* 32 bit */ case Protobuf.Int32: this.pos += 4; break;
-        default: throw new Error('Unimplemented type: ' + type);
-    }
+
+    if (type === Protobuf.Varint) {
+        var buf = this.buf;
+        while (buf[this.pos++] > 0x7f);
+
+    } else if (type === Protobuf.Message) {
+        var bytes = this.readVarint();
+        this.pos += bytes;
+
+    } else if (type === Protobuf.Int32) this.pos += 4;
+    else if (type === Protobuf.Int64) this.pos += 8;
+    else throw new Error('Unimplemented type: ' + type);
 };
 
 // === WRITING =================================================================
@@ -135,6 +143,7 @@ Protobuf.prototype.writeTag = function(tag, type) {
 
 Protobuf.prototype.realloc = function(min) {
     var length = this.buf.length;
+    if (!length) length = 1;
     while (length < this.pos + min) length *= 2;
     if (length != this.buf.length) {
         var buf = new Buffer(length);
@@ -151,8 +160,9 @@ Protobuf.prototype.writePacked = function(type, tag, items) {
     if (!items.length) return;
 
     var message = new Protobuf();
+    var write = message['write' + type];
     for (var i = 0; i < items.length; i++) {
-        message['write' + type](items[i]);
+        write.call(this, items[i]);
     }
     var data = message.finish();
 
@@ -172,10 +182,8 @@ Protobuf.prototype.writeTaggedUInt32 = function(tag, val) {
 };
 
 Protobuf.prototype.writeVarint = function(val) {
-    val = Number(val);
-    if (isNaN(val)) {
-        val = 0;
-    }
+    val = +val;
+    if (isNaN(val)) val = 0;
 
     if (val <= 0x7f) {
         this.realloc(1);
