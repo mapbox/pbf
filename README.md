@@ -8,11 +8,11 @@ Designed to be a building block for writing a very customized, lazy decoder for 
 If you need an easy-to-use, all-purpose protobuf JS library,
 use [protocol-buffers](https://github.com/mafintosh/protocol-buffers) instead.
 
-## install
+## Install
 
     npm install pbf
 
-## example
+## Example
 
 ```js
 var Pbf = require('pbf');
@@ -55,15 +55,15 @@ var packed = pbf.readPacked('UInt32');
 
 Reading methods:
 
-* readVarint()
-* readSVarint()
-* readUInt32()
-* readUInt64()
-* readDouble()
-* readString()
-* readBuffer()
-* readPacked(type)
-* skip(value)
+* `readVarint()`
+* `readSVarint()`
+* `readUInt32()`
+* `readUInt64()`
+* `readDouble()`
+* `readString()`
+* `readBuffer()`
+* `readPacked(type)`
+* `skip(value)`
 
 #### Writing
 
@@ -76,29 +76,29 @@ pbf.writeString("Hello world");
 
 Writing methods:
 
-* writeTaggedVarint(tag, val)
-* writeTaggedSVarint(tag, val)
-* writeTaggedUInt32(tag, val)
-* writeTaggedUInt64(tag, val)
-* writeTaggedBoolean(tag, val)
-* writeTaggedFloat(tag, val)
-* writeTaggedDouble(tag, val)
-* writeTaggedString(tag, val)
-* writeTaggedBuffer(tag, buffer)
-* writePacked(type, tag, items)
-* writeVarint(val)
-* writeSVarint(val)
-* writeUInt32(val)
-* writeUInt64(val)
-* writeFloat(val)
-* writeDouble(val)
-* writeString(val)
-* writeBuffer(buffer)
-* writeMessage(tag, pbf)
+* `writeTaggedVarint(tag, val)`
+* `writeTaggedSVarint(tag, val)`
+* `writeTaggedUInt32(tag, val)`
+* `writeTaggedUInt64(tag, val)`
+* `writeTaggedBoolean(tag, val)`
+* `writeTaggedFloat(tag, val)`
+* `writeTaggedDouble(tag, val)`
+* `writeTaggedString(tag, val)`
+* `writeTaggedBuffer(tag, buffer)`
+* `writePacked(type, tag, items)`
+* `writeVarint(val)`
+* `writeSVarint(val)`
+* `writeUInt32(val)`
+* `writeUInt64(val)`
+* `writeFloat(val)`
+* `writeDouble(val)`
+* `writeString(val)`
+* `writeBuffer(buffer)`
+* `writeMessage(tag, pbf)`
 
 Misc methods:
 
-* realloc(minBytes) - pad the underlying buffer size to accommodate the given number of bytes (at least)
-* finish() - return the buffer slice with the exact data length
+* `realloc(minBytes)` - pad the underlying buffer size to accommodate the given number of bytes (at least)
+* `finish()` - return the buffer slice with the exact data length
 
 For an example of a real-world usage of the library, see [vector-tile-js](https://github.com/mapbox/vector-tile-js).
