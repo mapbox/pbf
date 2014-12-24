@@ -68,6 +68,8 @@ var bufferMethods = {
     },
 
     toString: function(encoding, start, end) {
+        if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf8').decode(this.subarray(start, end));
+
         var str = '',
             tmp = '';
 
@@ -110,6 +112,8 @@ function extend(src, dst) {
 }
 
 function utf8ToBytes(str) {
+    if (typeof TextEncoder !== 'undefined') return new TextEncoder('utf8').encode();
+
     var length = str.length,
         bytes = [],
         codePoint, lead;
