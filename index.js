@@ -111,8 +111,9 @@ Protobuf.prototype.readPacked = function(type) {
     var bytes = this.readVarint();
     var end = this.pos + bytes;
     var array = [];
+    var read = this['read' + type];
     while (this.pos < end) {
-        array.push(this['read' + type]());
+        array.push(read.call(this));
     }
     return array;
 };
