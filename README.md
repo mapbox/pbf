@@ -49,11 +49,11 @@ Writing:
 ```js
 var pbf = new Pbf();
 
-pbf.writeTaggedString(1, 'Hello world');
-pbf.writeTaggedVarint(2, 300);
+pbf.writeStringField(1, 'Hello world');
+pbf.writeVarintField(2, 300);
 
 var layer = new Pbf();
-layer.writeTaggedString(1, 'foobar');
+layer.writeStringField(1, 'foobar');
 
 pbf.writeMessage(3, layer);
 
@@ -120,15 +120,15 @@ pbf.writeString("Hello world");
 
 Writing methods:
 
-* `writeTaggedVarint(tag, val)`
-* `writeTaggedSVarint(tag, val)`
-* `writeTaggedFixed32(tag, val)`
-* `writeTaggedFixed64(tag, val)`
-* `writeTaggedBoolean(tag, val)`
-* `writeTaggedFloat(tag, val)`
-* `writeTaggedDouble(tag, val)`
-* `writeTaggedString(tag, val)`
-* `writeTaggedBytes(tag, buffer)`
+* `writeVarintField(tag, val)`
+* `writeSVarintField(tag, val)`
+* `writeFixed32Field(tag, val)`
+* `writeFixed64Field(tag, val)`
+* `writeBooleanField(tag, val)`
+* `writeFloatField(tag, val)`
+* `writeDoubleField(tag, val)`
+* `writeStringField(tag, val)`
+* `writeBytesField(tag, buffer)`
 * `writePacked(type, tag, items)`
 * `writeVarint(val)`
 * `writeSVarint(val)`

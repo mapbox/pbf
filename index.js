@@ -184,21 +184,11 @@ Protobuf.prototype = {
         this.pos += 4;
     },
 
-    writeTaggedFixed32: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed32);
-        this.writeFixed32(val);
-    },
-
     writeFixed64: function(val) {
         this.realloc(8);
         this.buf.writeInt32LE(val & -1, this.pos);
         this.buf.writeUInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
         this.pos += 8;
-    },
-
-    writeTaggedFixed64: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed64);
-        this.writeFixed64(val);
     },
 
     writeVarint: function(val) {
@@ -236,11 +226,6 @@ Protobuf.prototype = {
         }
     },
 
-    writeTaggedVarint: function(tag, val) {
-        this.writeTag(tag, Protobuf.Varint);
-        this.writeVarint(val);
-    },
-
     writeSVarint: function(val) {
         if (val >= 0) {
             this.writeVarint(val * 2);
@@ -249,17 +234,8 @@ Protobuf.prototype = {
         }
     },
 
-    writeTaggedSVarint: function(tag, val) {
-        this.writeTag(tag, Protobuf.Varint);
-        this.writeSVarint(val);
-    },
-
     writeBoolean: function(val) {
         this.writeVarint(Boolean(val));
-    },
-
-    writeTaggedBoolean: function(tag, val) {
-        this.writeTaggedVarint(tag, Boolean(val));
     },
 
     writeString: function(str) {
@@ -271,31 +247,16 @@ Protobuf.prototype = {
         this.pos += bytes;
     },
 
-    writeTaggedString: function(tag, str) {
-        this.writeTag(tag, Protobuf.Bytes);
-        this.writeString(str);
-    },
-
     writeFloat: function(val) {
         this.realloc(4);
         this.buf.writeFloatLE(val, this.pos);
         this.pos += 4;
     },
 
-    writeTaggedFloat: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed32);
-        this.writeFloat(val);
-    },
-
     writeDouble: function(val) {
         this.realloc(8);
         this.buf.writeDoubleLE(val, this.pos);
         this.pos += 8;
-    },
-
-    writeTaggedDouble: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed64);
-        this.writeDouble(val);
     },
 
     writeBytes: function(buffer) {
@@ -308,7 +269,7 @@ Protobuf.prototype = {
         this.pos += len;
     },
 
-    writeTaggedBytes: function(tag, buffer) {
+    writeBytesField: function(tag, buffer) {
         this.writeTag(tag, Protobuf.Bytes);
         this.writeBytes(buffer);
     },
@@ -317,5 +278,44 @@ Protobuf.prototype = {
         var buffer = protobuf.finish();
         this.writeTag(tag, Protobuf.Bytes);
         this.writeBytes(buffer);
+    },
+
+    writeFixed32Field: function(tag, val) {
+        this.writeTag(tag, Protobuf.Fixed32);
+        this.writeFixed32(val);
+    },
+
+    writeFixed64Field: function(tag, val) {
+        this.writeTag(tag, Protobuf.Fixed64);
+        this.writeFixed64(val);
+    },
+
+    writeVarintField: function(tag, val) {
+        this.writeTag(tag, Protobuf.Varint);
+        this.writeVarint(val);
+    },
+
+    writeSVarintField: function(tag, val) {
+        this.writeTag(tag, Protobuf.Varint);
+        this.writeSVarint(val);
+    },
+
+    writeStringField: function(tag, str) {
+        this.writeTag(tag, Protobuf.Bytes);
+        this.writeString(str);
+    },
+
+    writeFloatField: function(tag, val) {
+        this.writeTag(tag, Protobuf.Fixed32);
+        this.writeFloat(val);
+    },
+
+    writeDoubleField: function(tag, val) {
+        this.writeTag(tag, Protobuf.Fixed64);
+        this.writeDouble(val);
+    },
+
+    writeBooleanField: function(tag, val) {
+        this.writeVarintField(tag, Boolean(val));
     }
 };
