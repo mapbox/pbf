@@ -20,7 +20,7 @@ suite
     readTile(false, true);
 })
 .add('write varints', function () {
-    var buf = new Pbf(new Buffer([]));
+    var buf = new Pbf(new Buffer(16));
     for (var i = 1; i <= 30; i++) {
         buf.writeVarint(1 << i);
     }
