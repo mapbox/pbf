@@ -32,8 +32,8 @@ Buffer.prototype = {
     readFloatLE:   function(pos) { return ieee754.read(this.arr, pos, true, 23, 4); },
     readDoubleLE:  function(pos) { return ieee754.read(this.arr, pos, true, 52, 8); },
 
-    writeFloatLE:  function(val, pos) { return ieee754.read(this.arr, val, pos, true, 23, 4); },
-    writeDoubleLE: function(val, pos) { return ieee754.read(this.arr, val, pos, true, 52, 8); },
+    writeFloatLE:  function(val, pos) { return ieee754.write(this.arr, val, pos, true, 23, 4); },
+    writeDoubleLE: function(val, pos) { return ieee754.write(this.arr, val, pos, true, 52, 8); },
 
     toString: function(encoding, start, end) {
         if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf8').decode(this.arr.subarray(start, end));
