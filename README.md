@@ -81,13 +81,13 @@ Basic reading methods:
 
 * `readVarint()`
 * `readSVarint()`
-* `readUInt32()`
-* `readUInt64()`
+* `readFixed32()`
+* `readFixed64()`
 * `readBoolean()`
 * `readFloat()`
 * `readDouble()`
 * `readString()`
-* `readBuffer()`
+* `readBytes()`
 * `readPacked(type)`
 * `skip(value)`
 
@@ -104,27 +104,27 @@ Writing methods:
 
 * `writeTaggedVarint(tag, val)`
 * `writeTaggedSVarint(tag, val)`
-* `writeTaggedUInt32(tag, val)`
-* `writeTaggedUInt64(tag, val)`
+* `writeTaggedFixed32(tag, val)`
+* `writeTaggedFixed64(tag, val)`
 * `writeTaggedBoolean(tag, val)`
 * `writeTaggedFloat(tag, val)`
 * `writeTaggedDouble(tag, val)`
 * `writeTaggedString(tag, val)`
-* `writeTaggedBuffer(tag, buffer)`
+* `writeTaggedBytes(tag, buffer)`
 * `writePacked(type, tag, items)`
 * `writeVarint(val)`
 * `writeSVarint(val)`
-* `writeUInt32(val)`
-* `writeUInt64(val)`
+* `writeFixed32(val)`
+* `writeFixed64(val)`
 * `writeFloat(val)`
 * `writeDouble(val)`
 * `writeString(val)`
-* `writeBuffer(buffer)`
+* `writeBytes(buffer)`
 * `writeMessage(tag, pbf)`
 
 Misc methods:
 
-* `realloc(minBytes)` - pad the underlying buffer size to accommodate the given number of bytes (at least)
+* `realloc(minBytes)` - pad the underlying buffer size to accommodate the given number of bytes
 * `finish()` - return the buffer slice with the exact data length
 * `destroy()` - disposes the buffer
 

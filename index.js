@@ -45,13 +45,13 @@ Protobuf.prototype.readMessage = function(readField) {
     this.read(readField, this.pos + bytes);
 };
 
-Protobuf.prototype.readUInt32 = function() {
+Protobuf.prototype.readFixed32 = function() {
     var val = this.buf.readUInt32LE(this.pos);
     this.pos += 4;
     return val;
 };
 
-Protobuf.prototype.readUInt64 = function() {
+Protobuf.prototype.readFixed64 = function() {
     var val = this.buf.readUInt32LE(this.pos) + this.buf.readUInt32LE(this.pos + 4) * SHIFT_LEFT_32;
     this.pos += 8;
     return val;
@@ -182,27 +182,27 @@ Protobuf.prototype.writePacked = function(type, tag, items) {
     this.writeBytes(data);
 };
 
-Protobuf.prototype.writeUInt32 = function(val) {
+Protobuf.prototype.writeFixed32 = function(val) {
     this.realloc(4);
     this.buf.writeUInt32LE(val, this.pos);
     this.pos += 4;
 };
 
-Protobuf.prototype.writeTaggedUInt32 = function(tag, val) {
+Protobuf.prototype.writeTaggedFixed32 = function(tag, val) {
     this.writeTag(tag, Protobuf.Fixed32);
-    this.writeUInt32(val);
+    this.writeFixed32(val);
 };
 
-Protobuf.prototype.writeUInt64 = function(val) {
+Protobuf.prototype.writeFixed64 = function(val) {
     this.realloc(8);
     this.buf.writeInt32LE(val & -1, this.pos);
     this.buf.writeUInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
     this.pos += 8;
 };
 
-Protobuf.prototype.writeTaggedUInt64 = function(tag, val) {
+Protobuf.prototype.writeTaggedFixed64 = function(tag, val) {
     this.writeTag(tag, Protobuf.Fixed64);
-    this.writeUInt64(val);
+    this.writeFixed64(val);
 };
 
 Protobuf.prototype.writeVarint = function(val) {
