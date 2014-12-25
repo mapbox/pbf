@@ -28,7 +28,7 @@ Protobuf.prototype = {
 
     // === READING =================================================================
 
-    read: function(readField, end) {
+    readFields: function(readField, end) {
         var buf = this.buf;
         end = end || buf.length;
 
@@ -43,7 +43,7 @@ Protobuf.prototype = {
 
     readMessage: function(readField) {
         var bytes = this.readVarint();
-        this.read(readField, this.pos + bytes);
+        this.readFields(readField, this.pos + bytes);
     },
 
     readFixed32: function() {

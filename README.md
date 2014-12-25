@@ -32,7 +32,7 @@ Reading:
 var pbf = new Pbf(buffer),
     name, version, layerName;
 
-pbf.read(function(tag) {
+pbf.readFields(function(tag) {
     if (tag === 1) name = pbf.readString();
     else if (tag === 2) version = pbf.readVarint();
     else if (tag === 3) {
@@ -79,7 +79,7 @@ pbf.length;
 Read a sequence of fields:
 
 ```js
-pbf.read(function (tag) {
+pbf.readFields(function (tag) {
     if (tag === 1) pbf.readVarint();
     else if (tag === 2) pbf.readString();
     else ...

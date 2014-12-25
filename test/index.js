@@ -166,11 +166,11 @@ test('readString', function (t) {
     t.end();
 });
 
-test('read', function (t) {
+test('readFields', function (t) {
     var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf')),
         layerOffsets = [];
 
-    buf.read(function (tag) {
+    buf.readFields(function (tag) {
         if (tag == 3) layerOffsets.push(buf.pos);
     });
 
@@ -184,7 +184,7 @@ test('readMessage', function (t) {
     var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf')),
         layerNames = [];
 
-    buf.read(function (tag) {
+    buf.readFields(function (tag) {
         if (tag == 3) buf.readMessage(readLayer);
     });
 
