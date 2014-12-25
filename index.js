@@ -70,7 +70,6 @@ Protobuf.prototype.readDouble = function() {
 };
 
 Protobuf.prototype.readVarint = function() {
-    // TODO: bounds checking
     var buf = this.buf,
         val, b, b0, b1, b2, b3;
 
@@ -105,7 +104,6 @@ Protobuf.prototype.readBoolean = function() {
 Protobuf.prototype.readString = function() {
     var bytes = this.readVarint(),
         str = this.buf.toString('utf8', this.pos, this.pos + bytes);
-    // TODO: bounds checking
     this.pos += bytes;
     return str;
 };
@@ -118,7 +116,6 @@ Protobuf.prototype.readBuffer = function() {
 };
 
 Protobuf.prototype.readPacked = function(type) {
-    // TODO: bounds checking
     var bytes = this.readVarint();
     var end = this.pos + bytes;
     var array = [];
@@ -130,7 +127,6 @@ Protobuf.prototype.readPacked = function(type) {
 };
 
 Protobuf.prototype.skip = function(val) {
-    // TODO: bounds checking
     var type = val & 0x7;
 
     if (type === Protobuf.Varint) {
