@@ -13,12 +13,10 @@ Protobuf.prototype = {
     get length() { return this.buf.length; }
 };
 
-Protobuf.Varint = 0;
-Protobuf.Int64 = 1;
-Protobuf.Message = 2;
-Protobuf.String = 2;
-Protobuf.Packed = 2;
-Protobuf.Int32 = 5;
+Protobuf.Varint  = 0; // varint: int32, int64, uint32, uint64, sint32, sint64, bool, enum
+Protobuf.Fixed64 = 1; // double, fixed64, sfixed64
+Protobuf.Bytes   = 2; // length-delimited: string, bytes, embedded messages, packed repeated fields
+Protobuf.Fixed32 = 5; // float, fixed32, sfixed32
 
 Protobuf.prototype.destroy = function() {
     this.buf = null;
@@ -139,12 +137,12 @@ Protobuf.prototype.skip = function(val) {
         var buf = this.buf;
         while (buf[this.pos++] > 0x7f);
 
-    } else if (type === Protobuf.Message) {
+    } else if (type === Protobuf.Bytes) {
         var bytes = this.readVarint();
         this.pos += bytes;
 
-    } else if (type === Protobuf.Int32) this.pos += 4;
-    else if (type === Protobuf.Int64) this.pos += 8;
+    } else if (type === Protobuf.Fixed32) this.pos += 4;
+    else if (type === Protobuf.Fixed64) this.pos += 8;
     else throw new Error('Unimplemented type: ' + type);
 };
 
@@ -180,8 +178,8 @@ Protobuf.prototype.writePacked = function(type, tag, items) {
     }
     var data = message.finish();
 
-    this.writeTag(tag, Protobuf.Packed);
-    this.writeBuffer(data);
+    this.writeTag(tag, Protobuf.Bytes);
+    this.writeBytes(data);
 };
 
 Protobuf.prototype.writeUInt32 = function(val) {
@@ -191,7 +189,7 @@ Protobuf.prototype.writeUInt32 = function(val) {
 };
 
 Protobuf.prototype.writeTaggedUInt32 = function(tag, val) {
-    this.writeTag(tag, Protobuf.Int32);
+    this.writeTag(tag, Protobuf.Fixed32);
     this.writeUInt32(val);
 };
 
@@ -203,7 +201,7 @@ Protobuf.prototype.writeUInt64 = function(val) {
 };
 
 Protobuf.prototype.writeTaggedUInt64 = function(tag, val) {
-    this.writeTag(tag, Protobuf.Int64);
+    this.writeTag(tag, Protobuf.Fixed64);
     this.writeUInt64(val);
 };
 
@@ -276,7 +274,7 @@ Protobuf.prototype.writeString = function(str) {
 };
 
 Protobuf.prototype.writeTaggedString = function(tag, str) {
-    this.writeTag(tag, Protobuf.String);
+    this.writeTag(tag, Protobuf.Bytes);
     this.writeString(str);
 };
 
@@ -287,7 +285,7 @@ Protobuf.prototype.writeFloat = function(val) {
 };
 
 Protobuf.prototype.writeTaggedFloat = function(tag, val) {
-    this.writeTag(tag, Protobuf.Int32);
+    this.writeTag(tag, Protobuf.Fixed32);
     this.writeFloat(val);
 };
 
@@ -298,7 +296,7 @@ Protobuf.prototype.writeDouble = function(val) {
 };
 
 Protobuf.prototype.writeTaggedDouble = function(tag, val) {
-    this.writeTag(tag, Protobuf.Int64);
+    this.writeTag(tag, Protobuf.Fixed64);
     this.writeDouble(val);
 };
 
@@ -311,12 +309,12 @@ Protobuf.prototype.writeBuffer = function(buffer) {
 };
 
 Protobuf.prototype.writeTaggedBuffer = function(tag, buffer) {
-    this.writeTag(tag, Protobuf.String);
     this.writeBuffer(buffer);
+    this.writeTag(tag, Protobuf.Bytes);
 };
 
 Protobuf.prototype.writeMessage = function(tag, protobuf) {
     var buffer = protobuf.finish();
-    this.writeTag(tag, Protobuf.Message);
     this.writeBuffer(buffer);
+    this.writeTag(tag, Protobuf.Bytes);
 };
