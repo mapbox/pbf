@@ -1,7 +1,7 @@
 'use strict';
 
 // lightweight Buffer shim for pbf browser build
-// based on code from https://github.com/feross/buffer (MIT-licensed)
+// based on code from github.com/feross/buffer and github.com/dpw/node-buffer-more-ints (MIT-licensed)
 
 module.exports = Buffer;
 
@@ -29,45 +29,11 @@ Buffer.prototype = {
         arr[pos + 3] = (val >>> 24);
     },
 
-    readUInt64LE: function(pos) {
-        var arr = this.arr;
-        return ((arr[pos]) |
-            (arr[pos + 1] << 8) |
-            (arr[pos + 2] << 16)) +
-            (arr[pos + 3] * 0x1000000) +
-            (arr[pos + 4] * 0x100000000) +
-            (arr[pos + 5] * 0x10000000000) +
-            (arr[pos + 6] * 0x1000000000000) +
-            (arr[pos + 7] * 0x100000000000000);
-    },
+    readFloatLE:   function(pos) { return ieee754.read(this.arr, pos, true, 23, 4); },
+    readDoubleLE:  function(pos) { return ieee754.read(this.arr, pos, true, 52, 8); },
 
-    writeUInt64LE: function(val, pos) {
-        var arr = this.arr;
-        arr[pos] = val;
-        arr[pos + 1] = (val >>> 8);
-        arr[pos + 2] = (val >>> 16);
-        arr[pos + 3] = (val >>> 24);
-        arr[pos + 4] = (val / 0x100000000) >>> 0 & 0xFF;
-        arr[pos + 5] = (val / 0x10000000000) >>> 0 & 0xFF;
-        arr[pos + 6] = (val / 0x1000000000000) >>> 0 & 0xFF;
-        arr[pos + 7] = (val / 0x100000000000000) >>> 0 & 0xFF;
-    },
-
-    readFloatLE: function(pos) {
-        return ieee754.read(this.arr, pos, true, 23, 4);
-    },
-
-    readDoubleLE: function(pos) {
-        return ieee754.read(this.arr, pos, true, 52, 8);
-    },
-
-    writeFloatLE: function(val, pos) {
-        return ieee754.read(this.arr, val, pos, true, 23, 4);
-    },
-
-    writeDoubleLE: function(val, pos) {
-        return ieee754.read(this.arr, val, pos, true, 52, 8);
-    },
+    writeFloatLE:  function(val, pos) { return ieee754.read(this.arr, val, pos, true, 23, 4); },
+    writeDoubleLE: function(val, pos) { return ieee754.read(this.arr, val, pos, true, 52, 8); },
 
     toString: function(encoding, start, end) {
         if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf8').decode(this.arr.subarray(start, end));
@@ -75,7 +41,8 @@ Buffer.prototype = {
         var str = '',
             tmp = '';
 
-        end = Math.min(this.length, end)
+        start = start || 0;
+        end = Math.min(this.length, end || this.length);
 
         for (var i = start; i < end; i++) {
             var ch = this.arr[i];
@@ -90,25 +57,26 @@ Buffer.prototype = {
         return str + decodeUtf8Str(tmp);
     },
 
-    slice: function(start, end) {
-        var fn = this.arr.slice || this.arr.subarray;
-        return fn.call(this.arr, start, end);
-    },
-
     write: function(str, pos) {
-        var bytes = Buffer._lastStr === str ? Buffer._lastEncoding : encodeString(str);
+        var bytes = Buffer._lastStr === str ? Buffer._lastEncoded : encodeString(str);
         for (var i = 0; i < bytes.length; i++) {
             this.arr[pos + i] = bytes[i];
         }
     },
 
+    slice: function(start, end) {
+        return this.arr.subarray(start, end);
+    },
+
     copy: function(buf, pos) {
         pos = pos || 0;
         for (var i = 0; i < this.length; i++) {
-            buf.arr[pos + i] = this.buf.arr[i];
+            buf.arr[pos + i] = this.arr[i];
         }
     }
 };
+
+Buffer.prototype.writeInt32LE = Buffer.prototype.writeUInt32LE;
 
 Buffer.wrap = function(arr) {
     var buf = Object.create(Buffer.prototype);
@@ -119,20 +87,9 @@ Buffer.wrap = function(arr) {
 
 Buffer.byteLength = function(str) {
     Buffer._lastStr = str;
-    var bytes = Buffer._lastEncoding = encodeString(str);
+    var bytes = Buffer._lastEncoded = encodeString(str);
     return bytes.length;
 };
-
-function augment(arr) {
-    return extend(arr, bufferMethods);
-};
-
-function extend(src, dst) {
-    for (var i in src) {
-        dst[i] = src[i];
-    }
-    return dst;
-}
 
 function encodeString(str) {
     if (typeof TextEncoder !== 'undefined') return new TextEncoder('utf8').encode();

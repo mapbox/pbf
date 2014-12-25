@@ -24,6 +24,9 @@ Protobuf.prototype.destroy = function() {
     this.buf = null;
 };
 
+var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
+    SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
+
 // === READING =================================================================
 
 Protobuf.prototype.readUInt32 = function() {
@@ -33,7 +36,7 @@ Protobuf.prototype.readUInt32 = function() {
 };
 
 Protobuf.prototype.readUInt64 = function() {
-    var val = this.buf.readUInt64LE(this.pos);
+    var val = this.buf.readUInt32LE(this.pos) + this.buf.readUInt32LE(this.pos + 4) * SHIFT_LEFT_32;
     this.pos += 8;
     return val;
 };
@@ -181,7 +184,8 @@ Protobuf.prototype.writeTaggedUInt32 = function(tag, val) {
 
 Protobuf.prototype.writeUInt64 = function(val) {
     this.realloc(8);
-    this.buf.writeUInt64LE(val, this.pos);
+    this.buf.writeInt32LE(val & -1, this.pos);
+    this.buf.writeUInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
     this.pos += 8;
 };
 

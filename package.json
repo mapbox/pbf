@@ -4,8 +4,8 @@
   "description": "a protocol buffer implementation in javascript",
   "main": "index.js",
   "scripts": {
-    "test": "jshint index.js test/*.js && tape test/index.js",
-    "cov": "istanbul cover test/index.js  && coveralls < ./coverage/lcov.info",
+    "test": "jshint index.js test/*.js && tape test/index.js | faucet",
+    "cov": "istanbul cover test/index.js && coveralls < ./coverage/lcov.info",
     "build-min": "browserify index.js -s Pbf | uglifyjs -c -m > pbf.js",
     "build-dev": "browserify index.js -d -s Pbf > pbf-dev.js"
   },
@@ -40,10 +40,11 @@
     "benchmark": "^1.0.0",
     "brfs": "1.0.1",
     "coveralls": "~2.10.1",
+    "faucet": "0.0.1",
     "istanbul": "~0.2.11",
     "jshint": "^2.5.11",
     "tape": "~2.4.2",
-    "vector-tile": "^0.1.3",
-    "uglify-js": "^2.4.16"
+    "uglify-js": "^2.4.16",
+    "vector-tile": "^0.1.3"
   }
 }
