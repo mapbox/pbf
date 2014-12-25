@@ -92,9 +92,7 @@ Protobuf.prototype.readVarint = function() {
 
 Protobuf.prototype.readSVarint = function() {
     var num = this.readVarint();
-    if (num > 2147483647) throw new Error('TODO: Handle numbers >= 2^30');
-    // zigzag encoding
-    return ((num >> 1) ^ -(num & 1));
+    return num % 2 === 1 ? (num + 1) / -2 : num / 2; // zigzag encoding
 };
 
 Protobuf.prototype.readBoolean = function() {
