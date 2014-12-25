@@ -27,18 +27,19 @@ npm run build-min # pbf.js (minified production build)
 ## Example
 
 ```js
-var Pbf = require('pbf');
-var pbf = new Pbf(buffer);
+var pbf = new Pbf(buffer),
+    name, version, layerName;
 
-while (pbf.pos < pbf.length) {
-    var val = pbf.readVarint(),
-        tag = val >> 3,
-        name, version;
-
+pbf.read(function(tag) {
     if (tag === 1) name = pbf.readString();
     else if (tag === 2) version = pbf.readVarint();
-    else pbf.skip(val);
-}
+    else if (tag === 3) {
+        pbf.readMessage(function(tag) {
+            if (tag === 1) layerName = pbf.readString();
+        });
+    }
+    return result;
+});
 ```
 
 ## API
@@ -57,6 +58,18 @@ pbf.length;
 
 #### Reading
 
+Read a sequence of fields:
+
+```js
+pbf.read(function (tag) {
+    if (tag === 1) pbf.readVarint();
+    else if (tag === 2) pbf.readString();
+    else ...
+});
+```
+
+To read an embedded message, use `pbf.readMessage(fn)` (in the same way as `read`).
+
 Read values:
 
 ```js
@@ -64,7 +77,7 @@ var value = pbf.readVarint();
 var packed = pbf.readPacked('UInt32');
 ```
 
-Reading methods:
+Basic reading methods:
 
 * `readVarint()`
 * `readSVarint()`
