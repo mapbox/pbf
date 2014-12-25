@@ -83,9 +83,17 @@ test('writeVarint throws error on a number that is too big', function(t) {
 
 test('readDouble', function(t) {
     var buffer = new Buffer(8);
-    buffer.writeDoubleLE(42, 0);
+    buffer.writeDoubleLE(12345.6789012345, 0);
     var buf = new Pbf(buffer);
-    t.equal(buf.readDouble(), 42);
+    t.equal(Math.round(buf.readDouble() * 1e10) / 1e10, 12345.6789012345);
+    t.end();
+});
+
+test('writeDouble', function(t) {
+    var buf = new Pbf(new Buffer(8));
+    buf.writeDouble(12345.6789012345);
+    buf.pos = 0;
+    t.equal(Math.round(buf.readDouble() * 1e10) / 1e10, 12345.6789012345);
     t.end();
 });
 
@@ -93,6 +101,14 @@ test('readFloat', function(t) {
     var buffer = new Buffer(4);
     buffer.writeFloatLE(123.456, 0);
     var buf = new Pbf(buffer);
+    t.equal(Math.round(1000 * buf.readFloat()) / 1000, 123.456);
+    t.end();
+});
+
+test('writeFloat', function(t) {
+    var buf = new Pbf(new Buffer(4));
+    buf.writeFloat(123.456);
+    buf.pos = 0;
     t.equal(Math.round(1000 * buf.readFloat()) / 1000, 123.456);
     t.end();
 });
@@ -107,10 +123,13 @@ test('readFixed32', function(t) {
     t.end();
 });
 
-test('writeFixed64', function (t) {
-    var buf = new Pbf(new Buffer(8));
-    buf.writeFixed64(102451124123);
-    t.same(toArray(buf.buf), [155,23,144,218,23,0,0,0]);
+test('writeFixed32', function(t) {
+    var buf = new Pbf(new Buffer(16));
+    buf.writeFixed32(42);
+    buf.writeFixed32(24);
+    buf.pos = 0;
+    t.equal(buf.readFixed32(), 42);
+    t.equal(buf.readFixed32(), 24);
     t.end();
 });
 
@@ -119,6 +138,31 @@ test('readFixed64', function (t) {
     buf.writeFixed64(102451124123);
     buf.pos = 0;
     t.same(buf.readFixed64(), 102451124123);
+    t.end();
+});
+
+test('writeFixed64', function (t) {
+    var buf = new Pbf(new Buffer(8));
+    buf.writeFixed64(102451124123);
+    t.same(toArray(buf.buf), [155,23,144,218,23,0,0,0]);
+    t.end();
+});
+
+test('writeString', function (t) {
+    var buffer = new Buffer(32);
+    var buf = new Pbf(buffer);
+    buf.writeVarint(Buffer.byteLength('Привет'));
+    buffer.write('Привет', buf.pos);
+    buf.pos = 0;
+    t.equal(buf.readString(), 'Привет');
+    t.end();
+});
+
+test('readString', function (t) {
+    var buf = new Pbf(new Buffer(0));
+    buf.writeString('Привет');
+    buf.pos = 0;
+    t.equal(buf.readString(), 'Привет');
     t.end();
 });
 
