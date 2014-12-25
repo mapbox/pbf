@@ -224,13 +224,15 @@ Protobuf.prototype.writeVarint = function(val) {
         this.buf[this.pos++] = 0x80 | ((val >>> 14) & 0x7f);
         this.buf[this.pos++] = 0x00 | ((val >>> 21) & 0x7f);
     } else {
-        while (val > 0) {
-            var b = val & 0x7f;
-            val = Math.floor(val / 128);
-            if (val > 0) b |= 0x80;
+        var pos = this.pos;
+        while (val >= 0x80) {
             this.realloc(1);
-            this.buf[this.pos++] = b;
+            this.buf[this.pos++] = (val & 0xff) | 0x80;
+            val /= 0x80;
         }
+        this.realloc(1);
+        this.buf[this.pos++] = val | 0;
+        if (this.pos - pos > 10) throw new Error("Given varint doesn't fit into 10 bytes");
     }
 };
 

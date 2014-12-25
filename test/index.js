@@ -25,17 +25,6 @@ test('realloc', function(t) {
     t.end();
 });
 
-test('readVarint basic', function(t) {
-    var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/3165.vector.pbf'));
-    t.equal(buf.length, 28056);
-    t.equal(buf.readVarint(), 120);
-    t.equal(buf.readVarint(), 14876);
-    t.equal(buf.readVarint(), 125);
-    t.equal(buf.readVarint(), 9);
-    buf.destroy();
-    t.end();
-});
-
 var testNumbers = [1,0,0,4,14,23,40,86,141,113,925,258,1105,1291,6872,12545,65521,126522,133028,444205,846327,1883372,
     3716678,674158,15203102,27135056,42501689,110263473,6449928,65474499,943840723,1552431153,407193337,2193544970,
     8167778088,5502125480,14014009728,56371207648,9459068416,410595966336,673736830976,502662539776,2654996269056,
@@ -60,6 +49,14 @@ test('readVarint & writeVarint', function(t) {
         t.equal(buf.readVarint(), testNumbers[i++]);
     }
 
+    t.end();
+});
+
+test('writeVarint throws error on a number that is too big', function(t) {
+    var buf = new Pbf(new Buffer(0));
+    t.throws(function () {
+        buf.writeVarint(29234322996241367000012);
+    });
     t.end();
 });
 
