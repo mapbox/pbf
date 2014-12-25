@@ -29,8 +29,7 @@ Protobuf.prototype = {
     // === READING =================================================================
 
     readFields: function(readField, end) {
-        var buf = this.buf;
-        end = end || buf.length;
+        end = end || this.length;
 
         while (this.pos < end) {
             var val = this.readVarint(),
@@ -161,7 +160,9 @@ Protobuf.prototype = {
     },
 
     finish: function() {
-        return this.buf.slice(0, this.pos);
+        this.length = this.pos;
+        this.pos = 0;
+        return this.buf.slice(0, this.length);
     },
 
     writePacked: function(type, tag, items) {
@@ -170,7 +171,7 @@ Protobuf.prototype = {
         var message = new Protobuf();
         var write = message['write' + type];
         for (var i = 0; i < items.length; i++) {
-            write.call(this, items[i]);
+            write.call(message, items[i]);
         }
         var data = message.finish();
 
