@@ -106,7 +106,7 @@ Protobuf.prototype.readString = function() {
     return str;
 };
 
-Protobuf.prototype.readBuffer = function() {
+Protobuf.prototype.readBytes = function() {
     var bytes = this.readVarint();
     var buffer = this.buf.slice(this.pos, this.pos + bytes);
     this.pos += bytes;
