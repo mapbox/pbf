@@ -39,13 +39,22 @@ test('readVarint & writeVarint', function(t) {
     }
     var len = buf.finish().length;
     t.equal(len, 229);
-    buf.pos = 0;
+    buf.finish();
 
     i = 0;
     while (buf.pos < len) {
         t.equal(buf.readVarint(), testNumbers[i++]);
     }
 
+    t.end();
+});
+
+test('readVarint & writeVarint handle really big numbers', function(t) {
+    var buf = new Pbf();
+    var bigNum = Math.pow(2, 69);
+    buf.writeVarint(bigNum);
+    buf.finish();
+    t.equal(buf.readVarint(), bigNum);
     t.end();
 });
 
@@ -63,7 +72,7 @@ test('readSVarint & writeSVarint', function(t) {
     }
     var len = buf.finish().length;
     t.equal(len, 224);
-    buf.pos = 0;
+    buf.finish();
 
     i = 0;
     while (buf.pos < len) {
@@ -81,6 +90,38 @@ test('writeVarint throws error on a number that is too big', function(t) {
     t.end();
 });
 
+test('readVarint throws error on a number that is longer than 10 bytes', function(t) {
+    var buf = new Pbf(new Buffer([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]));
+    t.throws(function () {
+        buf.readVarint();
+    });
+    t.end();
+});
+
+test('readBoolean & writeBoolean', function(t) {
+    var buf = new Pbf();
+    buf.writeBoolean(true);
+    buf.writeBoolean(false);
+    buf.finish();
+    t.equal(buf.readBoolean(), true);
+    t.equal(buf.readBoolean(), false);
+    t.end();
+});
+
+test('readBytes', function(t) {
+    var buf = new Pbf([8, 1, 2, 3, 4, 5, 6, 7, 8]);
+    t.same(buf.readBytes(), [1, 2, 3, 4, 5, 6, 7, 8]);
+    t.end();
+});
+
+test('writeBytes', function(t) {
+    var buf = new Pbf();
+    buf.writeBytes([1, 2, 3, 4, 5, 6, 7, 8]);
+    var bytes = buf.finish();
+    t.same(toArray(bytes), [8, 1, 2, 3, 4, 5, 6, 7, 8]);
+    t.end();
+});
+
 test('readDouble', function(t) {
     var buffer = new Buffer(8);
     buffer.writeDoubleLE(12345.6789012345, 0);
@@ -89,10 +130,21 @@ test('readDouble', function(t) {
     t.end();
 });
 
+test('readPacked and writePacked', function(t) {
+    var buf = new Pbf();
+    buf.writePacked('Varint', 1, testNumbers);
+    buf.finish();
+    buf.readFields(function (tag) {
+        if (tag === 1) t.same(buf.readPacked('Varint'), testNumbers);
+        else t.fail('wrong tag encountered: ' + tag);
+    });
+    t.end();
+});
+
 test('writeDouble', function(t) {
     var buf = new Pbf(new Buffer(8));
     buf.writeDouble(12345.6789012345);
-    buf.pos = 0;
+    buf.finish();
     t.equal(Math.round(buf.readDouble() * 1e10) / 1e10, 12345.6789012345);
     t.end();
 });
@@ -108,7 +160,7 @@ test('readFloat', function(t) {
 test('writeFloat', function(t) {
     var buf = new Pbf(new Buffer(4));
     buf.writeFloat(123.456);
-    buf.pos = 0;
+    buf.finish();
     t.equal(Math.round(1000 * buf.readFloat()) / 1000, 123.456);
     t.end();
 });
@@ -127,7 +179,7 @@ test('writeFixed32', function(t) {
     var buf = new Pbf(new Buffer(16));
     buf.writeFixed32(42);
     buf.writeFixed32(24);
-    buf.pos = 0;
+    buf.finish();
     t.equal(buf.readFixed32(), 42);
     t.equal(buf.readFixed32(), 24);
     t.end();
@@ -136,7 +188,7 @@ test('writeFixed32', function(t) {
 test('readFixed64', function (t) {
     var buf = new Pbf(new Buffer(8));
     buf.writeFixed64(102451124123);
-    buf.pos = 0;
+    buf.finish();
     t.same(buf.readFixed64(), 102451124123);
     t.end();
 });
@@ -151,9 +203,11 @@ test('writeFixed64', function (t) {
 test('writeString', function (t) {
     var buffer = new Buffer(32);
     var buf = new Pbf(buffer);
-    buf.writeVarint(Buffer.byteLength('Привет'));
+    var len = Buffer.byteLength('Привет');
+    buf.writeVarint(len);
     buffer.write('Привет', buf.pos);
-    buf.pos = 0;
+    buf.pos += len;
+    buf.finish();
     t.equal(buf.readString(), 'Привет');
     t.end();
 });
@@ -161,7 +215,7 @@ test('writeString', function (t) {
 test('readString', function (t) {
     var buf = new Pbf(new Buffer(0));
     buf.writeString('Привет');
-    buf.pos = 0;
+    buf.finish();
     t.equal(buf.readString(), 'Привет');
     t.end();
 });
