@@ -70,6 +70,8 @@ Reading methods:
 * `readSVarint()`
 * `readUInt32()`
 * `readUInt64()`
+* `readBoolean()`
+* `readFloat()`
 * `readDouble()`
 * `readString()`
 * `readBuffer()`

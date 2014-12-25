@@ -179,6 +179,17 @@ Protobuf.prototype.writeTaggedUInt32 = function(tag, val) {
     this.writeUInt32(val);
 };
 
+Protobuf.prototype.writeUInt64 = function(val) {
+    this.realloc(8);
+    this.buf.writeUInt64LE(val, this.pos);
+    this.pos += 8;
+};
+
+Protobuf.prototype.writeTaggedUInt64 = function(tag, val) {
+    this.writeTag(tag, Protobuf.Int64);
+    this.writeUInt64(val);
+};
+
 Protobuf.prototype.writeVarint = function(val) {
     val = +val;
     if (isNaN(val)) val = 0;
