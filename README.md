@@ -10,7 +10,19 @@ take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers)
 
 ## Install
 
-    npm install pbf
+Node and Browserify:
+
+```bash
+npm install pbf
+```
+
+Making a browser build:
+
+```bash
+npm install
+npm run build-dev # pbf-dev.js (development build)
+npm run build-min # pbf.js (minified production build)
+```
 
 ## Example
 
@@ -58,6 +70,8 @@ Reading methods:
 * `readSVarint()`
 * `readUInt32()`
 * `readUInt64()`
+* `readBoolean()`
+* `readFloat()`
 * `readDouble()`
 * `readString()`
 * `readBuffer()`

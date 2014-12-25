@@ -2,6 +2,16 @@ var Pbf = require('../'),
     fs = require('fs'),
     test = require('tape').test;
 
+require('./buffer.test');
+
+function toArray(buf) {
+    var arr = [];
+    for (var i = 0; i < buf.length; i++) {
+        arr.push(buf[i]);
+    }
+    return arr;
+}
+
 test('initialization', function(t) {
     var buf = new Pbf(new Buffer([]));
     buf.destroy();
@@ -43,3 +53,19 @@ test('readUInt32', function(t) {
     t.equal(buf.readUInt32(), 24);
     t.end();
 });
+
+test('writeUInt64LE', function (t) {
+    var buf = new Pbf(new Buffer(8));
+    buf.writeUInt64(102451124123);
+    t.same(toArray(buf.buf), [155,23,144,218,23,0,0,0]);
+    t.end();
+});
+
+test('readUInt64LE', function (t) {
+    var buf = new Pbf(new Buffer(8));
+    buf.writeUInt64(102451124123);
+    buf.pos = 0;
+    t.same(buf.readUInt64(), 102451124123);
+    t.end();
+});
+

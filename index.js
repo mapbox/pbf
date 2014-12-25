@@ -1,10 +1,11 @@
 'use strict';
 
-var ieee754 = require('ieee754');
-
 module.exports = Protobuf;
+
+var Buffer = typeof window !== 'undefined' ? require('./buffer') : global.Buffer;
+
 function Protobuf(buf) {
-    this.buf = buf;
+    this.buf = buf instanceof Uint8Array ? Buffer.wrap(buf) : buf;
     this.pos = 0;
 }
 
@@ -23,6 +24,9 @@ Protobuf.prototype.destroy = function() {
     this.buf = null;
 };
 
+var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
+    SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
+
 // === READING =================================================================
 
 Protobuf.prototype.readUInt32 = function() {
@@ -32,13 +36,19 @@ Protobuf.prototype.readUInt32 = function() {
 };
 
 Protobuf.prototype.readUInt64 = function() {
-    var val = this.buf.readUInt64LE(this.pos);
+    var val = this.buf.readUInt32LE(this.pos) + this.buf.readUInt32LE(this.pos + 4) * SHIFT_LEFT_32;
     this.pos += 8;
     return val;
 };
 
+Protobuf.prototype.readFloat = function() {
+    var val = this.buf.readFloatLE(this.pos);
+    this.pos += 4;
+    return val;
+};
+
 Protobuf.prototype.readDouble = function() {
-    var val = ieee754.read(this.buf, this.pos, true, 52, 8);
+    var val = this.buf.readDoubleLE(this.pos);
     this.pos += 8;
     return val;
 };
@@ -77,31 +87,21 @@ Protobuf.prototype.readSVarint = function() {
     return ((num >> 1) ^ -(num & 1));
 };
 
+Protobuf.prototype.readBoolean = function() {
+    return Boolean(this.readVarint());
+};
+
 Protobuf.prototype.readString = function() {
-    var bytes = this.readVarint();
+    var bytes = this.readVarint(),
+        str = this.buf.toString('utf8', this.pos, this.pos + bytes);
     // TODO: bounds checking
-    var chr = String.fromCharCode;
-    var b = this.buf;
-    var p = this.pos;
-    var end = this.pos + bytes;
-    var str = '';
-    while (p < end) {
-        if (b[p] <= 0x7F) str += chr(b[p++]);
-        else if (b[p] <= 0xBF) throw new Error('Invalid UTF-8 codepoint: ' + b[p]);
-        else if (b[p] <= 0xDF) str += chr((b[p++] & 0x1F) << 6 | (b[p++] & 0x3F));
-        else if (b[p] <= 0xEF) str += chr((b[p++] & 0x1F) << 12 | (b[p++] & 0x3F) << 6 | (b[p++] & 0x3F));
-        else if (b[p] <= 0xF7) p += 4; // We can't handle these codepoints in JS, so skip.
-        else if (b[p] <= 0xFB) p += 5;
-        else if (b[p] <= 0xFD) p += 6;
-        else throw new Error('Invalid UTF-8 codepoint: ' + b[p]);
-    }
     this.pos += bytes;
     return str;
 };
 
 Protobuf.prototype.readBuffer = function() {
     var bytes = this.readVarint();
-    var buffer = this.buf.subarray(this.pos, this.pos + bytes);
+    var buffer = this.buf.slice(this.pos, this.pos + bytes);
     this.pos += bytes;
     return buffer;
 };
@@ -142,10 +142,11 @@ Protobuf.prototype.writeTag = function(tag, type) {
 };
 
 Protobuf.prototype.realloc = function(min) {
-    var length = this.buf.length;
-    if (!length) length = 1;
+    var length = this.length || 1;
+
     while (length < this.pos + min) length *= 2;
-    if (length != this.buf.length) {
+
+    if (length != this.length) {
         var buf = new Buffer(length);
         this.buf.copy(buf);
         this.buf = buf;
@@ -179,6 +180,18 @@ Protobuf.prototype.writeUInt32 = function(val) {
 Protobuf.prototype.writeTaggedUInt32 = function(tag, val) {
     this.writeTag(tag, Protobuf.Int32);
     this.writeUInt32(val);
+};
+
+Protobuf.prototype.writeUInt64 = function(val) {
+    this.realloc(8);
+    this.buf.writeInt32LE(val & -1, this.pos);
+    this.buf.writeUInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
+    this.pos += 8;
+};
+
+Protobuf.prototype.writeTaggedUInt64 = function(tag, val) {
+    this.writeTag(tag, Protobuf.Int64);
+    this.writeUInt64(val);
 };
 
 Protobuf.prototype.writeVarint = function(val) {
