@@ -26,6 +26,8 @@ npm run build-min # pbf.js (minified production build)
 
 ## Example
 
+Reading:
+
 ```js
 var pbf = new Pbf(buffer),
     name, version, layerName;
@@ -40,6 +42,22 @@ pbf.read(function(tag) {
     }
     return result;
 });
+```
+
+Writing:
+
+```js
+var pbf = new Pbf();
+
+pbf.writeTaggedString(1, 'Hello world');
+pbf.writeTaggedVarint(2, 300);
+
+var layer = new Pbf();
+layer.writeTaggedString(1, 'foobar');
+
+pbf.writeMessage(3, layer);
+
+var buffer = pbf.finish();
 ```
 
 ## API
