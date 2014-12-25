@@ -78,6 +78,18 @@ test('toString', function (t) {
     t.end();
 });
 
+test('more complicated utf8', function (t) {
+    var shim = new BufferShim(100);
+    // crazy test from github.com/mathiasbynens/utf8.js
+    var str = '\uDC00\uDC00\uDC00\uDC00A\uDC00\uD834\uDF06\uDC00\uDEEE\uDFFF\uD800\uDC00\uD800\uD800\uD800\uD800A' +
+        '\uD800\uD834\uDF06';
+    var len = BufferShim.byteLength(str);
+    shim.write(str, 0);
+    var str2 = shim.toString('utf8', 0, len);
+    t.same(new Buffer(str2), new Buffer(str));
+    t.end();
+});
+
 test('wrap', function (t) {
     var arr = new Uint8Array(testBytes);
     var shim = BufferShim.wrap(arr);
@@ -98,5 +110,11 @@ test('copy', function (t) {
     shim.copy(shim2);
 
     t.same(toArray(shim.arr), toArray(shim2.arr));
+    t.end();
+});
+
+test('slice', function (t) {
+    var shim = BufferShim.wrap(new Uint8Array(testBytes));
+    t.same(toArray(shim.slice(0, 2)), [208, 159]);
     t.end();
 });

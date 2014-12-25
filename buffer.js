@@ -115,11 +115,7 @@ function encodeString(str) {
                 }
 
             } else {
-                if (codePoint > 0xDBFF) {
-                    bytes.push(0xEF, 0xBF, 0xBD);
-                    continue;
-
-                } else if (i + 1 === length) {
+                if (codePoint > 0xDBFF || (i + 1 === length)) {
                     bytes.push(0xEF, 0xBF, 0xBD);
                     continue;
 

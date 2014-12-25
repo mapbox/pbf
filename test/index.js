@@ -51,10 +51,13 @@ test('readVarint & writeVarint', function(t) {
 
 test('readVarint & writeVarint handle really big numbers', function(t) {
     var buf = new Pbf();
-    var bigNum = Math.pow(2, 69);
-    buf.writeVarint(bigNum);
+    var bigNum1 = Math.pow(2, 60);
+    var bigNum2 = Math.pow(2, 69);
+    buf.writeVarint(bigNum1);
+    buf.writeVarint(bigNum2);
     buf.finish();
-    t.equal(buf.readVarint(), bigNum);
+    t.equal(buf.readVarint(), bigNum1);
+    t.equal(buf.readVarint(), bigNum2);
     t.end();
 });
 
@@ -132,6 +135,8 @@ test('readDouble', function(t) {
 
 test('readPacked and writePacked', function(t) {
     var buf = new Pbf();
+    buf.writePacked('Varint', 1, []);
+    t.equal(buf.pos, 0);
     buf.writePacked('Varint', 1, testNumbers);
     buf.finish();
     buf.readFields(function (tag) {
@@ -249,5 +254,57 @@ test('readMessage', function (t) {
     t.same(layerNames, ["landuse","water","barrier_line","building","tunnel","road",
         "place_label","water_label","poi_label","road_label","housenum_label"]);
 
+    t.end();
+});
+
+test('field writing methods', function (t) {
+    var buf = new Pbf();
+    buf.writeFixed32Field(1, 100);
+    buf.writeFixed64Field(2, 200);
+    buf.writeVarintField(3, 1234);
+    buf.writeSVarintField(4, -599);
+    buf.writeStringField(5, 'Hello world');
+    buf.writeFloatField(6, 123);
+    buf.writeDoubleField(7, 123);
+    buf.writeBooleanField(8, true);
+    buf.writeBytesField(9, [1, 2, 3]);
+
+    var message = new Pbf();
+    message.writeBooleanField(1, true);
+    buf.writeMessage(10, message);
+
+    buf.finish();
+
+    buf.readFields(function (tag) {
+        if (tag === 1) buf.readFixed32();
+        else if (tag === 2) buf.readFixed64();
+        else if (tag === 3) buf.readVarint();
+        else if (tag === 4) buf.readSVarint();
+        else if (tag === 5) buf.readString();
+        else if (tag === 6) buf.readFloat();
+        else if (tag === 7) buf.readDouble();
+        else if (tag === 8) buf.readBoolean();
+        else if (tag === 9) buf.readBytes();
+        else if (tag === 10) buf.readMessage(function () { /* skip */ });
+        else t.fail('unknown tag');
+    });
+    t.end();
+});
+
+test('skip', function (t) {
+    var buf = new Pbf();
+    buf.writeFixed32Field(1, 100);
+    buf.writeFixed64Field(2, 200);
+    buf.writeVarintField(3, 1234);
+    buf.writeStringField(4, 'Hello world');
+    buf.finish();
+
+    buf.readFields(function () { /* skip */ });
+
+    t.equal(buf.pos, buf.length);
+
+    t.throws(function () {
+        buf.skip(6);
+    });
     t.end();
 });
