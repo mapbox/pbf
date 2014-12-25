@@ -223,7 +223,7 @@ Protobuf.prototype.writeVarint = function(val) {
         this.realloc(2);
         this.buf[this.pos++] = 0x80 | ((val >>> 0) & 0x7f);
         this.buf[this.pos++] = 0x00 | ((val >>> 7) & 0x7f);
-    } else if (val <= 0x1ffffff) {
+    } else if (val <= 0x1fffff) {
         this.realloc(3);
         this.buf[this.pos++] = 0x80 | ((val >>> 0) & 0x7f);
         this.buf[this.pos++] = 0x80 | ((val >>> 7) & 0x7f);
