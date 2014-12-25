@@ -5,6 +5,7 @@ module.exports = Protobuf;
 var Buffer = typeof window !== 'undefined' ? require('./buffer') : global.Buffer;
 
 function Protobuf(buf) {
+    buf = buf || new Buffer(4);
     this.buf = buf instanceof Uint8Array ? Buffer.wrap(buf) : buf;
     this.pos = 0;
     this.length = buf.length;
@@ -73,18 +74,18 @@ Protobuf.prototype = {
         var buf = this.buf,
             val, b, b0, b1, b2, b3;
 
-        b0 = buf[this.pos++]; if (b0 < 0x80) return b0; b0 = b0 & 0x7f;
-        b1 = buf[this.pos++]; if (b1 < 0x80) return b0 | b1 << 7; b1 = (b1 & 0x7f) << 7;
+        b0 = buf[this.pos++]; if (b0 < 0x80) return b0;                 b0 = b0 & 0x7f;
+        b1 = buf[this.pos++]; if (b1 < 0x80) return b0 | b1 << 7;       b1 = (b1 & 0x7f) << 7;
         b2 = buf[this.pos++]; if (b2 < 0x80) return b0 | b1 | b2 << 14; b2 = (b2 & 0x7f) << 14;
         b3 = buf[this.pos++]; if (b3 < 0x80) return b0 | b1 | b2 | b3 << 21;
 
         val = b0 | b1 | b2 | (b3 & 0x7f) << 21;
 
-        b = buf[this.pos++]; val += (b & 0x7f) * 0x10000000; if (b < 0x80) return val;
-        b = buf[this.pos++]; val += (b & 0x7f) * 0x800000000; if (b < 0x80) return val;
-        b = buf[this.pos++]; val += (b & 0x7f) * 0x40000000000; if (b < 0x80) return val;
-        b = buf[this.pos++]; val += (b & 0x7f) * 0x2000000000000; if (b < 0x80) return val;
-        b = buf[this.pos++]; val += (b & 0x7f) * 0x100000000000000; if (b < 0x80) return val;
+        b = buf[this.pos++]; val += (b & 0x7f) * 0x10000000;         if (b < 0x80) return val;
+        b = buf[this.pos++]; val += (b & 0x7f) * 0x800000000;        if (b < 0x80) return val;
+        b = buf[this.pos++]; val += (b & 0x7f) * 0x40000000000;      if (b < 0x80) return val;
+        b = buf[this.pos++]; val += (b & 0x7f) * 0x2000000000000;    if (b < 0x80) return val;
+        b = buf[this.pos++]; val += (b & 0x7f) * 0x100000000000000;  if (b < 0x80) return val;
         b = buf[this.pos++]; val += (b & 0x7f) * 0x8000000000000000; if (b < 0x80) return val;
 
         throw new Error('Expected varint not more than 10 bytes');
