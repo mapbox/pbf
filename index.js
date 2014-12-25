@@ -300,21 +300,23 @@ Protobuf.prototype.writeTaggedDouble = function(tag, val) {
     this.writeDouble(val);
 };
 
-Protobuf.prototype.writeBuffer = function(buffer) {
-    var bytes = buffer.length;
-    this.writeVarint(bytes);
-    this.realloc(bytes);
-    buffer.copy(this.buf, this.pos);
-    this.pos += bytes;
+Protobuf.prototype.writeBytes = function(buffer) {
+    var len = buffer.length;
+    this.writeVarint(len);
+    this.realloc(len);
+    for (var i = 0; i < len; i++) {
+        this.buf[this.pos + i] = buffer[i];
+    }
+    this.pos += len;
 };
 
-Protobuf.prototype.writeTaggedBuffer = function(tag, buffer) {
-    this.writeBuffer(buffer);
+Protobuf.prototype.writeTaggedBytes = function(tag, buffer) {
     this.writeTag(tag, Protobuf.Bytes);
+    this.writeBytes(buffer);
 };
 
 Protobuf.prototype.writeMessage = function(tag, protobuf) {
     var buffer = protobuf.finish();
-    this.writeBuffer(buffer);
     this.writeTag(tag, Protobuf.Bytes);
+    this.writeBytes(buffer);
 };
