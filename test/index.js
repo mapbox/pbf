@@ -70,28 +70,28 @@ test('readFloat', function(t) {
     t.end();
 });
 
-test('readUInt32', function(t) {
+test('readFixed32', function(t) {
     var buffer = new Buffer(16);
     buffer.writeUInt32LE(42, 0);
     buffer.writeUInt32LE(24, 4);
     var buf = new Pbf(buffer);
-    t.equal(buf.readUInt32(), 42);
-    t.equal(buf.readUInt32(), 24);
+    t.equal(buf.readFixed32(), 42);
+    t.equal(buf.readFixed32(), 24);
     t.end();
 });
 
-test('writeUInt64LE', function (t) {
+test('writeFixed64', function (t) {
     var buf = new Pbf(new Buffer(8));
-    buf.writeUInt64(102451124123);
+    buf.writeFixed64(102451124123);
     t.same(toArray(buf.buf), [155,23,144,218,23,0,0,0]);
     t.end();
 });
 
-test('readUInt64LE', function (t) {
+test('readFixed64', function (t) {
     var buf = new Pbf(new Buffer(8));
-    buf.writeUInt64(102451124123);
+    buf.writeFixed64(102451124123);
     buf.pos = 0;
-    t.same(buf.readUInt64(), 102451124123);
+    t.same(buf.readFixed64(), 102451124123);
     t.end();
 });
 
