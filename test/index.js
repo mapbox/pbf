@@ -69,3 +69,34 @@ test('readUInt64LE', function (t) {
     t.end();
 });
 
+test('read', function (t) {
+    var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf')),
+        layerOffsets = [];
+
+    buf.read(function (tag) {
+        if (tag == 3) layerOffsets.push(buf.pos);
+    });
+
+    t.ok(buf.pos >= buf.length);
+    t.same(layerOffsets, [1,2490,2581,2819,47298,47626,55732,56022,56456,88178,112554]);
+
+    t.end();
+});
+
+test('readMessage', function (t) {
+    var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf')),
+        layerNames = [];
+
+    buf.read(function (tag) {
+        if (tag == 3) buf.readMessage(readLayer);
+    });
+
+    function readLayer(tag) {
+        if (tag === 1) layerNames.push(buf.readString());
+    }
+
+    t.same(layerNames, ["landuse","water","barrier_line","building","tunnel","road",
+        "place_label","water_label","poi_label","road_label","housenum_label"]);
+
+    t.end();
+});

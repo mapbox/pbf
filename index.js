@@ -45,7 +45,7 @@ Protobuf.prototype.read = function(readField, end) {
 Protobuf.prototype.readMessage = function(readField) {
     var bytes = this.readVarint();
     this.read(readField, this.pos + bytes);
-}
+};
 
 Protobuf.prototype.readUInt32 = function() {
     var val = this.buf.readUInt32LE(this.pos);
