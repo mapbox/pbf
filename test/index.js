@@ -25,7 +25,7 @@ test('realloc', function(t) {
     t.end();
 });
 
-test('readVarInt', function(t) {
+test('readVarint basic', function(t) {
     var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/3165.vector.pbf'));
     t.equal(buf.length, 28056);
     t.equal(buf.readVarint(), 120);
@@ -36,11 +36,37 @@ test('readVarInt', function(t) {
     t.end();
 });
 
+test('readVarint & writeVarint', function(t) {
+    var buf = new Pbf(new Buffer(0));
+    var val;
+    for (var i = 0; i < 70; i++) {
+        val = Math.pow(2, i);
+        buf.writeVarint(val);
+    }
+    t.equal(buf.finish().length, 385);
+    buf.pos = 0;
+
+    for (i = 0; i < 70; i++) {
+        val = Math.pow(2, i);
+        t.equal(buf.readVarint(), val, i);
+    }
+
+    t.end();
+});
+
 test('readDouble', function(t) {
     var buffer = new Buffer(8);
     buffer.writeDoubleLE(42, 0);
     var buf = new Pbf(buffer);
     t.equal(buf.readDouble(), 42);
+    t.end();
+});
+
+test('readFloat', function(t) {
+    var buffer = new Buffer(4);
+    buffer.writeFloatLE(123.456, 0);
+    var buf = new Pbf(buffer);
+    t.equal(Math.round(1000 * buf.readFloat()) / 1000, 123.456);
     t.end();
 });
 

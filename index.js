@@ -73,29 +73,24 @@ Protobuf.prototype.readDouble = function() {
 
 Protobuf.prototype.readVarint = function() {
     // TODO: bounds checking
-    var pos = this.pos,
-        buf = this.buf;
+    var buf = this.buf,
+        val, b, b0, b1, b2, b3;
 
-    if (buf[pos] <= 0x7f) {
-        this.pos++;
-        return buf[pos];
-    } else if (buf[pos + 1] <= 0x7f) {
-        this.pos += 2;
-        return (buf[pos] & 0x7f) | (buf[pos + 1] << 7);
-    } else if (buf[pos + 2] <= 0x7f) {
-        this.pos += 3;
-        return (buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2]) << 14;
-    } else if (buf[pos + 3] <= 0x7f) {
-        this.pos += 4;
-        return (buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2] & 0x7f) << 14 | (buf[pos + 3]) << 21;
-    } else if (buf[pos + 4] <= 0x7f) {
-        this.pos += 5;
-        return ((buf[pos] & 0x7f) | (buf[pos + 1] & 0x7f) << 7 | (buf[pos + 2] & 0x7f) << 14 | (buf[pos + 3]) << 21) + (buf[pos + 4] * 268435456);
-    } else {
-        this.skip(Protobuf.Varint);
-        return 0;
-        // throw new Error("TODO: Handle 6+ byte varints");
-    }
+    b0 = buf[this.pos++]; if (b0 < 0x80) return b0; b0 = b0 & 0x7f;
+    b1 = buf[this.pos++]; if (b1 < 0x80) return b0 | b1 << 7; b1 = (b1 & 0x7f) << 7;
+    b2 = buf[this.pos++]; if (b2 < 0x80) return b0 | b1 | b2 << 14; b2 = (b2 & 0x7f) << 14;
+    b3 = buf[this.pos++]; if (b3 < 0x80) return b0 | b1 | b2 | b3 << 21;
+
+    val = b0 | b1 | b2 | (b3 & 0x7f) << 21;
+
+    b = buf[this.pos++]; val += (b & 0x7f) * 0x10000000; if (b < 0x80) return val;
+    b = buf[this.pos++]; val += (b & 0x7f) * 0x800000000; if (b < 0x80) return val;
+    b = buf[this.pos++]; val += (b & 0x7f) * 0x40000000000; if (b < 0x80) return val;
+    b = buf[this.pos++]; val += (b & 0x7f) * 0x2000000000000; if (b < 0x80) return val;
+    b = buf[this.pos++]; val += (b & 0x7f) * 0x100000000000000; if (b < 0x80) return val;
+    b = buf[this.pos++]; val += (b & 0x7f) * 0x8000000000000000; if (b < 0x80) return val;
+
+    throw new Error('Expected varint not more than 10 bytes');
 };
 
 Protobuf.prototype.readSVarint = function() {
