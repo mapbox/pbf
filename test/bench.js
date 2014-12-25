@@ -42,7 +42,7 @@ function readTile(loadGeom, loadPacked) {
             if (loadGeom) feature.loadGeometry();
             if (loadPacked) {
                 buf.pos = feature._geometry;
-                buf.readPacked('UInt32');
+                buf.readPacked('SVarint');
             }
         }
     }

@@ -7,11 +7,8 @@ var Buffer = typeof window !== 'undefined' ? require('./buffer') : global.Buffer
 function Protobuf(buf) {
     this.buf = buf instanceof Uint8Array ? Buffer.wrap(buf) : buf;
     this.pos = 0;
+    this.length = buf.length;
 }
-
-Protobuf.prototype = {
-    get length() { return this.buf.length; }
-};
 
 Protobuf.Varint  = 0; // varint: int32, int64, uint32, uint64, sint32, sint64, bool, enum
 Protobuf.Fixed64 = 1; // double, fixed64, sfixed64
@@ -155,6 +152,7 @@ Protobuf.prototype.realloc = function(min) {
         var buf = new Buffer(length);
         this.buf.copy(buf);
         this.buf = buf;
+        this.length = length;
     }
 };
 
