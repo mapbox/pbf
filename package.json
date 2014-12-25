@@ -1,7 +1,7 @@
 {
   "name": "pbf",
-  "version": "0.0.2",
-  "description": "a protocol buffer implementation in javascript",
+  "version": "1.0.0",
+  "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
   "scripts": {
     "test": "jshint index.js test/*.js && tape test/index.js | faucet",
