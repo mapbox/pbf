@@ -27,6 +27,15 @@ test('readUInt32LE', function (t) {
     t.end();
 });
 
+test('readInt32LE', function (t) {
+    var shim = new BufferShim(8);
+    shim.writeInt32LE(12562, 0);
+    shim.writeInt32LE(-555, 4);
+
+    t.same([shim.readInt32LE(0), shim.readInt32LE(4)], [12562, -555]);
+    t.end();
+});
+
 test('writeFloatLE', function (t) {
     var shim = new BufferShim(4);
     shim.writeFloatLE(123.456, 0);

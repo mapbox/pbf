@@ -29,6 +29,14 @@ Buffer.prototype = {
         arr[pos + 3] = (val >>> 24);
     },
 
+    readInt32LE: function(pos) {
+        var arr = this.arr;
+        return ((arr[pos]) |
+            (arr[pos + 1] << 8) |
+            (arr[pos + 2] << 16)) +
+            (arr[pos + 3] << 24);
+    },
+
     readFloatLE:   function(pos) { return ieee754.read(this.arr, pos, true, 23, 4); },
     readDoubleLE:  function(pos) { return ieee754.read(this.arr, pos, true, 52, 8); },
 

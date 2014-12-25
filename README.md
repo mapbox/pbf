@@ -2,10 +2,10 @@
 
 [![build status](https://secure.travis-ci.org/mapbox/pbf.png)](http://travis-ci.org/mapbox/pbf) [![Coverage Status](https://coveralls.io/repos/mapbox/pbf/badge.png)](https://coveralls.io/r/mapbox/pbf)
 
-A low-level, lightweight [protocol buffers](https://developers.google.com/protocol-buffers) implementation in JavaScript for Node and browsers.
+A low-level, ultra-lightweight (2.9KB gzipped) [protocol buffers](https://developers.google.com/protocol-buffers) implementation in JavaScript for browsers and Node.
 
 Designed to be a building block for writing a customized, lazy decoder for a stable protobuf schema.
-If you need an easy-to-use, all-purpose protobuf JS library that does most of the work for you,
+If you need an all-purpose protobuf JS library that does most of the work for you,
 take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers).
 
 ## Install
@@ -101,6 +101,8 @@ Basic reading methods:
 * `readSVarint()`
 * `readFixed32()`
 * `readFixed64()`
+* `readSFixed32()`
+* `readSFixed64()`
 * `readBoolean()`
 * `readFloat()`
 * `readDouble()`
@@ -124,6 +126,8 @@ Writing methods:
 * `writeSVarintField(tag, val)`
 * `writeFixed32Field(tag, val)`
 * `writeFixed64Field(tag, val)`
+* `writeSFixed32Field(tag, val)`
+* `writeSFixed64Field(tag, val)`
 * `writeBooleanField(tag, val)`
 * `writeFloatField(tag, val)`
 * `writeDoubleField(tag, val)`
@@ -132,8 +136,8 @@ Writing methods:
 * `writePacked(type, tag, items)`
 * `writeVarint(val)`
 * `writeSVarint(val)`
-* `writeFixed32(val)`
-* `writeFixed64(val)`
+* `writeSFixed32(val)`
+* `writeSFixed64(val)`
 * `writeFloat(val)`
 * `writeDouble(val)`
 * `writeString(val)`

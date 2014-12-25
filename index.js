@@ -12,9 +12,9 @@ function Protobuf(buf) {
 }
 
 Protobuf.Varint  = 0; // varint: int32, int64, uint32, uint64, sint32, sint64, bool, enum
-Protobuf.Fixed64 = 1; // double, fixed64, sfixed64
+Protobuf.Fixed64 = 1; // 64-bit: double, fixed64, sfixed64
 Protobuf.Bytes   = 2; // length-delimited: string, bytes, embedded messages, packed repeated fields
-Protobuf.Fixed32 = 5; // float, fixed32, sfixed32
+Protobuf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
 
 var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
     SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
@@ -53,6 +53,18 @@ Protobuf.prototype = {
 
     readFixed64: function() {
         var val = this.buf.readUInt32LE(this.pos) + this.buf.readUInt32LE(this.pos + 4) * SHIFT_LEFT_32;
+        this.pos += 8;
+        return val;
+    },
+
+    readSFixed32: function() {
+        var val = this.buf.readInt32LE(this.pos);
+        this.pos += 4;
+        return val;
+    },
+
+    readSFixed64: function() {
+        var val = this.buf.readUInt32LE(this.pos) + this.buf.readInt32LE(this.pos + 4) * SHIFT_LEFT_32;
         this.pos += 8;
         return val;
     },
@@ -192,6 +204,19 @@ Protobuf.prototype = {
         this.pos += 8;
     },
 
+    writeSFixed32: function(val) {
+        this.realloc(4);
+        this.buf.writeInt32LE(val, this.pos);
+        this.pos += 4;
+    },
+
+    writeSFixed64: function(val) {
+        this.realloc(8);
+        this.buf.writeInt32LE(val & -1, this.pos);
+        this.buf.writeInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
+        this.pos += 8;
+    },
+
     writeVarint: function(val) {
         val = +val;
 
@@ -288,6 +313,16 @@ Protobuf.prototype = {
     writeFixed64Field: function(tag, val) {
         this.writeTag(tag, Protobuf.Fixed64);
         this.writeFixed64(val);
+    },
+
+    writeSFixed32Field: function(tag, val) {
+        this.writeTag(tag, Protobuf.Fixed32);
+        this.writeSFixed32(val);
+    },
+
+    writeSFixed64Field: function(tag, val) {
+        this.writeTag(tag, Protobuf.Fixed64);
+        this.writeSFixed64(val);
     },
 
     writeVarintField: function(tag, val) {

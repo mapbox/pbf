@@ -205,6 +205,41 @@ test('writeFixed64', function (t) {
     t.end();
 });
 
+test('readSFixed32', function(t) {
+    var buffer = new Buffer(16);
+    buffer.writeInt32LE(4223, 0);
+    buffer.writeInt32LE(-1231, 4);
+    var buf = new Pbf(buffer);
+    t.equal(buf.readSFixed32(), 4223);
+    t.equal(buf.readSFixed32(), -1231);
+    t.end();
+});
+
+test('writeSFixed32', function(t) {
+    var buf = new Pbf(new Buffer(16));
+    buf.writeSFixed32(4223);
+    buf.writeSFixed32(-1231);
+    buf.finish();
+    t.equal(buf.readSFixed32(), 4223);
+    t.equal(buf.readSFixed32(), -1231);
+    t.end();
+});
+
+test('readSFixed64', function (t) {
+    var buf = new Pbf(new Buffer(8));
+    buf.writeSFixed64(-102451124123);
+    buf.finish();
+    t.same(buf.readSFixed64(), -102451124123);
+    t.end();
+});
+
+test('writeSFixed64', function (t) {
+    var buf = new Pbf(new Buffer(8));
+    buf.writeSFixed64(-102451124123);
+    t.same(toArray(buf.buf), [101,232,111,37,232,255,255,255]);
+    t.end();
+});
+
 test('writeString', function (t) {
     var buffer = new Buffer(32);
     var buf = new Pbf(buffer);
@@ -273,6 +308,9 @@ test('field writing methods', function (t) {
     message.writeBooleanField(1, true);
     buf.writeMessage(10, message);
 
+    buf.writeSFixed32Field(11, -123);
+    buf.writeSFixed64Field(12, -256);
+
     buf.finish();
 
     buf.readFields(function (tag) {
@@ -286,6 +324,8 @@ test('field writing methods', function (t) {
         else if (tag === 8) buf.readBoolean();
         else if (tag === 9) buf.readBytes();
         else if (tag === 10) buf.readMessage(function () { /* skip */ });
+        else if (tag === 11) buf.readSFixed32();
+        else if (tag === 12) buf.readSFixed64();
         else t.fail('unknown tag');
     });
     t.end();
