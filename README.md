@@ -178,3 +178,39 @@ Misc methods:
 * `destroy()` - dispose the buffer
 
 For an example of a real-world usage of the library, see [vector-tile-js](https://github.com/mapbox/vector-tile-js).
+
+## Changelog
+
+#### 1.1.0 (Dec 26 2014)
+
+Brings tons of improvements and fixes over the previous version (`0.0.2`).
+Basically makes the library complete.
+
+##### Improvements
+
+- Improved performance of both reading and writing.
+- Made the browser build 3 times smaller.
+- Added convenience `readFields` and `readMessage` methods for a much easier reading API.
+- Added reading methods: `readFloat`, `readBoolean`, `readSFixed32`, `readSFixed64`.
+- Added writing methods: `writeUInt64`, `writeSFixed32`, `writeSFixed64`.
+- Improved `readDouble` and `readString` to use native Buffer methods under Node.
+- Improved `readString` and `writeString` to use HTML5 `TextEncoder` and `TextDecoder` where available.
+- Made `Pbf` `buffer` argument optional.
+- Added extensive docs and examples in the readme.
+- Added an extensive test suite that brings test coverage up to 100%.
+
+##### Breaking API changes
+
+- Renamed `readBuffer`/`writeBuffer` to `readBytes`/`writeBytes`.
+- Renamed `readUInt32`/`writeUInt32` to `readFixed32`/`writeFixed32`, etc.
+- Renamed `writeTaggedVarint` to `writeVarintField`, etc.
+- Changed `writePacked` signature from `(type, tag, items)` to `(tag, type, items)`.
+
+##### Bugfixes
+
+- Fixed `readVarint` to handle varints bigger than 6 bytes.
+- Fixed `readSVarint` to handle number bigger than `2^30`.
+- Fixed `writeVarint` failing on some integers.
+- Fixed `writeVarint` not throwing an error on numbers that are too big.
+- Fixed `readUInt64` always failing.
+- Fixed writing to an empty buffer always failing.
