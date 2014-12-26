@@ -86,12 +86,13 @@ pbf.readFields(function (tag) {
 });
 ```
 
-It optionally accepts an object that will be passed to the reading function for easier construction of decoded data:
+It optionally accepts an object that will be passed to the reading function for easier construction of decoded data,
+and also passes the Protobuf object as a third argument:
 
 ```js
 var result = pbf.readFields(callback, {})
 
-function callback(tag, result) {
+function callback(tag, result, pbf) {
     if (tag === 1) result.id = pbf.readVarint();
 }
 ```
@@ -181,7 +182,7 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 
 ## Changelog
 
-#### 1.1.0 (Dec 26 2014)
+#### 1.1.1 (Dec 26 2014)
 
 Brings tons of improvements and fixes over the previous version (`0.0.2`).
 Basically makes the library complete.

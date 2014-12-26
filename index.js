@@ -34,7 +34,7 @@ Protobuf.prototype = {
             var val = this.readVarint(),
                 tag = val >> 3,
                 startPos = this.pos;
-            readField(tag, result);
+            readField(tag, result, this);
             if (this.pos === startPos) this.skip(val);
         }
         return result;
