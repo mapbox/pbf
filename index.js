@@ -27,21 +27,22 @@ Protobuf.prototype = {
 
     // === READING =================================================================
 
-    readFields: function(readField, end) {
+    readFields: function(readField, result, end) {
         end = end || this.length;
 
         while (this.pos < end) {
             var val = this.readVarint(),
                 tag = val >> 3,
                 startPos = this.pos;
-            readField(tag);
+            readField(tag, result);
             if (this.pos === startPos) this.skip(val);
         }
+        return result;
     },
 
-    readMessage: function(readField) {
+    readMessage: function(readField, result) {
         var bytes = this.readVarint();
-        this.readFields(readField, this.pos + bytes);
+        return this.readFields(readField, result, this.pos + bytes);
     },
 
     readFixed32: function() {

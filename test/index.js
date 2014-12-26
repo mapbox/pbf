@@ -262,11 +262,16 @@ test('readString', function (t) {
 
 test('readFields', function (t) {
     var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf')),
-        layerOffsets = [];
+        layerOffsets = [],
+        foo = {}, res, res2;
 
-    buf.readFields(function (tag) {
+    res2 = buf.readFields(function (tag, result) {
         if (tag == 3) layerOffsets.push(buf.pos);
-    });
+        res = result;
+    }, foo);
+
+    t.equal(res, foo);
+    t.equal(res2, foo);
 
     t.ok(buf.pos >= buf.length);
     t.same(layerOffsets, [1,2490,2581,2819,47298,47626,55732,56022,56456,88178,112554]);
@@ -276,15 +281,20 @@ test('readFields', function (t) {
 
 test('readMessage', function (t) {
     var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf')),
-        layerNames = [];
+        layerNames = [],
+        foo = {}, res, res2;
 
     buf.readFields(function (tag) {
-        if (tag == 3) buf.readMessage(readLayer);
-    });
+        if (tag == 3) res2 = buf.readMessage(readLayer, foo);
+    }, foo);
 
-    function readLayer(tag) {
+    function readLayer(tag, result) {
         if (tag === 1) layerNames.push(buf.readString());
+        res = result;
     }
+
+    t.equal(res, foo);
+    t.equal(res2, foo);
 
     t.same(layerNames, ["landuse","water","barrier_line","building","tunnel","road",
         "place_label","water_label","poi_label","road_label","housenum_label"]);

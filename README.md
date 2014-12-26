@@ -40,7 +40,6 @@ pbf.readFields(function(tag) {
             if (tag === 1) layerName = pbf.readString();
         });
     }
-    return result;
 });
 ```
 
@@ -87,7 +86,17 @@ pbf.readFields(function (tag) {
 });
 ```
 
-To read an embedded message, use `pbf.readMessage(fn)` (in the same way as `read`).
+It optionally accepts an object that will be passed to the reading function for easier construction of decoded data:
+
+```js
+var result = pbf.readFields(callback, {})
+
+function callback(tag, result) {
+    if (tag === 1) result.id = pbf.readVarint();
+}
+```
+
+To read an embedded message, use `pbf.readMessage(fn[, obj])` (in the same way as `read`).
 
 Read values:
 
