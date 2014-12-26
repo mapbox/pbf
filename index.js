@@ -19,7 +19,6 @@ Protobuf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
 var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
     SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
 
-
 Protobuf.prototype = {
 
     destroy: function() {
@@ -51,15 +50,17 @@ Protobuf.prototype = {
         return val;
     },
 
-    readFixed64: function() {
-        var val = this.buf.readUInt32LE(this.pos) + this.buf.readUInt32LE(this.pos + 4) * SHIFT_LEFT_32;
-        this.pos += 8;
-        return val;
-    },
-
     readSFixed32: function() {
         var val = this.buf.readInt32LE(this.pos);
         this.pos += 4;
+        return val;
+    },
+
+    // 64-bit int handling is based on github.com/dpw/node-buffer-more-ints (MIT-licensed)
+
+    readFixed64: function() {
+        var val = this.buf.readUInt32LE(this.pos) + this.buf.readUInt32LE(this.pos + 4) * SHIFT_LEFT_32;
+        this.pos += 8;
         return val;
     },
 
@@ -197,17 +198,17 @@ Protobuf.prototype = {
         this.pos += 4;
     },
 
+    writeSFixed32: function(val) {
+        this.realloc(4);
+        this.buf.writeInt32LE(val, this.pos);
+        this.pos += 4;
+    },
+
     writeFixed64: function(val) {
         this.realloc(8);
         this.buf.writeInt32LE(val & -1, this.pos);
         this.buf.writeUInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
         this.pos += 8;
-    },
-
-    writeSFixed32: function(val) {
-        this.realloc(4);
-        this.buf.writeInt32LE(val, this.pos);
-        this.pos += 4;
     },
 
     writeSFixed64: function(val) {
@@ -252,11 +253,7 @@ Protobuf.prototype = {
     },
 
     writeSVarint: function(val) {
-        if (val >= 0) {
-            this.writeVarint(val * 2);
-        } else {
-            this.writeVarint(val * -2 - 1);
-        }
+        this.writeVarint(val < 0 ? -val * 2 - 1 : val * 2);
     },
 
     writeBoolean: function(val) {
@@ -310,14 +307,14 @@ Protobuf.prototype = {
         this.writeFixed32(val);
     },
 
-    writeFixed64Field: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed64);
-        this.writeFixed64(val);
-    },
-
     writeSFixed32Field: function(tag, val) {
         this.writeTag(tag, Protobuf.Fixed32);
         this.writeSFixed32(val);
+    },
+
+    writeFixed64Field: function(tag, val) {
+        this.writeTag(tag, Protobuf.Fixed64);
+        this.writeFixed64(val);
     },
 
     writeSFixed64Field: function(tag, val) {

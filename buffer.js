@@ -1,7 +1,7 @@
 'use strict';
 
 // lightweight Buffer shim for pbf browser build
-// based on code from github.com/feross/buffer and github.com/dpw/node-buffer-more-ints (MIT-licensed)
+// based on code from github.com/feross/buffer (MIT-licensed)
 
 module.exports = Buffer;
 
