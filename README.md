@@ -62,16 +62,17 @@ var buffer = pbf.finish();
 
 ## API
 
-Create a buffer:
+Create a Protobuf object, optionally given a `Buffer` as input data (or `Uint8Array` in browsers):
 
 ```js
 var pbf = Protobuf(/*Buffer*/ buf);
 ```
 
-Get buffer length:
+Protobuf object properties:
 
 ```js
-pbf.length;
+pbf.length; // length of the underlying buffer
+pbf.pos; // current offset for reading or writing
 ```
 
 #### Reading
@@ -149,7 +150,8 @@ Scalar writing methods:
 
 Misc methods:
 
-* `realloc(minBytes)` - pad the underlying buffer size to accommodate the given number of bytes
+* `realloc(minBytes)` - pad the underlying buffer size to accommodate the given number of bytes;
+   note that the size increases exponentially, so it won't necessarily equal the size of data written
 * `finish()` - make the current buffer ready for reading and return the data as a buffer slice
 * `destroy()` - dispose the buffer
 
