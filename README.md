@@ -64,7 +64,7 @@ var buffer = pbf.finish();
 Create a Protobuf object, optionally given a `Buffer` as input data (or `Uint8Array` in browsers):
 
 ```js
-var pbf = Protobuf(/*Buffer*/ buf);
+var pbf = Protobuf(/*Buffer or Uint8Array*/ buf);
 ```
 
 Protobuf object properties:
@@ -182,7 +182,7 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 
 ## Changelog
 
-#### 1.1.1 (Dec 26 2014)
+#### 1.1.2 (Dec 26 2014)
 
 Brings tons of improvements and fixes over the previous version (`0.0.2`).
 Basically makes the library complete.

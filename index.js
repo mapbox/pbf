@@ -2,13 +2,16 @@
 
 module.exports = Protobuf;
 
-var Buffer = typeof window !== 'undefined' ? require('./buffer') : global.Buffer;
+var isBrowser = typeof window !== 'undefined',
+    Buffer = isBrowser ? require('./buffer') : global.Buffer;
 
 function Protobuf(buf) {
-    buf = buf || new Buffer(4);
-    this.buf = buf instanceof Uint8Array ? Buffer.wrap(buf) : buf;
+    this.buf = !buf ? new Buffer(0) :
+        isBrowser ? Buffer.wrap(buf) :
+        buf instanceof Uint8Array ? new Buffer(buf) : buf;
+
     this.pos = 0;
-    this.length = buf.length;
+    this.length = this.buf.length;
 }
 
 Protobuf.Varint  = 0; // varint: int32, int64, uint32, uint64, sint32, sint64, bool, enum

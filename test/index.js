@@ -290,7 +290,7 @@ test('readMessage', function (t) {
         if (tag == 3) buf.readMessage(readLayer, foo);
     }, foo);
 
-    function readLayer(tag, result) {
+    function readLayer(tag) {
         if (tag === 1) layerNames.push(buf.readString());
     }
 
