@@ -2,12 +2,11 @@
 
 module.exports = Protobuf;
 
-var isBrowser = typeof window !== 'undefined',
-    Buffer = isBrowser ? require('./buffer') : global.Buffer;
+var Buffer = global.Buffer || require('./buffer');
 
 function Protobuf(buf) {
     this.buf = !buf ? new Buffer(0) :
-        isBrowser ? Buffer.wrap(buf) :
+        !global.Buffer ? Buffer.wrap(buf) :
         buf instanceof Uint8Array ? new Buffer(buf) : buf;
 
     this.pos = 0;

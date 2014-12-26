@@ -14,7 +14,7 @@ test('writeUInt32LE', function (t) {
     shim.writeUInt32LE(12562, 0);
     shim.writeUInt32LE(555, 4);
 
-    t.same(toArray(shim.arr), [18,49,0,0,43,2,0,0]);
+    t.same(toArray(shim), [18,49,0,0,43,2,0,0]);
     t.end();
 });
 
@@ -40,7 +40,7 @@ test('writeFloatLE', function (t) {
     var shim = new BufferShim(4);
     shim.writeFloatLE(123.456, 0);
 
-    t.same(toArray(shim.arr), [121,233,246,66]);
+    t.same(toArray(shim), [121,233,246,66]);
     t.end();
 });
 
@@ -56,7 +56,7 @@ test('writeDoubleLE', function (t) {
     var shim = new BufferShim(8);
     shim.writeDoubleLE(123.4567890123456789, 0);
 
-    t.same(toArray(shim.arr), [153,76,251,7,60,221,94,64]);
+    t.same(toArray(shim), [153,76,251,7,60,221,94,64]);
     t.end();
 });
 
@@ -75,7 +75,7 @@ test('write', function (t) {
     var shim = new BufferShim(22);
     shim.write(testStr, 0);
 
-    t.same(toArray(shim.arr), testBytes);
+    t.same(toArray(shim), testBytes);
     t.end();
 });
 
@@ -118,7 +118,7 @@ test('copy', function (t) {
 
     shim.copy(shim2);
 
-    t.same(toArray(shim.arr), toArray(shim2.arr));
+    t.same(toArray(shim), toArray(shim2));
     t.end();
 });
 

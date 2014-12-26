@@ -8,43 +8,43 @@ module.exports = Buffer;
 var ieee754 = require('ieee754');
 
 function Buffer(length) {
-    this.arr = new Uint8Array(length);
-    this.length = length;
+    var buf = new Uint8Array(length);
+    for (var i in BufferMethods) {
+        buf[i] = BufferMethods[i];
+    }
+    return buf;
 }
 
-Buffer.prototype = {
+var BufferMethods = {
     readUInt32LE: function(pos) {
-        var arr = this.arr;
-        return ((arr[pos]) |
-            (arr[pos + 1] << 8) |
-            (arr[pos + 2] << 16)) +
-            (arr[pos + 3] * 0x1000000);
+        return ((this[pos]) |
+            (this[pos + 1] << 8) |
+            (this[pos + 2] << 16)) +
+            (this[pos + 3] * 0x1000000);
     },
 
     writeUInt32LE: function(val, pos) {
-        var arr = this.arr;
-        arr[pos] = val;
-        arr[pos + 1] = (val >>> 8);
-        arr[pos + 2] = (val >>> 16);
-        arr[pos + 3] = (val >>> 24);
+        this[pos] = val;
+        this[pos + 1] = (val >>> 8);
+        this[pos + 2] = (val >>> 16);
+        this[pos + 3] = (val >>> 24);
     },
 
     readInt32LE: function(pos) {
-        var arr = this.arr;
-        return ((arr[pos]) |
-            (arr[pos + 1] << 8) |
-            (arr[pos + 2] << 16)) +
-            (arr[pos + 3] << 24);
+        return ((this[pos]) |
+            (this[pos + 1] << 8) |
+            (this[pos + 2] << 16)) +
+            (this[pos + 3] << 24);
     },
 
-    readFloatLE:   function(pos) { return ieee754.read(this.arr, pos, true, 23, 4); },
-    readDoubleLE:  function(pos) { return ieee754.read(this.arr, pos, true, 52, 8); },
+    readFloatLE:   function(pos) { return ieee754.read(this, pos, true, 23, 4); },
+    readDoubleLE:  function(pos) { return ieee754.read(this, pos, true, 52, 8); },
 
-    writeFloatLE:  function(val, pos) { return ieee754.write(this.arr, val, pos, true, 23, 4); },
-    writeDoubleLE: function(val, pos) { return ieee754.write(this.arr, val, pos, true, 52, 8); },
+    writeFloatLE:  function(val, pos) { return ieee754.write(this, val, pos, true, 23, 4); },
+    writeDoubleLE: function(val, pos) { return ieee754.write(this, val, pos, true, 52, 8); },
 
     toString: function(encoding, start, end) {
-        if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf8').decode(this.arr.subarray(start, end));
+        if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf8').decode(this.subarray(start, end));
 
         var str = '',
             tmp = '';
@@ -53,7 +53,7 @@ Buffer.prototype = {
         end = Math.min(this.length, end || this.length);
 
         for (var i = start; i < end; i++) {
-            var ch = this.arr[i];
+            var ch = this[i];
             if (ch <= 0x7F) {
                 str += decodeUtf8Str(tmp) + String.fromCharCode(ch)
                 tmp = '';
@@ -68,28 +68,27 @@ Buffer.prototype = {
     write: function(str, pos) {
         var bytes = Buffer._lastStr === str ? Buffer._lastEncoded : encodeString(str);
         for (var i = 0; i < bytes.length; i++) {
-            this.arr[pos + i] = bytes[i];
+            this[pos + i] = bytes[i];
         }
     },
 
     slice: function(start, end) {
-        return this.arr.subarray(start, end);
+        return this.subarray(start, end);
     },
 
     copy: function(buf, pos) {
         pos = pos || 0;
         for (var i = 0; i < this.length; i++) {
-            buf.arr[pos + i] = this.arr[i];
+            buf[pos + i] = this[i];
         }
     }
 };
 
-Buffer.prototype.writeInt32LE = Buffer.prototype.writeUInt32LE;
+BufferMethods.writeInt32LE = BufferMethods.writeUInt32LE;
 
 Buffer.wrap = function(arr) {
-    var buf = Object.create(Buffer.prototype);
-    buf.arr = arr;
-    buf.length = arr.length;
+    var buf = Buffer(arr.length);
+    buf.set(arr);
     return buf;
 };
 
