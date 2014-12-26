@@ -103,34 +103,29 @@ function encodeString(str) {
     if (typeof TextEncoder !== 'undefined') return new TextEncoder('utf8').encode();
 
     var length = str.length,
-        bytes = [],
-        codePoint, lead;
+        bytes = [];
 
-    for (var i = 0; i < length; i++) {
-        codePoint = str.charCodeAt(i);
+    for (var i = 0, c, lead; i < length; i++) {
+        c = str.charCodeAt(i); // code point
 
-        if (codePoint > 0xD7FF && codePoint < 0xE000) {
+        if (c > 0xD7FF && c < 0xE000) {
 
             if (lead) {
-                if (codePoint < 0xDC00) {
+                if (c < 0xDC00) {
                     bytes.push(0xEF, 0xBF, 0xBD);
-                    lead = codePoint;
+                    lead = c;
                     continue;
 
                 } else {
-                  codePoint = lead - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000;
+                  c = lead - 0xD800 << 10 | c - 0xDC00 | 0x10000;
                   lead = null;
                 }
 
             } else {
-                if (codePoint > 0xDBFF || (i + 1 === length)) {
-                    bytes.push(0xEF, 0xBF, 0xBD);
-                    continue;
+                if (c > 0xDBFF || (i + 1 === length)) bytes.push(0xEF, 0xBF, 0xBD);
+                else lead = c;
 
-                } else {
-                    lead = codePoint;
-                    continue;
-                }
+                continue;
             }
 
         } else if (lead) {
@@ -138,32 +133,15 @@ function encodeString(str) {
             lead = null;
         }
 
-        if (codePoint < 0x80) {
-            bytes.push(codePoint);
-
-        } else if (codePoint < 0x800) {
-            bytes.push(
-                codePoint >> 0x6 | 0xC0,
-                codePoint & 0x3F | 0x80
-            );
-
-        } else if (codePoint < 0x10000) {
-            bytes.push(
-                codePoint >> 0xC | 0xE0,
-                codePoint >> 0x6 & 0x3F | 0x80,
-                codePoint & 0x3F | 0x80
-            );
-
-        } else if (codePoint < 0x200000) {
-            bytes.push(
-                codePoint >> 0x12 | 0xF0,
-                codePoint >> 0xC & 0x3F | 0x80,
-                codePoint >> 0x6 & 0x3F | 0x80,
-                codePoint & 0x3F | 0x80
-            );
+        if (c < 0x80) {
+            bytes.push(c);
 
         } else {
-            throw new Error('Invalid code point');
+            if (c < 0x800) bytes.push(c >> 0x6 | 0xC0);
+            else if (c < 0x10000) bytes.push(c >> 0xC | 0xE0, c >> 0x6 & 0x3F | 0x80);
+            else bytes.push(c >> 0x12 | 0xF0, c >> 0xC & 0x3F | 0x80, c >> 0x6 & 0x3F | 0x80);
+
+            bytes.push(c & 0x3F | 0x80);
         }
     }
     return bytes;
