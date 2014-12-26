@@ -100,7 +100,7 @@ Buffer.byteLength = function(str) {
 };
 
 function encodeString(str) {
-    if (typeof TextEncoder !== 'undefined') return new TextEncoder('utf8').encode();
+    if (typeof TextEncoder !== 'undefined') return new TextEncoder('utf8').encode(str);
 
     var length = str.length,
         bytes = [];
