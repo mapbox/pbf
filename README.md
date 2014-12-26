@@ -105,6 +105,19 @@ var value = pbf.readVarint();
 var packed = pbf.readPacked('UInt32');
 ```
 
+For lazy or partial decoding, simply save the position instead of reading a value,
+then later set it back to the saved value and read:
+
+```js
+var fooPos = -1;
+pbf.readFields(function (tag) {
+    if (tag === 1) fooPos = pbf.pos;
+});
+...
+pbf.pos = fooPos;
+pbf.readMessage(readFoo);
+```
+
 Basic reading methods:
 
 * `readVarint()`
