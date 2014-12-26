@@ -26,7 +26,7 @@ npm run build-min # pbf.js (minified production build)
 
 ## Example
 
-Reading:
+#### Reading
 
 ```js
 var pbf = new Pbf(buffer),
@@ -44,7 +44,7 @@ pbf.readFields(function(tag) {
 });
 ```
 
-Writing:
+#### Writing
 
 ```js
 var pbf = new Pbf();
@@ -120,7 +120,7 @@ pbf.writeVarint(123);
 pbf.writeString("Hello world");
 ```
 
-Writing methods:
+Field writing methods:
 
 * `writeVarintField(tag, val)`
 * `writeSVarintField(tag, val)`
@@ -133,7 +133,11 @@ Writing methods:
 * `writeDoubleField(tag, val)`
 * `writeStringField(tag, val)`
 * `writeBytesField(tag, buffer)`
-* `writePacked(type, tag, items)`
+* `writePacked(tag, type, items)`
+* `writeMessage(tag, pbf)`
+
+Scalar writing methods:
+
 * `writeVarint(val)`
 * `writeSVarint(val)`
 * `writeSFixed32(val)`
@@ -142,12 +146,11 @@ Writing methods:
 * `writeDouble(val)`
 * `writeString(val)`
 * `writeBytes(buffer)`
-* `writeMessage(tag, pbf)`
 
 Misc methods:
 
 * `realloc(minBytes)` - pad the underlying buffer size to accommodate the given number of bytes
 * `finish()` - make the current buffer ready for reading and return the data as a buffer slice
-* `destroy()` - disposes the buffer
+* `destroy()` - dispose the buffer
 
 For an example of a real-world usage of the library, see [vector-tile-js](https://github.com/mapbox/vector-tile-js).

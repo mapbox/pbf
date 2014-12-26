@@ -177,7 +177,7 @@ Protobuf.prototype = {
         return this.buf.slice(0, this.length);
     },
 
-    writePacked: function(type, tag, items) {
+    writePacked: function(tag, type, items) {
         if (!items.length) return;
 
         var message = new Protobuf();

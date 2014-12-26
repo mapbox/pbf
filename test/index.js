@@ -135,9 +135,9 @@ test('readDouble', function(t) {
 
 test('readPacked and writePacked', function(t) {
     var buf = new Pbf();
-    buf.writePacked('Varint', 1, []);
+    buf.writePacked(1, 'Varint', []);
     t.equal(buf.pos, 0);
-    buf.writePacked('Varint', 1, testNumbers);
+    buf.writePacked(1, 'Varint', testNumbers);
     buf.finish();
     buf.readFields(function (tag) {
         if (tag === 1) t.same(buf.readPacked('Varint'), testNumbers);
