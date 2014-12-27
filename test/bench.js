@@ -1,23 +1,19 @@
 var Pbf = require('../'),
-    VectorTile = require('vector-tile').VectorTile,
     Benchmark = require('benchmark'),
     fs = require('fs');
+
+var protobuf = require('protocol-buffers'),
+    messages = protobuf(fs.readFileSync('../vector-tile-js/proto/vector_tile.proto'));
 
 var suite = new Benchmark.Suite(),
     data = fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf');
 
-readTile(); // output any errors before running the suite
-readTile(false, true);
-
 suite
-.add('read tile with geometries', function() {
-    readTile(true);
+.add('decode vector tile with pbf', function() {
+    var layers = new Pbf(data).readFields(readTile, []);
 })
-.add('read tile without geometries', function() {
-    readTile();
-})
-.add('read tile with packed geometries load', function() {
-    readTile(false, true);
+.add('decode vector tile with protocol-buffers', function() {
+    var tile = messages.tile.decode(data);
 })
 .add('write varints', function () {
     var buf = new Pbf(new Buffer(16));
@@ -30,20 +26,32 @@ suite
 })
 .run();
 
+function readTile(tag, layers, pbf) {
+    if (tag === 3) layers.push(pbf.readMessage(readLayer, {features: [], keys: [], values: []}));
+}
 
-function readTile(loadGeom, loadPacked) {
-    var buf = new Pbf(data),
-        vt = new VectorTile(buf);
+function readLayer(tag, layer, pbf) {
+    if (tag === 15) layer.version = pbf.readVarint();
+    else if (tag === 1) layer.name = pbf.readString();
+    else if (tag === 2) layer.features.push(pbf.readMessage(readFeature, {}));
+    else if (tag === 3) layer.keys.push(pbf.readString());
+    else if (tag === 4) layer.values.push(pbf.readMessage(readValue, {}).value);
+    else if (tag === 5) layer.extent = pbf.readVarint() || 4096;
+}
 
-    for (var id in vt.layers) {
-        var layer = vt.layers[id];
-        for (var i = 0; i < layer.length; i++) {
-            var feature = layer.feature(i);
-            if (loadGeom) feature.loadGeometry();
-            if (loadPacked) {
-                buf.pos = feature._geometry;
-                buf.readPacked('SVarint');
-            }
-        }
-    }
+function readFeature(tag, feature, pbf) {
+    if (tag === 1) feature.id = pbf.readVarint();
+    else if (tag === 2) feature.tags = pbf.readPacked('Varint');
+    else if (tag === 3) feature.type = pbf.readVarint();
+    else if (tag === 4) feature.geometry = pbf.readPacked('Varint');
+}
+
+function readValue(tag, value, pbf) {
+    if (tag === 1) value.value = pbf.readString();
+    else if (tag === 2) value.value = pbf.readFloat();
+    else if (tag === 3) value.value = pbf.readDouble();
+    else if (tag === 4) value.value = pbf.readVarint();
+    else if (tag === 5) value.value = pbf.readVarint();
+    else if (tag === 6) value.value = pbf.readSVarint();
+    else if (tag === 7) value.value = pbf.readBoolean();
 }
