@@ -45,8 +45,7 @@ Protobuf.prototype = {
     },
 
     readMessage: function(readField, result) {
-        var bytes = this.readVarint();
-        return this.readFields(readField, result, this.pos + bytes);
+        return this.readFields(readField, result, this.readVarint() + this.pos);
     },
 
     readFixed32: function() {
@@ -118,16 +117,16 @@ Protobuf.prototype = {
     },
 
     readString: function() {
-        var bytes = this.readVarint(),
-            str = this.buf.toString('utf8', this.pos, this.pos + bytes);
-        this.pos += bytes;
+        var end = this.readVarint() + this.pos,
+            str = this.buf.toString('utf8', this.pos, end);
+        this.pos = end;
         return str;
     },
 
     readBytes: function() {
-        var bytes = this.readVarint();
-        var buffer = this.buf.slice(this.pos, this.pos + bytes);
-        this.pos += bytes;
+        var end = this.readVarint() + this.pos,
+            buffer = this.buf.slice(this.pos, end);
+        this.pos = end;
         return buffer;
     },
 
@@ -144,16 +143,9 @@ Protobuf.prototype = {
 
     skip: function(val) {
         var type = val & 0x7;
-
-        if (type === Protobuf.Varint) {
-            var buf = this.buf;
-            while (buf[this.pos++] > 0x7f);
-
-        } else if (type === Protobuf.Bytes) {
-            var bytes = this.readVarint();
-            this.pos += bytes;
-
-        } else if (type === Protobuf.Fixed32) this.pos += 4;
+        if (type === Protobuf.Varint) while (this.buf[this.pos++] > 0x7f);
+        else if (type === Protobuf.Bytes) this.pos = this.readVarint() + this.pos;
+        else if (type === Protobuf.Fixed32) this.pos += 4;
         else if (type === Protobuf.Fixed64) this.pos += 8;
         else throw new Error('Unimplemented type: ' + type);
     },

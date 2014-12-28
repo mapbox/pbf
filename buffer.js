@@ -37,8 +37,8 @@ var BufferMethods = {
             (this[pos + 3] << 24);
     },
 
-    readFloatLE:   function(pos) { return ieee754.read(this, pos, true, 23, 4); },
-    readDoubleLE:  function(pos) { return ieee754.read(this, pos, true, 52, 8); },
+    readFloatLE:  function(pos) { return ieee754.read(this, pos, true, 23, 4); },
+    readDoubleLE: function(pos) { return ieee754.read(this, pos, true, 52, 8); },
 
     writeFloatLE:  function(val, pos) { return ieee754.write(this, val, pos, true, 23, 4); },
     writeDoubleLE: function(val, pos) { return ieee754.write(this, val, pos, true, 52, 8); },
@@ -116,8 +116,8 @@ function encodeString(str) {
                     continue;
 
                 } else {
-                  c = lead - 0xD800 << 10 | c - 0xDC00 | 0x10000;
-                  lead = null;
+                    c = lead - 0xD800 << 10 | c - 0xDC00 | 0x10000;
+                    lead = null;
                 }
 
             } else {
