@@ -10,10 +10,10 @@ var suite = new Benchmark.Suite(),
 
 suite
 .add('decode vector tile with pbf', function() {
-    var layers = new Pbf(data).readFields(readTile, []);
+    new Pbf(data).readFields(readTile, []);
 })
 .add('decode vector tile with protocol-buffers', function() {
-    var tile = messages.tile.decode(data);
+    messages.tile.decode(data);
 })
 .add('write varints', function () {
     var buf = new Pbf(new Buffer(16));
