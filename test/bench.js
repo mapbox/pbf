@@ -8,9 +8,15 @@ var protobuf = require('protocol-buffers'),
 var suite = new Benchmark.Suite(),
     data = fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf');
 
+var layers = new Pbf(data).readFields(readTile, []);
+var layersJSON = JSON.stringify(layers);
+
 suite
 .add('decode vector tile with pbf', function() {
     new Pbf(data).readFields(readTile, []);
+})
+.add('native JSON.parse of the same data', function() {
+    JSON.parse(layersJSON);
 })
 .add('decode vector tile with protocol-buffers', function() {
     messages.tile.decode(data);
