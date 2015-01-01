@@ -130,15 +130,12 @@ Protobuf.prototype = {
         return buffer;
     },
 
-    readPacked: function(type) {
-        var bytes = this.readVarint();
-        var end = this.pos + bytes;
-        var array = [];
-        var read = this['read' + type];
-        while (this.pos < end) {
-            array.push(read.call(this));
-        }
-        return array;
+    readPacked: function(read) {
+        var end = this.readVarint() + this.pos,
+            arr = [];
+        while (this.pos < end) arr.push(read.call(this));
+        return arr;
+    },
     },
 
     skip: function(val) {
@@ -175,18 +172,14 @@ Protobuf.prototype = {
         return this.buf.slice(0, this.length);
     },
 
-    writePacked: function(tag, type, items) {
+    writePacked: function(tag, write, items) {
         if (!items.length) return;
 
         var message = new Protobuf();
-        var write = message['write' + type];
         for (var i = 0; i < items.length; i++) {
             write.call(message, items[i]);
         }
-        var data = message.finish();
-
-        this.writeTag(tag, Protobuf.Bytes);
-        this.writeBytes(data);
+        this.writeMessage(tag, message);
     },
 
     writeFixed32: function(val) {
@@ -294,9 +287,8 @@ Protobuf.prototype = {
     },
 
     writeMessage: function(tag, protobuf) {
-        var buffer = protobuf.finish();
         this.writeTag(tag, Protobuf.Bytes);
-        this.writeBytes(buffer);
+        this.writeBytes(protobuf.finish());
     },
 
     writeFixed32Field: function(tag, val) {

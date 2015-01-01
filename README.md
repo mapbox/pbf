@@ -182,6 +182,11 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 
 ## Changelog
 
+#### master (unreleased)
+
+- Changed `readPacked` and `writePacked` to accept reading method reference instead of string
+  (e.g. `pbf.readPacked(pbf.readVarint)`) for significant performance gain.
+
 #### 1.1.3 (Dec 26 2014)
 
 Brings tons of improvements and fixes over the previous version (`0.0.2`).

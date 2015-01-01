@@ -135,12 +135,12 @@ test('readDouble', function(t) {
 
 test('readPacked and writePacked', function(t) {
     var buf = new Pbf();
-    buf.writePacked(1, 'Varint', []);
+    buf.writePacked(1, buf.writeVarint, []);
     t.equal(buf.pos, 0);
-    buf.writePacked(1, 'Varint', testNumbers);
+    buf.writePacked(1, buf.writeVarint, testNumbers);
     buf.finish();
     buf.readFields(function (tag) {
-        if (tag === 1) t.same(buf.readPacked('Varint'), testNumbers);
+        if (tag === 1) t.same(buf.readPacked(buf.readVarint), testNumbers);
         else t.fail('wrong tag encountered: ' + tag);
     });
     t.end();

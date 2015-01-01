@@ -8,18 +8,17 @@ var protobuf = require('protocol-buffers'),
 var suite = new Benchmark.Suite(),
     data = fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf');
 
-var layers = new Pbf(data).readFields(readTile, []);
-var layersJSON = JSON.stringify(layers);
+var layersJSON = JSON.stringify(readData(data));
 
 suite
 .add('decode vector tile with pbf', function() {
-    new Pbf(data).readFields(readTile, []);
-})
-.add('native JSON.parse of the same data', function() {
-    JSON.parse(layersJSON);
+    readData(data);
 })
 .add('decode vector tile with protocol-buffers', function() {
     messages.tile.decode(data);
+})
+.add('native JSON.parse of the same data', function() {
+    JSON.parse(layersJSON);
 })
 .add('write varints', function () {
     var buf = new Pbf(new Buffer(16));
@@ -31,6 +30,10 @@ suite
     console.log(String(event.target));
 })
 .run();
+
+function readData(data) {
+    return new Pbf(data).readFields(readTile, []);
+}
 
 function readTile(tag, layers, pbf) {
     if (tag === 3) layers.push(pbf.readMessage(readLayer, {features: [], keys: [], values: []}));
