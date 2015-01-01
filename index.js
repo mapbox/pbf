@@ -130,12 +130,18 @@ Protobuf.prototype = {
         return buffer;
     },
 
-    readPacked: function(read) {
+    readPacked: function(type) {
         var end = this.readVarint() + this.pos,
             arr = [];
-        while (this.pos < end) arr.push(read.call(this));
+        if (type === 'Varint')        while (this.pos < end) arr.push(this.readVarint());
+        else if (type === 'SVarint')  while (this.pos < end) arr.push(this.readSVarint());
+        else if (type === 'Float')    while (this.pos < end) arr.push(this.readFloat());
+        else if (type === 'Double')   while (this.pos < end) arr.push(this.readDouble());
+        else if (type === 'Fixed32')  while (this.pos < end) arr.push(this.readFixed32());
+        else if (type === 'SFixed32') while (this.pos < end) arr.push(this.readSFixed32());
+        else if (type === 'Fixed64')  while (this.pos < end) arr.push(this.readFixed64());
+        else if (type === 'SFixed64') while (this.pos < end) arr.push(this.readSFixed64());
         return arr;
-    },
     },
 
     skip: function(val) {
@@ -172,13 +178,22 @@ Protobuf.prototype = {
         return this.buf.slice(0, this.length);
     },
 
-    writePacked: function(tag, write, items) {
+    writePacked: function(tag, type, items) {
         if (!items.length) return;
 
-        var message = new Protobuf();
-        for (var i = 0; i < items.length; i++) {
-            write.call(message, items[i]);
-        }
+        var message = new Protobuf(),
+            i = 0,
+            len = items.length;
+
+        if (type === 'Varint')        for (; i < len; i++) message.writeVarint(items[i]);
+        else if (type === 'SVarint')  for (; i < len; i++) message.writeSVarint(items[i]);
+        else if (type === 'Float')    for (; i < len; i++) message.writeFloat(items[i]);
+        else if (type === 'Double')   for (; i < len; i++) message.writeDouble(items[i]);
+        else if (type === 'Fixed32')  for (; i < len; i++) message.writeFixed32(items[i]);
+        else if (type === 'SFixed32') for (; i < len; i++) message.writeSFixed32(items[i]);
+        else if (type === 'Fixed64')  for (; i < len; i++) message.writeFixed64(items[i]);
+        else if (type === 'SFixed64') for (; i < len; i++) message.writeSFixed64(items[i]);
+
         this.writeMessage(tag, message);
     },
 
