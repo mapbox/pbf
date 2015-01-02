@@ -2,27 +2,11 @@
 
 [![build status](https://secure.travis-ci.org/mapbox/pbf.png)](http://travis-ci.org/mapbox/pbf) [![Coverage Status](https://coveralls.io/repos/mapbox/pbf/badge.png)](https://coveralls.io/r/mapbox/pbf)
 
-A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers).
+A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers) (a compact binary format for structured data serialization).
 
 Designed to be a building block for writing customized decoders and encoders for a stable protobuf schema.
 If you need an all-purpose protobuf JS library that does most of the work for you,
 take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers).
-
-## Install
-
-Node and Browserify:
-
-```bash
-npm install pbf
-```
-
-Making a browser build:
-
-```bash
-npm install
-npm run build-dev # pbf-dev.js (development build)
-npm run build-min # pbf.js (minified production build)
-```
 
 ## Example
 
@@ -55,6 +39,22 @@ layer.writeStringField(1, 'foobar');
 pbf.writeMessage(3, layer);
 
 var buffer = pbf.finish();
+```
+
+## Install
+
+Node and Browserify:
+
+```bash
+npm install pbf
+```
+
+Making a browser build:
+
+```bash
+npm install
+npm run build-dev # pbf-dev.js (development build)
+npm run build-min # pbf.js (minified production build)
 ```
 
 ## API
@@ -180,11 +180,11 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 
 ## Changelog
 
-#### master (unreleased)
+#### 1.1.4 (Jan 2, 2015)
 
 - Significantly improved `readPacked` and `writePacked` performance (the tile reading benchmark is now 70% faster).
 
-#### 1.1.3 (Dec 26 2014)
+#### 1.1.3 (Dec 26, 2014)
 
 Brings tons of improvements and fixes over the previous version (`0.0.2`).
 Basically makes the library complete.

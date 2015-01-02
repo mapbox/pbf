@@ -293,14 +293,14 @@ Protobuf.prototype = {
         this.pos += len;
     },
 
-    writeBytesField: function(tag, buffer) {
-        this.writeTag(tag, Protobuf.Bytes);
-        this.writeBytes(buffer);
-    },
-
     writeMessage: function(tag, protobuf) {
         this.writeTag(tag, Protobuf.Bytes);
         this.writeBytes(protobuf.finish());
+    },
+
+    writeBytesField: function(tag, buffer) {
+        this.writeTag(tag, Protobuf.Bytes);
+        this.writeBytes(buffer);
     },
 
     writeFixed32Field: function(tag, val) {
