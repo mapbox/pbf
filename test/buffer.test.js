@@ -3,6 +3,8 @@
 var BufferShim = require('../src/buffer'),
     test = require('tape');
 
+require('../src/buffer-write');
+
 function toArray(buf) {
     var arr = [];
     for (var i = 0; i < buf.length; i++) {

@@ -4,6 +4,8 @@ var Pbf = require('../src/pbf.js'),
     fs = require('fs'),
     test = require('tape').test;
 
+require('../src/pbf-write.js');
+
 function toArray(buf) {
     var arr = [];
     for (var i = 0; i < buf.length; i++) {
