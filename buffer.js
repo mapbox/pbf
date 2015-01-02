@@ -8,10 +8,18 @@ module.exports = Buffer;
 var ieee754 = require('ieee754');
 
 function Buffer(length) {
-    var buf = new Uint8Array(length);
+    var arr;
+    if (length && length.length) {
+        arr = length;
+        length = arr.length;
+    }
+    var buf = new Uint8Array(length || 0);
+    if (arr) buf.set(arr);
+
     for (var i in BufferMethods) {
         buf[i] = BufferMethods[i];
     }
+    buf._isBuffer = true;
     return buf;
 }
 
@@ -86,16 +94,14 @@ var BufferMethods = {
 
 BufferMethods.writeInt32LE = BufferMethods.writeUInt32LE;
 
-Buffer.wrap = function(arr) {
-    var buf = Buffer(arr.length);
-    buf.set(arr);
-    return buf;
-};
-
 Buffer.byteLength = function(str) {
     Buffer._lastStr = str;
     var bytes = Buffer._lastEncoded = encodeString(str);
     return bytes.length;
+};
+
+Buffer.isBuffer = function(buf) {
+    return !!(buf && buf._isBuffer);
 };
 
 function encodeString(str) {

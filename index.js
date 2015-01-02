@@ -5,10 +5,7 @@ module.exports = Protobuf;
 var Buffer = global.Buffer || require('./buffer');
 
 function Protobuf(buf) {
-    this.buf = !buf ? new Buffer(0) :
-        !global.Buffer ? Buffer.wrap(buf) :
-        buf instanceof Uint8Array ? new Buffer(buf) : buf;
-
+    this.buf = !Buffer.isBuffer(buf) ? new Buffer(buf || 0) : buf;
     this.pos = 0;
     this.length = this.buf.length;
 }
@@ -182,8 +179,8 @@ Protobuf.prototype = {
         if (!items.length) return;
 
         var message = new Protobuf(),
-            i = 0,
-            len = items.length;
+            len = items.length,
+            i = 0;
 
         if (type === 'Varint')        for (; i < len; i++) message.writeVarint(items[i]);
         else if (type === 'SVarint')  for (; i < len; i++) message.writeSVarint(items[i]);

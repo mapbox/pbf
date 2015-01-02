@@ -1,3 +1,5 @@
+'use strict';
+
 var Pbf = require('../'),
     fs = require('fs'),
     test = require('tape').test;
@@ -113,7 +115,7 @@ test('readBoolean & writeBoolean', function(t) {
 
 test('readBytes', function(t) {
     var buf = new Pbf([8, 1, 2, 3, 4, 5, 6, 7, 8]);
-    t.same(buf.readBytes(), [1, 2, 3, 4, 5, 6, 7, 8]);
+    t.same(toArray(buf.readBytes()), [1, 2, 3, 4, 5, 6, 7, 8]);
     t.end();
 });
 
@@ -137,12 +139,19 @@ test('readPacked and writePacked', function(t) {
     var buf = new Pbf();
     buf.writePacked(1, 'Varint', []);
     t.equal(buf.pos, 0);
-    buf.writePacked(1, 'Varint', testNumbers);
-    buf.finish();
-    buf.readFields(function (tag) {
-        if (tag === 1) t.same(buf.readPacked('Varint'), testNumbers);
-        else t.fail('wrong tag encountered: ' + tag);
+
+    var testNumbers2 = testNumbers.slice(0, 10);
+
+    ['Varint', 'SVarint', 'Float', 'Double', 'Fixed32', 'SFixed32', 'Fixed64', 'SFixed64'].forEach(function (type) {
+        var buf = new Pbf();
+        buf.writePacked(1, type, testNumbers2);
+        buf.finish();
+        buf.readFields(function readField(tag) {
+            if (tag === 1) t.same(buf.readPacked(type), testNumbers2, 'packed ' + type);
+            else t.fail('wrong tag encountered: ' + tag);
+        });
     });
+
     t.end();
 });
 

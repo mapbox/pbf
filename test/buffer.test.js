@@ -1,3 +1,5 @@
+'use strict';
+
 var BufferShim = require('../buffer'),
     test = require('tape');
 
@@ -8,6 +10,20 @@ function toArray(buf) {
     }
     return arr;
 }
+
+test('empty buffer', function (t) {
+    var buf = new BufferShim();
+    t.equal(buf.length, 0);
+    t.end();
+});
+
+test('isBuffer', function (t) {
+    var buf = new BufferShim();
+    t.equal(BufferShim.isBuffer(buf), true);
+    t.equal(BufferShim.isBuffer([1, 2, 3]), false);
+    t.equal(BufferShim.isBuffer(new BufferShim([1, 2, 3])), true);
+    t.end();
+});
 
 test('writeUInt32LE', function (t) {
     var shim = new BufferShim(8);
@@ -101,7 +117,7 @@ test('more complicated utf8', function (t) {
 
 test('wrap', function (t) {
     var arr = new Uint8Array(testBytes);
-    var shim = BufferShim.wrap(arr);
+    var shim = new BufferShim(arr);
 
     t.same(shim.toString(), testStr);
     t.end();
@@ -113,7 +129,7 @@ test('byteLength', function (t) {
 });
 
 test('copy', function (t) {
-    var shim = BufferShim.wrap(new Uint8Array(testBytes));
+    var shim = new BufferShim(new Uint8Array(testBytes));
     var shim2 = new BufferShim(22);
 
     shim.copy(shim2);
@@ -123,7 +139,7 @@ test('copy', function (t) {
 });
 
 test('slice', function (t) {
-    var shim = BufferShim.wrap(new Uint8Array(testBytes));
+    var shim = new BufferShim(new Uint8Array(testBytes));
     t.same(toArray(shim.slice(0, 2)), [208, 159]);
     t.end();
 });
