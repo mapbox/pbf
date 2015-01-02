@@ -52,7 +52,7 @@ var BufferMethods = {
     writeDoubleLE: function(val, pos) { return ieee754.write(this, val, pos, true, 52, 8); },
 
     toString: function(encoding, start, end) {
-        if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf8').decode(this.subarray(start, end));
+        if (global.TextDecoder) return new global.TextDecoder('utf8').decode(this.subarray(start, end));
 
         var str = '',
             tmp = '';
@@ -63,10 +63,10 @@ var BufferMethods = {
         for (var i = start; i < end; i++) {
             var ch = this[i];
             if (ch <= 0x7F) {
-                str += decodeUtf8Str(tmp) + String.fromCharCode(ch)
+                str += decodeUtf8Str(tmp) + String.fromCharCode(ch);
                 tmp = '';
             } else {
-                tmp += '%' + ch.toString(16)
+                tmp += '%' + ch.toString(16);
             }
         }
 
@@ -105,7 +105,7 @@ Buffer.isBuffer = function(buf) {
 };
 
 function encodeString(str) {
-    if (typeof TextEncoder !== 'undefined') return new TextEncoder('utf8').encode(str);
+    if (global.TextEncoder) return new global.TextEncoder('utf8').encode(str);
 
     var length = str.length,
         bytes = [];
