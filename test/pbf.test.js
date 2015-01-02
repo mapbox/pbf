@@ -1,6 +1,6 @@
 'use strict';
 
-var Pbf = require('../src/index.js'),
+var Pbf = require('../src/pbf.js'),
     fs = require('fs'),
     test = require('tape').test;
 

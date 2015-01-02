@@ -1,3 +1,5 @@
+'use strict';
+
 var Pbf = require('../'),
     Benchmark = require('benchmark'),
     fs = require('fs');
