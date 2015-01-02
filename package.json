@@ -18,7 +18,11 @@
     "buffer",
     "pbf",
     "protobuf",
-    "binary"
+    "binary",
+    "format",
+    "serialization",
+    "encoder",
+    "decoder"
   ],
   "author": "Konstantin Kaefer",
   "license": "BSD",

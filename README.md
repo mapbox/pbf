@@ -2,9 +2,9 @@
 
 [![build status](https://secure.travis-ci.org/mapbox/pbf.png)](http://travis-ci.org/mapbox/pbf) [![Coverage Status](https://coveralls.io/repos/mapbox/pbf/badge.png)](https://coveralls.io/r/mapbox/pbf)
 
-A low-level, ultra-lightweight (2.9KB gzipped) [protocol buffers](https://developers.google.com/protocol-buffers) implementation in JavaScript for browsers and Node.
+A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers).
 
-Designed to be a building block for writing a customized, lazy decoder for a stable protobuf schema.
+Designed to be a building block for writing customized decoders and encoders for a stable protobuf schema.
 If you need an all-purpose protobuf JS library that does most of the work for you,
 take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers).
 
@@ -35,11 +35,9 @@ var pbf = new Pbf(buffer),
 pbf.readFields(function(tag) {
     if (tag === 1) name = pbf.readString();
     else if (tag === 2) version = pbf.readVarint();
-    else if (tag === 3) {
-        pbf.readMessage(function(tag) {
-            if (tag === 1) layerName = pbf.readString();
-        });
-    }
+    else if (tag === 3) pbf.readMessage(function(tag) {
+        if (tag === 1) layerName = pbf.readString();
+    });
 });
 ```
 
