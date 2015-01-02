@@ -4,8 +4,8 @@
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
   "scripts": {
-    "test": "jshint index.js test/*.js && tape test/index.js | faucet",
-    "cov": "istanbul cover test/index.js && coveralls < ./coverage/lcov.info",
+    "test": "jshint src/*.js test/*.js && tape test/*.test.js | faucet",
+    "cov": "istanbul cover test/*.test.js && coveralls < ./coverage/lcov.info",
     "build-min": "browserify index.js -s Pbf | uglifyjs -c -m > pbf.js",
     "build-dev": "browserify index.js -d -s Pbf > pbf-dev.js"
   },

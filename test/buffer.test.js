@@ -1,6 +1,6 @@
 'use strict';
 
-var BufferShim = require('../buffer'),
+var BufferShim = require('../src/buffer'),
     test = require('tape');
 
 function toArray(buf) {

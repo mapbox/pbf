@@ -1,10 +1,8 @@
 'use strict';
 
-var Pbf = require('../'),
+var Pbf = require('../src/index.js'),
     fs = require('fs'),
     test = require('tape').test;
-
-require('./buffer.test');
 
 function toArray(buf) {
     var arr = [];
