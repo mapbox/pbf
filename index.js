@@ -1,24 +1,24 @@
 'use strict';
 
-module.exports = Protobuf;
+module.exports = Pbf;
 
 var Buffer = global.Buffer || require('./buffer');
 
-function Protobuf(buf) {
+function Pbf(buf) {
     this.buf = !Buffer.isBuffer(buf) ? new Buffer(buf || 0) : buf;
     this.pos = 0;
     this.length = this.buf.length;
 }
 
-Protobuf.Varint  = 0; // varint: int32, int64, uint32, uint64, sint32, sint64, bool, enum
-Protobuf.Fixed64 = 1; // 64-bit: double, fixed64, sfixed64
-Protobuf.Bytes   = 2; // length-delimited: string, bytes, embedded messages, packed repeated fields
-Protobuf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
+Pbf.Varint  = 0; // varint: int32, int64, uint32, uint64, sint32, sint64, bool, enum
+Pbf.Fixed64 = 1; // 64-bit: double, fixed64, sfixed64
+Pbf.Bytes   = 2; // length-delimited: string, bytes, embedded messages, packed repeated fields
+Pbf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
 
 var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
     SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
 
-Protobuf.prototype = {
+Pbf.prototype = {
 
     destroy: function() {
         this.buf = null;
@@ -143,10 +143,10 @@ Protobuf.prototype = {
 
     skip: function(val) {
         var type = val & 0x7;
-        if (type === Protobuf.Varint) while (this.buf[this.pos++] > 0x7f);
-        else if (type === Protobuf.Bytes) this.pos = this.readVarint() + this.pos;
-        else if (type === Protobuf.Fixed32) this.pos += 4;
-        else if (type === Protobuf.Fixed64) this.pos += 8;
+        if (type === Pbf.Varint) while (this.buf[this.pos++] > 0x7f);
+        else if (type === Pbf.Bytes) this.pos = this.readVarint() + this.pos;
+        else if (type === Pbf.Fixed32) this.pos += 4;
+        else if (type === Pbf.Fixed64) this.pos += 8;
         else throw new Error('Unimplemented type: ' + type);
     },
 
@@ -178,7 +178,7 @@ Protobuf.prototype = {
     writePacked: function(tag, type, items) {
         if (!items.length) return;
 
-        var message = new Protobuf(),
+        var message = new Pbf(),
             len = items.length,
             i = 0;
 
@@ -294,57 +294,57 @@ Protobuf.prototype = {
     },
 
     writeMessage: function(tag, protobuf) {
-        this.writeTag(tag, Protobuf.Bytes);
+        this.writeTag(tag, Pbf.Bytes);
         this.writeBytes(protobuf.finish());
     },
 
     writeBytesField: function(tag, buffer) {
-        this.writeTag(tag, Protobuf.Bytes);
+        this.writeTag(tag, Pbf.Bytes);
         this.writeBytes(buffer);
     },
 
     writeFixed32Field: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed32);
+        this.writeTag(tag, Pbf.Fixed32);
         this.writeFixed32(val);
     },
 
     writeSFixed32Field: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed32);
+        this.writeTag(tag, Pbf.Fixed32);
         this.writeSFixed32(val);
     },
 
     writeFixed64Field: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed64);
+        this.writeTag(tag, Pbf.Fixed64);
         this.writeFixed64(val);
     },
 
     writeSFixed64Field: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed64);
+        this.writeTag(tag, Pbf.Fixed64);
         this.writeSFixed64(val);
     },
 
     writeVarintField: function(tag, val) {
-        this.writeTag(tag, Protobuf.Varint);
+        this.writeTag(tag, Pbf.Varint);
         this.writeVarint(val);
     },
 
     writeSVarintField: function(tag, val) {
-        this.writeTag(tag, Protobuf.Varint);
+        this.writeTag(tag, Pbf.Varint);
         this.writeSVarint(val);
     },
 
     writeStringField: function(tag, str) {
-        this.writeTag(tag, Protobuf.Bytes);
+        this.writeTag(tag, Pbf.Bytes);
         this.writeString(str);
     },
 
     writeFloatField: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed32);
+        this.writeTag(tag, Pbf.Fixed32);
         this.writeFloat(val);
     },
 
     writeDoubleField: function(tag, val) {
-        this.writeTag(tag, Protobuf.Fixed64);
+        this.writeTag(tag, Pbf.Fixed64);
         this.writeDouble(val);
     },
 
