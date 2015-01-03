@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jshint index.js buffer.js test/*.js && tape test/*.test.js | faucet",
-    "cov": "istanbul cover test/*.test.js && coveralls < ./coverage/lcov.info",
+    "cov": "istanbul cover tape test/*.test.js && coveralls < ./coverage/lcov.info",
     "build-min": "browserify index.js -s Pbf | uglifyjs -c -m > pbf.js",
     "build-dev": "browserify index.js -d -s Pbf > pbf-dev.js"
   },
