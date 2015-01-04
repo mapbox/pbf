@@ -157,7 +157,7 @@ Pbf.prototype = {
     },
 
     realloc: function(min) {
-        var length = this.length || 1;
+        var length = this.length || 16;
 
         while (length < this.pos + min) length *= 2;
 
@@ -178,8 +178,8 @@ Pbf.prototype = {
     writePacked: function(tag, type, items) {
         if (!items.length) return;
 
-        var message = new Pbf(),
-            len = items.length,
+        var len = items.length,
+            message = new Pbf(len * 4),
             i = 0;
 
         if (type === 'Varint')        for (; i < len; i++) message.writeVarint(items[i]);
@@ -295,9 +295,9 @@ Pbf.prototype = {
         this.pos += len;
     },
 
-    writeMessage: function(tag, protobuf) {
+    writeMessage: function(tag, pbf) {
         this.writeTag(tag, Pbf.Bytes);
-        this.writeBytes(protobuf.finish());
+        this.writeBytes(pbf.buf, 0, pbf.pos);
     },
 
     writeBytesField: function(tag, buffer) {

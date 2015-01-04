@@ -23,7 +23,9 @@ test('initialization', function(t) {
 test('realloc', function(t) {
     var buf = new Pbf(new Buffer([]));
     buf.realloc(5);
-    t.equal(buf.length, 8);
+    t.ok(buf.length >= 5);
+    buf.realloc(25);
+    t.ok(buf.length >= 30);
     t.end();
 });
 
