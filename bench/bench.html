@@ -9,8 +9,16 @@
     <script src='data.js'></script>
     <script>
         console.time('decode');
-        for (var i = 0; i < 100; i++) readLayers(data);
+        for (var i = 0; i < 10; i++) readLayers(data);
         console.timeEnd('decode');
+
+        var layers = readLayers(data);
+        console.time('encode');
+        for (var i = 0; i < 10; i++) encodeLayers(layers);
+        console.timeEnd('encode');
+
+
+        // decoding vector tile
 
         function readLayers(data) {
             return new Pbf(new Uint8Array(data)).readFields(readTile, []);
@@ -50,6 +58,54 @@
             }
             return null;
         }
+
+
+        // encoding vector tile
+
+        function encodeLayers(layers) {
+            var pbf = new Pbf();
+            for (var i = 0; i < layers.length; i++) {
+                pbf.writeMessage(3, encodeLayer(layers[i]));
+            }
+            return pbf.finish();
+        }
+        function encodeLayer(layer) {
+            var pbf = new Pbf();
+            pbf.writeStringField(1, layer.name);
+
+            for (var i = 0; i < layer.features.length; i++) {
+                pbf.writeMessage(2, encodeFeature(layer.features[i]));
+            }
+            for (i = 0; i < layer.keys.length; i++) {
+                pbf.writeStringField(3, layer.keys[i]);
+            }
+            for (i = 0; i < layer.values.length; i++) {
+                pbf.writeMessage(4, encodeValue(layer.values[i]));
+            }
+            pbf.writeVarintField(5, layer.extent);
+            pbf.writeVarintField(15, layer.version);
+            return pbf;
+        }
+        function encodeFeature(feature) {
+            var pbf = new Pbf();
+            pbf.writeVarintField(1, feature.id);
+            pbf.writePacked(2, 'Varint', feature.tags);
+            pbf.writeVarintField(3, feature.type);
+            pbf.writePacked(4, 'Varint', feature.geometry);
+            return pbf;
+        }
+        function encodeValue(value) {
+            var pbf = new Pbf();
+            if (typeof value === 'string') pbf.writeStringField(1, value);
+            else if (typeof value === 'number') {
+                if (value % 1 === 0) { // integer
+                    if (value >= 0) pbf.writeVarintField(4, value);
+                    else pbf.writeSVarintField(6, value);
+                } else pbf.writeDoubleField(3, value);
+            } else if (typeof value === 'boolean') pbf.writeBooleanField(7, value);
+            return pbf;
+        }
+
     </script>
 </body>
 </html>
