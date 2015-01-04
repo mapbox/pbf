@@ -16,9 +16,19 @@ function Buffer(length) {
     var buf = new Uint8Array(length || 0);
     if (arr) buf.set(arr);
 
-    for (var i in BufferMethods) {
-        buf[i] = BufferMethods[i];
-    }
+    buf.readUInt32LE = BufferMethods.readUInt32LE;
+    buf.writeUInt32LE = BufferMethods.writeUInt32LE;
+    buf.readInt32LE = BufferMethods.readInt32LE;
+    buf.writeInt32LE = BufferMethods.writeInt32LE;
+    buf.readFloatLE = BufferMethods.readFloatLE;
+    buf.writeFloatLE = BufferMethods.writeFloatLE;
+    buf.readDoubleLE = BufferMethods.readDoubleLE;
+    buf.writeDoubleLE = BufferMethods.writeDoubleLE;
+    buf.toString = BufferMethods.toString;
+    buf.write = BufferMethods.write;
+    buf.slice = BufferMethods.slice;
+    buf.copy = BufferMethods.copy;
+
     buf._isBuffer = true;
     return buf;
 }
@@ -105,8 +115,6 @@ Buffer.isBuffer = function(buf) {
 };
 
 function encodeString(str) {
-    if (global.TextEncoder) return new global.TextEncoder('utf8').encode(str);
-
     var length = str.length,
         bytes = [];
 
