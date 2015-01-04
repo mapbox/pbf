@@ -283,11 +283,13 @@ Pbf.prototype = {
         this.pos += 8;
     },
 
-    writeBytes: function(buffer) {
-        var len = buffer.length;
+    writeBytes: function(buffer, start, end) {
+        start = start || 0;
+        end = end || buffer.length;
+        var len = end - start;
         this.writeVarint(len);
         this.realloc(len);
-        for (var i = 0; i < len; i++) {
+        for (var i = start; i < end; i++) {
             this.buf[this.pos + i] = buffer[i];
         }
         this.pos += len;

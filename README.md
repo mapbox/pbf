@@ -167,7 +167,7 @@ Scalar writing methods:
 * `writeFloat(val)`
 * `writeDouble(val)`
 * `writeString(val)`
-* `writeBytes(buffer)`
+* `writeBytes(buffer[, start, end])`
 
 Misc methods:
 
@@ -179,6 +179,10 @@ Misc methods:
 For an example of a real-world usage of the library, see [vector-tile-js](https://github.com/mapbox/vector-tile-js).
 
 ## Changelog
+
+#### master (unreleased)
+
+- Added optional `start` and `end` arguments to `writeBytes`.
 
 #### 1.1.4 (Jan 2, 2015)
 
