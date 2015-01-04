@@ -52,8 +52,6 @@ var BufferMethods = {
     writeDoubleLE: function(val, pos) { return ieee754.write(this, val, pos, true, 52, 8); },
 
     toString: function(encoding, start, end) {
-        if (global.TextDecoder) return new global.TextDecoder('utf8').decode(this.subarray(start, end));
-
         var str = '',
             tmp = '';
 
@@ -63,14 +61,16 @@ var BufferMethods = {
         for (var i = start; i < end; i++) {
             var ch = this[i];
             if (ch <= 0x7F) {
-                str += decodeUtf8Str(tmp) + String.fromCharCode(ch);
+                str += decodeURIComponent(tmp) + String.fromCharCode(ch);
                 tmp = '';
             } else {
                 tmp += '%' + ch.toString(16);
             }
         }
 
-        return str + decodeUtf8Str(tmp);
+        str += decodeURIComponent(tmp);
+
+        return str;
     },
 
     write: function(str, pos) {
@@ -150,12 +150,4 @@ function encodeString(str) {
         }
     }
     return bytes;
-}
-
-function decodeUtf8Str(str) {
-    try {
-        return decodeURIComponent(str);
-    } catch (err) {
-        return String.fromCharCode(0xFFFD); // UTF 8 invalid char
-    }
 }
