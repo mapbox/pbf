@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>debug page</title>
+    <meta charset='utf-8'>
+</head>
+<body>
+    <script src='../pbf-dev.js'></script>
+    <script src='data.js'></script>
+    <script>
+        console.time('decode');
+        for (var i = 0; i < 100; i++) readLayers(data);
+        console.timeEnd('decode');
+
+        function readLayers(data) {
+            return new Pbf(new Uint8Array(data)).readFields(readTile, []);
+        }
+        function readTile(tag, layers, pbf) {
+            if (tag === 3) layers.push(pbf.readMessage(readLayer, {features: [], keys: [], values: []}));
+        }
+        function readLayer(tag, layer, pbf) {
+            if (tag === 1) layer.name = pbf.readString();
+            else if (tag === 2) layer.features.push(pbf.readMessage(readFeature, {}));
+            else if (tag === 3) layer.keys.push(pbf.readString());
+            else if (tag === 4) layer.values.push(readValue(pbf));
+            else if (tag === 5) layer.extent = pbf.readVarint();
+            else if (tag === 15) layer.version = pbf.readVarint();
+        }
+        function readFeature(tag, feature, pbf) {
+            if (tag === 1) feature.id = pbf.readVarint();
+            else if (tag === 2) feature.tags = pbf.readPacked('Varint');
+            else if (tag === 3) feature.type = pbf.readVarint();
+            else if (tag === 4) feature.geometry = pbf.readPacked('Varint');
+        }
+        function readValue(pbf) {
+            var end = pbf.readVarint() + pbf.pos;
+
+            while (pbf.pos < end) {
+                var val = pbf.readVarint(),
+                    tag = val >> 3;
+
+                if (tag === 1) return pbf.readString();
+                else if (tag === 2) return pbf.readFloat();
+                else if (tag === 3) return pbf.readDouble();
+                else if (tag === 4) return pbf.readVarint();
+                else if (tag === 5) return pbf.readVarint();
+                else if (tag === 6) return pbf.readSVarint();
+                else if (tag === 7) return pbf.readBoolean();
+                else pbf.skip(val);
+            }
+            return null;
+        }
+    </script>
+</body>
+</html>
