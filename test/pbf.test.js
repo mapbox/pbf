@@ -138,20 +138,25 @@ test('readDouble', function(t) {
 });
 
 test('readPacked and writePacked', function(t) {
-    var buf = new Pbf();
-    buf.writePacked(1, 'Varint', []);
-    t.equal(buf.pos, 0);
-
     var testNumbers2 = testNumbers.slice(0, 10);
 
     ['Varint', 'SVarint', 'Float', 'Double', 'Fixed32', 'SFixed32', 'Fixed64', 'SFixed64'].forEach(function (type) {
         var buf = new Pbf();
-        buf.writePacked(1, type, testNumbers2);
+        buf['writePacked' + type](1, testNumbers2);
         buf.finish();
         buf.readFields(function readField(tag) {
-            if (tag === 1) t.same(buf.readPacked(type), testNumbers2, 'packed ' + type);
+            if (tag === 1) t.same(buf['readPacked' + type](), testNumbers2, 'packed ' + type);
             else t.fail('wrong tag encountered: ' + tag);
         });
+    });
+
+    var buf = new Pbf();
+    buf.writePackedBoolean(1, testNumbers2);
+    buf.finish();
+    buf.readFields(function readField(tag) {
+        if (tag === 1) t.same(buf.readPackedBoolean(),
+            [true, false, false, true, true, true, true, true, true, true], 'packed Boolean');
+        else t.fail('wrong tag encountered: ' + tag);
     });
 
     t.end();

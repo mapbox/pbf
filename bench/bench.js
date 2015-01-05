@@ -57,9 +57,9 @@ function readLayer(tag, layer, pbf) {
 }
 function readFeature(tag, feature, pbf) {
     if (tag === 1) feature.id = pbf.readVarint();
-    else if (tag === 2) feature.tags = pbf.readPacked('Varint');
+    else if (tag === 2) feature.tags = pbf.readPackedVarint();
     else if (tag === 3) feature.type = pbf.readVarint();
-    else if (tag === 4) feature.geometry = pbf.readPacked('Varint');
+    else if (tag === 4) feature.geometry = pbf.readPackedVarint();
 }
 function readValue(tag, value, pbf) {
     if (tag === 1) value.value = pbf.readString();
@@ -100,9 +100,9 @@ function encodeLayer(layer) {
 function encodeFeature(feature) {
     var pbf = new Pbf();
     pbf.writeVarintField(1, feature.id);
-    pbf.writePacked(2, 'Varint', feature.tags);
+    pbf.writePackedVarint(2, feature.tags);
     pbf.writeVarintField(3, feature.type);
-    pbf.writePacked(4, 'Varint', feature.geometry);
+    pbf.writePackedVarint(4, feature.geometry);
     return pbf;
 }
 function encodeValue(value) {

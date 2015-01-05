@@ -117,7 +117,7 @@ pbf.pos = fooPos;
 pbf.readMessage(readFoo);
 ```
 
-Basic reading methods:
+Scalar reading methods:
 
 * `readVarint()`
 * `readSVarint()`
@@ -130,8 +130,21 @@ Basic reading methods:
 * `readDouble()`
 * `readString()`
 * `readBytes()`
-* `readPacked(type)`
+* `readString()`
+* `readBytes()`
 * `skip(value)`
+
+Packed reading methods:
+
+* `readPackedVarint()`
+* `readPackedSVarint()`
+* `readPackedFixed32()`
+* `readPackedFixed64()`
+* `readPackedSFixed32()`
+* `readPackedSFixed64()`
+* `readPackedBoolean()`
+* `readPackedFloat()`
+* `readPackedDouble()`
 
 #### Writing
 
@@ -158,12 +171,23 @@ Field writing methods:
 * `writePacked(tag, type, items)`
 * `writeMessage(tag, pbf)`
 
+Packed field writing methods:
+
+* `writePackedVarint(tag, val)`
+* `writePackedSVarint(tag, val)`
+* `writePackedSFixed32(tag, val)`
+* `writePackedSFixed64(tag, val)`
+* `writePackedBoolean(tag, val)`
+* `writePackedFloat(tag, val)`
+* `writePackedDouble(tag, val)`
+
 Scalar writing methods:
 
 * `writeVarint(val)`
 * `writeSVarint(val)`
 * `writeSFixed32(val)`
 * `writeSFixed64(val)`
+* `writeBoolean(val)`
 * `writeFloat(val)`
 * `writeDouble(val)`
 * `writeString(val)`
@@ -182,6 +206,8 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 
 #### master (unreleased)
 
+- Replaced `readPacked` and `writePacked` methods that accept type as a string
+  with `readPackedVarint`, etc. for each type (for better performance).
 - Significantly improved encoding performance (the tile encoding benchmark is now 2.6x faster).
 - Significantly improved encoding and decoding performance in browsers (faster Buffer shim).
 - Added optional `start` and `end` arguments to `writeBytes`.
