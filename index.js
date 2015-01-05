@@ -241,21 +241,25 @@ Pbf.prototype = {
         if (val <= 0x7f) {
             this.realloc(1);
             this.buf[this.pos++] = val;
+
         } else if (val <= 0x3fff) {
             this.realloc(2);
-            this.buf[this.pos++] = 0x80 | ((val >>> 0) & 0x7f);
-            this.buf[this.pos++] = 0x00 | ((val >>> 7) & 0x7f);
+            this.buf[this.pos++] = ((val >>> 0) & 0x7f) | 0x80;
+            this.buf[this.pos++] =  (val >>> 7) & 0x7f;
+
         } else if (val <= 0x1fffff) {
             this.realloc(3);
-            this.buf[this.pos++] = 0x80 | ((val >>> 0) & 0x7f);
-            this.buf[this.pos++] = 0x80 | ((val >>> 7) & 0x7f);
-            this.buf[this.pos++] = 0x00 | ((val >>> 14) & 0x7f);
+            this.buf[this.pos++] = ((val >>>  0) & 0x7f) | 0x80;
+            this.buf[this.pos++] = ((val >>>  7) & 0x7f) | 0x80;
+            this.buf[this.pos++] =  (val >>> 14) & 0x7f;
+
         } else if (val <= 0xfffffff) {
             this.realloc(4);
-            this.buf[this.pos++] = 0x80 | ((val >>> 0) & 0x7f);
-            this.buf[this.pos++] = 0x80 | ((val >>> 7) & 0x7f);
-            this.buf[this.pos++] = 0x80 | ((val >>> 14) & 0x7f);
-            this.buf[this.pos++] = 0x00 | ((val >>> 21) & 0x7f);
+            this.buf[this.pos++] = ((val >>>  0) & 0x7f) | 0x80;
+            this.buf[this.pos++] = ((val >>>  7) & 0x7f) | 0x80;
+            this.buf[this.pos++] = ((val >>> 14) & 0x7f) | 0x80;
+            this.buf[this.pos++] =  (val >>> 21) & 0x7f;
+
         } else {
             var pos = this.pos;
             while (val >= 0x80) {
@@ -347,52 +351,42 @@ Pbf.prototype = {
         this.writeTag(tag, Pbf.Bytes);
         this.writeBytes(buffer);
     },
-
     writeFixed32Field: function(tag, val) {
         this.writeTag(tag, Pbf.Fixed32);
         this.writeFixed32(val);
     },
-
     writeSFixed32Field: function(tag, val) {
         this.writeTag(tag, Pbf.Fixed32);
         this.writeSFixed32(val);
     },
-
     writeFixed64Field: function(tag, val) {
         this.writeTag(tag, Pbf.Fixed64);
         this.writeFixed64(val);
     },
-
     writeSFixed64Field: function(tag, val) {
         this.writeTag(tag, Pbf.Fixed64);
         this.writeSFixed64(val);
     },
-
     writeVarintField: function(tag, val) {
         this.writeTag(tag, Pbf.Varint);
         this.writeVarint(val);
     },
-
     writeSVarintField: function(tag, val) {
         this.writeTag(tag, Pbf.Varint);
         this.writeSVarint(val);
     },
-
     writeStringField: function(tag, str) {
         this.writeTag(tag, Pbf.Bytes);
         this.writeString(str);
     },
-
     writeFloatField: function(tag, val) {
         this.writeTag(tag, Pbf.Fixed32);
         this.writeFloat(val);
     },
-
     writeDoubleField: function(tag, val) {
         this.writeTag(tag, Pbf.Fixed64);
         this.writeDouble(val);
     },
-
     writeBooleanField: function(tag, val) {
         this.writeVarintField(tag, Boolean(val));
     }

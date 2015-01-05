@@ -33,6 +33,8 @@ function Buffer(length) {
     return buf;
 }
 
+var lastStr, lastStrEncoded;
+
 var BufferMethods = {
     readUInt32LE: function(pos) {
         return ((this[pos]) |
@@ -84,7 +86,7 @@ var BufferMethods = {
     },
 
     write: function(str, pos) {
-        var bytes = Buffer._lastStr === str ? Buffer._lastEncoded : encodeString(str);
+        var bytes = str === lastStr ? lastStrEncoded : encodeString(str);
         for (var i = 0; i < bytes.length; i++) {
             this[pos + i] = bytes[i];
         }
@@ -105,9 +107,9 @@ var BufferMethods = {
 BufferMethods.writeInt32LE = BufferMethods.writeUInt32LE;
 
 Buffer.byteLength = function(str) {
-    Buffer._lastStr = str;
-    var bytes = Buffer._lastEncoded = encodeString(str);
-    return bytes.length;
+    lastStr = str;
+    lastStrEncoded = encodeString(str);
+    return lastStrEncoded.length;
 };
 
 Buffer.isBuffer = function(buf) {
@@ -146,15 +148,11 @@ function encodeString(str) {
             lead = null;
         }
 
-        if (c < 0x80) {
-            bytes.push(c);
-
-        } else {
-            if (c < 0x800) bytes.push(c >> 0x6 | 0xC0);
-            else if (c < 0x10000) bytes.push(c >> 0xC | 0xE0, c >> 0x6 & 0x3F | 0x80);
-            else bytes.push(c >> 0x12 | 0xF0, c >> 0xC & 0x3F | 0x80, c >> 0x6 & 0x3F | 0x80);
-
-            bytes.push(c & 0x3F | 0x80);
+        if (c < 0x80) bytes.push(c);
+        else {
+            if (c < 0x800) bytes.push(c >> 0x6 | 0xC0, c & 0x3F | 0x80);
+            else if (c < 0x10000) bytes.push(c >> 0xC | 0xE0, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
+            else bytes.push(c >> 0x12 | 0xF0, c >> 0xC & 0x3F | 0x80, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
         }
     }
     return bytes;
