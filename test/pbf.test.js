@@ -327,10 +327,10 @@ test('field writing methods', function (t) {
     buf.writeDoubleField(7, 123);
     buf.writeBooleanField(8, true);
     buf.writeBytesField(9, [1, 2, 3]);
-
-    var message = new Pbf();
-    message.writeBooleanField(1, true);
-    buf.writeMessage(10, message);
+    buf.writeMessage(10, function () {
+        buf.writeBooleanField(1, true);
+        buf.writePackedVarint(2, testNumbers);
+    });
 
     buf.writeSFixed32Field(11, -123);
     buf.writeSFixed64Field(12, -256);

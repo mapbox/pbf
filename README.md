@@ -13,32 +13,35 @@ take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers)
 #### Reading
 
 ```js
-var pbf = new Pbf(buffer),
-    name, version, layerName;
+var data = new Pbf(buffer).readFields(readData, {});
 
-pbf.readFields(function(tag) {
-    if (tag === 1) name = pbf.readString();
-    else if (tag === 2) version = pbf.readVarint();
-    else if (tag === 3) pbf.readMessage(function(tag) {
-        if (tag === 1) layerName = pbf.readString();
-    });
-});
+function readData(tag, data, pbf) {
+    if (tag === 1) data.name = pbf.readString();
+    else if (tag === 2) data.version = pbf.readVarint();
+    else if (tag === 3) data.layer = pbf.readMessage(readLayer, {});
+}
+function readLayer(tag, layer, pbf) {
+    if (tag === 1) layer.name = pbf.readString();
+    else if (tag === 3) layer.size = pbf.readVarint();
+}
 ```
 
 #### Writing
 
 ```js
-var pbf = new Pbf();
+var buffer = writeData(data);
 
-pbf.writeStringField(1, 'Hello world');
-pbf.writeVarintField(2, 300);
-
-var layer = new Pbf();
-layer.writeStringField(1, 'foobar');
-
-pbf.writeMessage(3, layer);
-
-var buffer = pbf.finish();
+function writeData(data) {
+    var pbf = new Pbf();
+    pbf.writeStringField(1, data.name);
+    pbf.writeVarintField(2, data.version);
+    pbf.writeMessage(3, writeLayer, data.layer);
+    return pbf.finish();
+}
+function writeLayer(layer, pbf) {
+    pbf.writeStringField(1, layer.name);
+    pbf.writeVarintField(2, layer.size);
+}
 ```
 
 ## Install
@@ -155,6 +158,17 @@ pbf.writeVarint(123);
 pbf.writeString("Hello world");
 ```
 
+Write an embedded message:
+
+```js
+pbf.writeMessage(1, writeObj, obj);
+
+function writeObj(obj, pbf) {
+    pbf.writeStringField(obj.name);
+    pbf.writeVarintField(obj.version);
+}
+```
+
 Field writing methods:
 
 * `writeVarintField(tag, val)`
@@ -204,13 +218,19 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 
 ## Changelog
 
-#### master (unreleased)
+#### 1.2.0 (Jan 5, 2015)
 
+##### Breaking API changes
+
+- Changed `writeMessage` signature to `(tag, fn, obj)` (see example in the docs)
+  for a huge encoding performance improvement.
 - Replaced `readPacked` and `writePacked` methods that accept type as a string
-  with `readPackedVarint`, etc. for each type (for better performance).
-- Significantly improved encoding performance (the tile encoding benchmark is now 2.6x faster).
-- Significantly improved encoding and decoding performance in browsers (faster Buffer shim).
-- Added optional `start` and `end` arguments to `writeBytes`.
+  with `readPackedVarint`, etc. for each type (better performance and simpler API).
+
+##### Improvements
+
+- 5x faster encoding in Node (vector tile benchmark).
+- 40x faster encoding and 3x faster decoding in the browser (vector tile benchmark).
 
 #### 1.1.4 (Jan 2, 2015)
 

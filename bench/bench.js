@@ -3,7 +3,7 @@
 var Pbf = require('../'),
     Benchmark = require('benchmark'),
     fs = require('fs'),
-    protobuf = require('../../protocol-buffers/index');
+    protobuf = require('protocol-buffers');
 
 var messages = protobuf(fs.readFileSync(__dirname + '/vector_tile.proto')),
     data = fs.readFileSync(__dirname + '/../test/fixtures/12665.vector.pbf'),
@@ -76,37 +76,32 @@ function readValue(tag, value, pbf) {
 function encodeLayers(layers) {
     var pbf = new Pbf();
     for (var i = 0; i < layers.length; i++) {
-        pbf.writeMessage(3, encodeLayer(layers[i]));
+        pbf.writeMessage(3, encodeLayer, layers[i]);
     }
     return pbf.finish();
 }
-function encodeLayer(layer) {
-    var pbf = new Pbf();
+function encodeLayer(layer, pbf) {
     pbf.writeStringField(1, layer.name);
 
     for (var i = 0; i < layer.features.length; i++) {
-        pbf.writeMessage(2, encodeFeature(layer.features[i]));
+        pbf.writeMessage(2, encodeFeature, layer.features[i]);
     }
     for (i = 0; i < layer.keys.length; i++) {
         pbf.writeStringField(3, layer.keys[i]);
     }
     for (i = 0; i < layer.values.length; i++) {
-        pbf.writeMessage(4, encodeValue(layer.values[i]));
+        pbf.writeMessage(4, encodeValue, layer.values[i]);
     }
     pbf.writeVarintField(5, layer.extent);
     pbf.writeVarintField(15, layer.version);
-    return pbf;
 }
-function encodeFeature(feature) {
-    var pbf = new Pbf();
+function encodeFeature(feature, pbf) {
     pbf.writeVarintField(1, feature.id);
     pbf.writePackedVarint(2, feature.tags);
     pbf.writeVarintField(3, feature.type);
     pbf.writePackedVarint(4, feature.geometry);
-    return pbf;
 }
-function encodeValue(value) {
-    var pbf = new Pbf();
+function encodeValue(value, pbf) {
     if (typeof value === 'string') pbf.writeStringField(1, value);
     else if (typeof value === 'number') {
         if (value % 1 === 0) { // integer
@@ -114,5 +109,4 @@ function encodeValue(value) {
             else pbf.writeSVarintField(6, value);
         } else pbf.writeDoubleField(3, value);
     } else if (typeof value === 'boolean') pbf.writeBooleanField(7, value);
-    return pbf;
 }

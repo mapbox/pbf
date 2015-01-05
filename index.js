@@ -298,68 +298,50 @@ Pbf.prototype = {
         this.pos += 8;
     },
 
-    writeBytes: function(buffer, start, end) {
-        start = start || 0;
-        end = end || buffer.length;
-        var len = end - start;
+    writeBytes: function(buffer) {
+        var len = buffer.length;
         this.writeVarint(len);
         this.realloc(len);
-        for (var i = start; i < end; i++) {
-            this.buf[this.pos + i] = buffer[i];
+        for (var i = 0; i < len; i++) this.buf[this.pos++] = buffer[i];
+    },
+
+    writeMessage: function(tag, fn, obj) {
+        this.writeTag(tag, Pbf.Bytes);
+
+        this.pos++; // reserve 1 byte for short message length
+
+        // write the message directly to the buffer and see how much was written
+        var startPos = this.pos;
+        fn(obj, this);
+        var len = this.pos - startPos;
+
+        var varintLen =
+            len <= 0x7f ? 1 :
+            len <= 0x3fff ? 2 :
+            len <= 0x1fffff ? 3 :
+            len <= 0xfffffff ? 4 : Math.ceil(Math.log(len) / (Math.LN2 * 7));
+
+        // if 1 byte isn't enough for encoding message length, shift the data to the right
+        if (varintLen > 1) {
+            this.realloc(varintLen - 1);
+            for (var i = this.pos - 1; i >= startPos; i--) this.buf[i + varintLen - 1] = this.buf[i];
         }
+
+        // finally, write the message length in the reserved place and restore the position
+        this.pos = startPos - 1;
+        this.writeVarint(len);
         this.pos += len;
     },
 
-    writePackedVarint: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 2);
-        for (var i = 0; i < len; i++) message.writeVarint(items[i]);
-        this.writeMessage(tag, message);
-    },
-    writePackedSVarint: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 2);
-        for (var i = 0; i < len; i++) message.writeSVarint(items[i]);
-        this.writeMessage(tag, message);
-    },
-    writePackedBoolean: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 2);
-        for (var i = 0; i < len; i++) message.writeBoolean(items[i]);
-        this.writeMessage(tag, message);
-    },
-    writePackedFloat: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 4);
-        for (var i = 0; i < len; i++) message.writeFloat(items[i]);
-        this.writeMessage(tag, message);
-    },
-    writePackedDouble: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 8);
-        for (var i = 0; i < len; i++) message.writeDouble(items[i]);
-        this.writeMessage(tag, message);
-    },
-    writePackedFixed32: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 4);
-        for (var i = 0; i < len; i++) message.writeFixed32(items[i]);
-        this.writeMessage(tag, message);
-    },
-    writePackedSFixed32: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 4);
-        for (var i = 0; i < len; i++) message.writeSFixed32(items[i]);
-        this.writeMessage(tag, message);
-    },
-    writePackedFixed64: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 8);
-        for (var i = 0; i < len; i++) message.writeFixed64(items[i]);
-        this.writeMessage(tag, message);
-    },
-    writePackedSFixed64: function(tag, items) {
-        var len = items.length, message = new Pbf(len * 8);
-        for (var i = 0; i < len; i++) message.writeSFixed64(items[i]);
-        this.writeMessage(tag, message);
-    },
-
-    writeMessage: function(tag, pbf) {
-        this.writeTag(tag, Pbf.Bytes);
-        this.writeBytes(pbf.buf, 0, pbf.pos);
-    },
+    writePackedVarint:   function(tag, arr) { this.writeMessage(tag, writePackedVarint, arr);   },
+    writePackedSVarint:  function(tag, arr) { this.writeMessage(tag, writePackedSVarint, arr);  },
+    writePackedBoolean:  function(tag, arr) { this.writeMessage(tag, writePackedBoolean, arr);  },
+    writePackedFloat:    function(tag, arr) { this.writeMessage(tag, writePackedFloat, arr);    },
+    writePackedDouble:   function(tag, arr) { this.writeMessage(tag, writePackedDouble, arr);   },
+    writePackedFixed32:  function(tag, arr) { this.writeMessage(tag, writePackedFixed32, arr);  },
+    writePackedSFixed32: function(tag, arr) { this.writeMessage(tag, writePackedSFixed32, arr); },
+    writePackedFixed64:  function(tag, arr) { this.writeMessage(tag, writePackedFixed64, arr);  },
+    writePackedSFixed64: function(tag, arr) { this.writeMessage(tag, writePackedSFixed64, arr); },
 
     writeBytesField: function(tag, buffer) {
         this.writeTag(tag, Pbf.Bytes);
@@ -415,3 +397,13 @@ Pbf.prototype = {
         this.writeVarintField(tag, Boolean(val));
     }
 };
+
+function writePackedVarint(arr, pbf)   { for (var i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);   }
+function writePackedSVarint(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeSVarint(arr[i]);  }
+function writePackedFloat(arr, pbf)    { for (var i = 0; i < arr.length; i++) pbf.writeFloat(arr[i]);    }
+function writePackedDouble(arr, pbf)   { for (var i = 0; i < arr.length; i++) pbf.writeDouble(arr[i]);   }
+function writePackedBoolean(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeBoolean(arr[i]);  }
+function writePackedFixed32(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed32(arr[i]);  }
+function writePackedSFixed32(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed32(arr[i]); }
+function writePackedFixed64(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);  }
+function writePackedSFixed64(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]); }
