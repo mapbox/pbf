@@ -133,8 +133,6 @@ Scalar reading methods:
 * `readDouble()`
 * `readString()`
 * `readBytes()`
-* `readString()`
-* `readBytes()`
 * `skip(value)`
 
 Packed reading methods:
@@ -205,7 +203,7 @@ Scalar writing methods:
 * `writeFloat(val)`
 * `writeDouble(val)`
 * `writeString(val)`
-* `writeBytes(buffer[, start, end])`
+* `writeBytes(buffer)`
 
 Misc methods:
 
