@@ -127,17 +127,46 @@ Pbf.prototype = {
         return buffer;
     },
 
-    readPacked: function(type) {
-        var end = this.readVarint() + this.pos,
-            arr = [];
-        if (type === 'Varint')        while (this.pos < end) arr.push(this.readVarint());
-        else if (type === 'SVarint')  while (this.pos < end) arr.push(this.readSVarint());
-        else if (type === 'Float')    while (this.pos < end) arr.push(this.readFloat());
-        else if (type === 'Double')   while (this.pos < end) arr.push(this.readDouble());
-        else if (type === 'Fixed32')  while (this.pos < end) arr.push(this.readFixed32());
-        else if (type === 'SFixed32') while (this.pos < end) arr.push(this.readSFixed32());
-        else if (type === 'Fixed64')  while (this.pos < end) arr.push(this.readFixed64());
-        else if (type === 'SFixed64') while (this.pos < end) arr.push(this.readSFixed64());
+    // verbose for performance reasons; doesn't affect gzipped size
+
+    readPackedVarint: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readVarint());
+        return arr;
+    },
+    readPackedSVarint: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readSVarint());
+        return arr;
+    },
+    readPackedFloat: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readFloat());
+        return arr;
+    },
+    readPackedDouble: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readDouble());
+        return arr;
+    },
+    readPackedFixed32: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readFixed32());
+        return arr;
+    },
+    readPackedSFixed32: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readSFixed32());
+        return arr;
+    },
+    readPackedFixed64: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readFixed64());
+        return arr;
+    },
+    readPackedSFixed64: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readSFixed64());
         return arr;
     },
 
@@ -173,25 +202,6 @@ Pbf.prototype = {
         this.length = this.pos;
         this.pos = 0;
         return this.buf.slice(0, this.length);
-    },
-
-    writePacked: function(tag, type, items) {
-        if (!items.length) return;
-
-        var len = items.length,
-            message = new Pbf(len * 4),
-            i = 0;
-
-        if (type === 'Varint')        for (; i < len; i++) message.writeVarint(items[i]);
-        else if (type === 'SVarint')  for (; i < len; i++) message.writeSVarint(items[i]);
-        else if (type === 'Float')    for (; i < len; i++) message.writeFloat(items[i]);
-        else if (type === 'Double')   for (; i < len; i++) message.writeDouble(items[i]);
-        else if (type === 'Fixed32')  for (; i < len; i++) message.writeFixed32(items[i]);
-        else if (type === 'SFixed32') for (; i < len; i++) message.writeSFixed32(items[i]);
-        else if (type === 'Fixed64')  for (; i < len; i++) message.writeFixed64(items[i]);
-        else if (type === 'SFixed64') for (; i < len; i++) message.writeSFixed64(items[i]);
-
-        this.writeMessage(tag, message);
     },
 
     writeFixed32: function(val) {
@@ -293,6 +303,47 @@ Pbf.prototype = {
             this.buf[this.pos + i] = buffer[i];
         }
         this.pos += len;
+    },
+
+    writePackedVarint: function(tag, items) {
+        var len = items.length, message = new Pbf(len * 4);
+        for (var i = 0; i < len; i++) message.writeVarint(items[i]);
+        this.writeMessage(tag, message);
+    },
+    writePackedSVarint: function(tag, items) {
+        var len = items.length, message = new Pbf(len * 4);
+        for (var i = 0; i < len; i++) message.writeSVarint(items[i]);
+        this.writeMessage(tag, message);
+    },
+    writePackedFloat: function(tag, items) {
+        var len = items.length, message = new Pbf(len * 4);
+        for (var i = 0; i < len; i++) message.writeFloat(items[i]);
+        this.writeMessage(tag, message);
+    },
+    writePackedDouble: function(tag, items) {
+        var len = items.length, message = new Pbf(len * 8);
+        for (var i = 0; i < len; i++) message.writeDouble(items[i]);
+        this.writeMessage(tag, message);
+    },
+    writePackedFixed32: function(tag, items) {
+        var len = items.length, message = new Pbf(len * 4);
+        for (var i = 0; i < len; i++) message.writeFixed32(items[i]);
+        this.writeMessage(tag, message);
+    },
+    writePackedSFixed32: function(tag, items) {
+        var len = items.length, message = new Pbf(len * 4);
+        for (var i = 0; i < len; i++) message.writeSFixed32(items[i]);
+        this.writeMessage(tag, message);
+    },
+    writePackedFixed64: function(tag, items) {
+        var len = items.length, message = new Pbf(len * 4);
+        for (var i = 0; i < len; i++) message.writeFixed64(items[i]);
+        this.writeMessage(tag, message);
+    },
+    writePackedSFixed64: function(tag, items) {
+        var len = items.length, message = new Pbf(len * 4);
+        for (var i = 0; i < len; i++) message.writeSFixed64(items[i]);
+        this.writeMessage(tag, message);
     },
 
     writeMessage: function(tag, pbf) {
