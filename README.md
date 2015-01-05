@@ -182,10 +182,9 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 
 #### master (unreleased)
 
-- Added optional `start` and `end` arguments to `writeBytes`.
 - Significantly improved encoding performance (the tile encoding benchmark is now 2.6x faster).
-- Significantly improved encoding performance in browsers (faster Buffer shim).
-- Improved decoding performance in browsers (HTML5 TextDecoder turned out to be very slow).
+- Significantly improved encoding and decoding performance in browsers (faster Buffer shim).
+- Added optional `start` and `end` arguments to `writeBytes`.
 
 #### 1.1.4 (Jan 2, 2015)
 

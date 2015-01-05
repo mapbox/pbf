@@ -12,11 +12,20 @@
         for (var i = 0; i < 10; i++) readLayers(data);
         console.timeEnd('decode');
 
-        var layers = readLayers(data);
+        var layers = readLayers(data),
+            layersJSON = JSON.stringify(layers);
+
         console.time('encode');
         for (var i = 0; i < 10; i++) encodeLayers(layers);
         console.timeEnd('encode');
 
+        console.time('JSON.parse');
+        for (var i = 0; i < 10; i++) JSON.parse(layersJSON);
+        console.timeEnd('JSON.parse');
+
+        console.time('JSON.stringify');
+        for (var i = 0; i < 10; i++) JSON.stringify(layers);
+        console.timeEnd('JSON.stringify');
 
         // decoding vector tile
 
