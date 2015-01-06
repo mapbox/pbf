@@ -5,32 +5,31 @@ var Pbf = require('../'),
     fs = require('fs'),
     protobuf = require('protocol-buffers');
 
-var messages = protobuf(fs.readFileSync(__dirname + '/vector_tile.proto')),
+var Tile = protobuf(fs.readFileSync(__dirname + '/vector_tile.proto')).Tile,
     data = fs.readFileSync(__dirname + '/../test/fixtures/12665.vector.pbf'),
     suite = new Benchmark.Suite();
 
 var layers = read(data),
-    layersJSON = JSON.stringify(layers);
-
-var layers2 = messages.Tile.decode(data);
+    layersJSON = JSON.stringify(layers),
+    layers2 = Tile.decode(data);
 
 suite
 .add('decode vector tile with pbf', function() {
     read(data);
 })
-.add('decode vector tile with protocol-buffers', function() {
-    messages.Tile.decode(data);
-})
-.add('native JSON.parse of the same data', function() {
-    JSON.parse(layersJSON);
-})
 .add('encode vector tile with pbf', function() {
     write(layers);
 })
-.add('encode vector tile with protocol-buffers', function() {
-    messages.Tile.encode(layers2);
+.add('decode vector tile with protocol-buffers', function() {
+    Tile.decode(data);
 })
-.add('native JSON.stringify', function() {
+.add('encode vector tile with protocol-buffers', function() {
+    Tile.encode(layers2);
+})
+.add('JSON.parse vector tile', function() {
+    JSON.parse(layersJSON);
+})
+.add('JSON.stringify vector tile', function() {
     JSON.stringify(layers);
 })
 .on('cycle', function(event) {
@@ -51,7 +50,7 @@ function readLayer(tag, layer, pbf) {
     if (tag === 1) layer.name = pbf.readString();
     else if (tag === 2) layer.features.push(pbf.readMessage(readFeature, {}));
     else if (tag === 3) layer.keys.push(pbf.readString());
-    else if (tag === 4) layer.values.push(pbf.readMessage(readValue, {}).value);
+    else if (tag === 4) layer.values.push(pbf.readMessage(readValue, {}));
     else if (tag === 5) layer.extent = pbf.readVarint();
     else if (tag === 15) layer.version = pbf.readVarint();
 }
@@ -62,12 +61,13 @@ function readFeature(tag, feature, pbf) {
     else if (tag === 4) feature.geometry = pbf.readPackedVarint();
 }
 function readValue(tag, value, pbf) {
-    if (tag === 1) value.value = pbf.readString();
-    else if (tag === 2) value.value = pbf.readFloat();
-    else if (tag === 3) value.value = pbf.readDouble();
-    else if (tag === 4 || tag === 5) value.value = pbf.readVarint();
-    else if (tag === 6) value.value = pbf.readSVarint();
-    else if (tag === 7) value.value = pbf.readBoolean();
+    if (tag === 1) value.string_value = pbf.readString();
+    else if (tag === 2) value.float_value = pbf.readFloat();
+    else if (tag === 3) value.double_value = pbf.readDouble();
+    else if (tag === 4) value.int_value = pbf.readVarint();
+    else if (tag === 5) value.uint_value = pbf.readVarint();
+    else if (tag === 6) value.sint_value = pbf.readSVarint();
+    else if (tag === 7) value.bool_value = pbf.readBoolean();
 }
 
 // encoding vector tile
@@ -93,11 +93,11 @@ function writeFeature(feature, pbf) {
     pbf.writePackedVarint(4, feature.geometry);
 }
 function writeValue(value, pbf) {
-    if (typeof value === 'string') pbf.writeStringField(1, value);
-    else if (typeof value === 'boolean') pbf.writeBooleanField(7, value);
-    else if (typeof value === 'number') {
-        if (value % 1 !== 0) pbf.writeDoubleField(3, value);
-        else if (value >= 0) pbf.writeVarintField(4, value);
-        else pbf.writeSVarintField(6, value);
-    }
+    if (value.string_value !== undefined) pbf.writeString(value.string_value);
+    else if (value.float_value !== undefined) pbf.writeFloat(value.float_value);
+    else if (value.double_value !== undefined) pbf.writeDouble(value.double_value);
+    else if (value.int_value !== undefined) pbf.writeVarint(value.int_value);
+    else if (value.uint_value !== undefined) pbf.writeVarint(value.uint_value);
+    else if (value.sint_value !== undefined) pbf.writeSVarint(value.sint_value);
+    else if (value.bool_value !== undefined) pbf.writeBoolean(value.bool_value);
 }
