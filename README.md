@@ -29,14 +29,14 @@ function readLayer(tag, layer, pbf) {
 #### Writing
 
 ```js
-var buffer = writeData(data);
+var pbf = new Pbf();
+writeData(data, pbf);
+var buffer = pbf.finish();
 
-function writeData(data) {
-    var pbf = new Pbf();
+function writeData(data, pbf) {
     pbf.writeStringField(1, data.name);
     pbf.writeVarintField(2, data.version);
     pbf.writeMessage(3, writeLayer, data.layer);
-    return pbf.finish();
 }
 function writeLayer(layer, pbf) {
     pbf.writeStringField(1, layer.name);
