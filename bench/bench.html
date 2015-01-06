@@ -9,6 +9,15 @@
     <script src='data.js'></script>
     <script src='vector_tile.js'></script>
     <script>
+        function read(data) {
+            return readTile(new Pbf(data));
+        }
+        function write(tile) {
+            var pbf = new Pbf();
+            writeTile(tile, pbf);
+            return pbf.finish();
+        }
+
         var tile = read(data),
             tileJSON = JSON.stringify(tile);
 

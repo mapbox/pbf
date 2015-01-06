@@ -1,34 +1,33 @@
 'use strict';
 
 if (typeof exports !== 'undefined') {
-    exports.read = read;
-    exports.write = write;
-    global.Pbf = require('../');
+    exports.readTile = readTile;
+    exports.writeTile = writeTile;
 }
 
 // decoding vector tile
 
-function read(data) {
-    return new Pbf(data).readFields(readTile, {layers: []});
+function readTile(pbf) {
+    return pbf.readFields(readTileField, {layers: []});
 }
-function readTile(tag, tile, pbf) {
-    if (tag === 3) tile.layers.push(pbf.readMessage(readLayer, {features: [], keys: [], values: []}));
+function readTileField(tag, tile, pbf) {
+    if (tag === 3) tile.layers.push(pbf.readMessage(readLayerField, {features: [], keys: [], values: []}));
 }
-function readLayer(tag, layer, pbf) {
+function readLayerField(tag, layer, pbf) {
     if (tag === 1) layer.name = pbf.readString();
-    else if (tag === 2) layer.features.push(pbf.readMessage(readFeature, {}));
+    else if (tag === 2) layer.features.push(pbf.readMessage(readFeatureField, {}));
     else if (tag === 3) layer.keys.push(pbf.readString());
-    else if (tag === 4) layer.values.push(pbf.readMessage(readValue, {}));
+    else if (tag === 4) layer.values.push(pbf.readMessage(readValueField, {}));
     else if (tag === 5) layer.extent = pbf.readVarint();
     else if (tag === 15) layer.version = pbf.readVarint();
 }
-function readFeature(tag, feature, pbf) {
+function readFeatureField(tag, feature, pbf) {
     if (tag === 1) feature.id = pbf.readVarint();
     else if (tag === 2) feature.tags = pbf.readPackedVarint();
     else if (tag === 3) feature.type = pbf.readVarint();
     else if (tag === 4) feature.geometry = pbf.readPackedVarint();
 }
-function readValue(tag, value, pbf) {
+function readValueField(tag, value, pbf) {
     if (tag === 1) value.string_value = pbf.readString();
     else if (tag === 2) value.float_value = pbf.readFloat();
     else if (tag === 3) value.double_value = pbf.readDouble();
@@ -40,10 +39,8 @@ function readValue(tag, value, pbf) {
 
 // encoding vector tile
 
-function write(tile) {
-    var pbf = new Pbf();
+function writeTile(tile, pbf) {
     if (tile.layers !== undefined) for (var i = 0; i < tile.layers.length; i++) pbf.writeMessage(3, writeLayer, tile.layers[i]);
-    return pbf.finish();
 }
 function writeLayer(layer, pbf) {
     if (layer.name !== undefined) pbf.writeStringField(1, layer.name);
