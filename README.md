@@ -104,7 +104,8 @@ Read values:
 
 ```js
 var value = pbf.readVarint();
-var packed = pbf.readPacked('UInt32');
+var str = pbf.readString();
+var numbers = pbf.readPackedVarint();
 ```
 
 For lazy or partial decoding, simply save the position instead of reading a value,
