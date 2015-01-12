@@ -4,9 +4,9 @@
 
 A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers) (a compact binary format for structured data serialization).
 
-Designed to be a building block for writing customized decoders and encoders for a stable protobuf schema.
+Designed to be a building block for writing customized decoders and encoders.
 If you need an all-purpose protobuf JS library that does most of the work for you,
-take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers).
+take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers) too.
 
 ## Example
 
@@ -62,13 +62,17 @@ npm run build-min # dist/pbf.js (minified production build)
 
 ## API
 
-Create a Protobuf object, optionally given a `Buffer` as input data (or `Uint8Array` in browsers):
+Create a `Pbf` object, optionally given a `Buffer` or `Uint8Array` as input data:
 
 ```js
-var pbf = Protobuf(/*Buffer or Uint8Array*/ buf);
+// parse a pbf file from disk in Node
+var pbf = new Pbf(fs.readFileSync('data.pbf'));
+
+// parse a pbf file in a browser after an ajax request with responseType="arraybuffer"
+var pbf = new Pbf(new Uint8Array(xhr.response));
 ```
 
-Protobuf object properties:
+`Pbf` object properties:
 
 ```js
 pbf.length; // length of the underlying buffer
@@ -88,7 +92,7 @@ pbf.readFields(function (tag) {
 ```
 
 It optionally accepts an object that will be passed to the reading function for easier construction of decoded data,
-and also passes the Protobuf object as a third argument:
+and also passes the `Pbf` object as a third argument:
 
 ```js
 var result = pbf.readFields(callback, {})
