@@ -56,8 +56,8 @@ Making a browser build:
 
 ```bash
 npm install
-npm run build-dev # pbf-dev.js (development build)
-npm run build-min # pbf.js (minified production build)
+npm run build-dev # dist/pbf-dev.js (development build)
+npm run build-min # dist/pbf.js (minified production build)
 ```
 
 ## API

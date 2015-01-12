@@ -6,8 +6,8 @@
   "scripts": {
     "test": "jshint index.js buffer.js test/*.js && tape test/*.test.js | faucet",
     "cov": "istanbul cover tape test/*.test.js && coveralls < ./coverage/lcov.info",
-    "build-min": "browserify index.js -s Pbf | uglifyjs -c -m > pbf.js",
-    "build-dev": "browserify index.js -d -s Pbf > pbf-dev.js"
+    "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
+    "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js"
   },
   "repository": {
     "type": "git",
@@ -47,7 +47,8 @@
     "faucet": "0.0.1",
     "istanbul": "~0.3.5",
     "jshint": "^2.5.11",
-    "protocol-buffers": "^2.4.3",
+    "mkdirp": "^0.5.0",
+    "protocol-buffers": "^2.4.6",
     "tape": "~3.0.3",
     "uglify-js": "^2.4.16"
   }
