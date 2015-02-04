@@ -3,6 +3,8 @@
 var BufferShim = require('../buffer'),
     test = require('tape');
 
+/*eslint comma-spacing: 0*/
+
 function toArray(buf) {
     var arr = [];
     for (var i = 0; i < buf.length; i++) {

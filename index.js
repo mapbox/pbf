@@ -177,7 +177,7 @@ Pbf.prototype = {
 
     skip: function(val) {
         var type = val & 0x7;
-        if (type === Pbf.Varint) while (this.buf[this.pos++] > 0x7f);
+        if (type === Pbf.Varint) while (this.buf[this.pos++] > 0x7f) {}
         else if (type === Pbf.Bytes) this.pos = this.readVarint() + this.pos;
         else if (type === Pbf.Fixed32) this.pos += 4;
         else if (type === Pbf.Fixed64) this.pos += 8;
@@ -195,7 +195,7 @@ Pbf.prototype = {
 
         while (length < this.pos + min) length *= 2;
 
-        if (length != this.length) {
+        if (length !== this.length) {
             var buf = new Buffer(length);
             this.buf.copy(buf);
             this.buf = buf;
@@ -245,20 +245,20 @@ Pbf.prototype = {
         } else if (val <= 0x3fff) {
             this.realloc(2);
             this.buf[this.pos++] = ((val >>> 0) & 0x7f) | 0x80;
-            this.buf[this.pos++] =  (val >>> 7) & 0x7f;
+            this.buf[this.pos++] = ((val >>> 7) & 0x7f);
 
         } else if (val <= 0x1fffff) {
             this.realloc(3);
-            this.buf[this.pos++] = ((val >>>  0) & 0x7f) | 0x80;
-            this.buf[this.pos++] = ((val >>>  7) & 0x7f) | 0x80;
-            this.buf[this.pos++] =  (val >>> 14) & 0x7f;
+            this.buf[this.pos++] = ((val >>> 0) & 0x7f) | 0x80;
+            this.buf[this.pos++] = ((val >>> 7) & 0x7f) | 0x80;
+            this.buf[this.pos++] = ((val >>> 14) & 0x7f);
 
         } else if (val <= 0xfffffff) {
             this.realloc(4);
-            this.buf[this.pos++] = ((val >>>  0) & 0x7f) | 0x80;
-            this.buf[this.pos++] = ((val >>>  7) & 0x7f) | 0x80;
+            this.buf[this.pos++] = ((val >>> 0) & 0x7f) | 0x80;
+            this.buf[this.pos++] = ((val >>> 7) & 0x7f) | 0x80;
             this.buf[this.pos++] = ((val >>> 14) & 0x7f) | 0x80;
-            this.buf[this.pos++] =  (val >>> 21) & 0x7f;
+            this.buf[this.pos++] = ((val >>> 21) & 0x7f);
 
         } else {
             var pos = this.pos;
@@ -269,7 +269,7 @@ Pbf.prototype = {
             }
             this.realloc(1);
             this.buf[this.pos++] = val | 0;
-            if (this.pos - pos > 10) throw new Error("Given varint doesn't fit into 10 bytes");
+            if (this.pos - pos > 10) throw new Error('Given varint doesn\'t fit into 10 bytes');
         }
     },
 

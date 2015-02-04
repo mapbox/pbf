@@ -2,9 +2,12 @@
 
 var Pbf = require('../'),
     fs = require('fs'),
+    path = require('path'),
     test = require('tape').test;
 
 require('./buffer.test');
+
+/*eslint comma-spacing: 0*/
 
 function toArray(buf) {
     var arr = [];
@@ -277,12 +280,12 @@ test('readString', function (t) {
 });
 
 test('readFields', function (t) {
-    var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf')),
+    var buf = new Pbf(fs.readFileSync(path.join(__dirname, '/fixtures/12665.vector.pbf'))),
         layerOffsets = [],
         foo = {}, res, res2, buf2;
 
     res2 = buf.readFields(function (tag, result, buf) {
-        if (tag == 3) layerOffsets.push(buf.pos);
+        if (tag === 3) layerOffsets.push(buf.pos);
         res = result;
         buf2 = buf;
     }, foo);
@@ -298,20 +301,20 @@ test('readFields', function (t) {
 });
 
 test('readMessage', function (t) {
-    var buf = new Pbf(fs.readFileSync(__dirname + '/fixtures/12665.vector.pbf')),
+    var buf = new Pbf(fs.readFileSync(path.join(__dirname, '/fixtures/12665.vector.pbf'))),
         layerNames = [],
         foo = {};
 
     buf.readFields(function (tag) {
-        if (tag == 3) buf.readMessage(readLayer, foo);
+        if (tag === 3) buf.readMessage(readLayer, foo);
     }, foo);
 
     function readLayer(tag) {
         if (tag === 1) layerNames.push(buf.readString());
     }
 
-    t.same(layerNames, ["landuse","water","barrier_line","building","tunnel","road",
-        "place_label","water_label","poi_label","road_label","housenum_label"]);
+    t.same(layerNames, ['landuse','water','barrier_line','building','tunnel','road',
+        'place_label','water_label','poi_label','road_label','housenum_label']);
 
     t.end();
 });

@@ -4,7 +4,7 @@
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
   "scripts": {
-    "test": "jshint index.js buffer.js test/*.js && tape test/*.test.js | faucet",
+    "test": "eslint index.js buffer.js test/*.js && tape test/*.test.js | faucet",
     "cov": "istanbul cover tape test/*.test.js && coveralls < ./coverage/lcov.info",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
     "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js"
@@ -33,13 +33,6 @@
   "dependencies": {
     "ieee754": "~1.1.4"
   },
-  "jshintConfig": {
-    "trailing": true,
-    "undef": true,
-    "unused": true,
-    "indent": 4,
-    "node": true
-  },
   "devDependencies": {
     "benchmark": "^1.0.0",
     "brfs": "1.2.0",
@@ -51,5 +44,42 @@
     "protocol-buffers": "^2.4.6",
     "tape": "~3.0.3",
     "uglify-js": "^2.4.16"
+  },
+  "eslintConfig": {
+    "rules": {
+      "no-use-before-define": [
+        2,
+        "nofunc"
+      ],
+      "camelcase": 2,
+      "space-after-function-name": 2,
+      "space-in-parens": 2,
+      "space-before-blocks": 2,
+      "space-after-keywords": 2,
+      "comma-style": 2,
+      "no-lonely-if": 2,
+      "no-else-return": 2,
+      "new-cap": 2,
+      "space-in-brackets": 2,
+      "quotes": [
+        2,
+        "single"
+      ],
+      "no-new": 2,
+      "no-empty": 0,
+      "key-spacing": 0,
+      "no-multi-spaces": 0,
+      "no-underscore-dangle": 0,
+      "no-shadow": 0,
+      "curly": 0,
+      "no-constant-condition": 0
+    },
+    "env": {
+      "node": true,
+      "browser": true
+    },
+    "globals": {
+      "Buffer": true
+    }
   }
 }

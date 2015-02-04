@@ -7,6 +7,8 @@ module.exports = Buffer;
 
 var ieee754 = require('ieee754');
 
+var BufferMethods;
+
 function Buffer(length) {
     var arr;
     if (length && length.length) {
@@ -35,7 +37,7 @@ function Buffer(length) {
 
 var lastStr, lastStrEncoded;
 
-var BufferMethods = {
+BufferMethods = {
     readUInt32LE: function(pos) {
         return ((this[pos]) |
             (this[pos + 1] << 8) |
@@ -149,11 +151,9 @@ function encodeString(str) {
         }
 
         if (c < 0x80) bytes.push(c);
-        else {
-            if (c < 0x800) bytes.push(c >> 0x6 | 0xC0, c & 0x3F | 0x80);
-            else if (c < 0x10000) bytes.push(c >> 0xC | 0xE0, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
-            else bytes.push(c >> 0x12 | 0xF0, c >> 0xC & 0x3F | 0x80, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
-        }
+        else if (c < 0x800) bytes.push(c >> 0x6 | 0xC0, c & 0x3F | 0x80);
+        else if (c < 0x10000) bytes.push(c >> 0xC | 0xE0, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
+        else bytes.push(c >> 0x12 | 0xF0, c >> 0xC & 0x3F | 0x80, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
     }
     return bytes;
 }
