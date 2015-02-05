@@ -9,12 +9,15 @@ if (process.argv.length > 2) {
     compileMessages(resolve.sync(process.argv[2]), 'exports', {},
         process.argv.indexOf('--no-read') === -1,
         process.argv.indexOf('--no-write') === -1);
+} else {
+    console.warn('Error: no path to proto file given.');
 }
 
 function compileMessage(message, parentName, enums, read, write) {
     var name = message.name,
         nameLow = name.toLowerCase(),
-        nameCap = name.charAt(0).toUpperCase() + name.substr(1);
+        nameCap = name.charAt(0).toUpperCase() + name.substr(1),
+        i, field;
 
     console.log('\n// %s ========================================\n', name);
 
@@ -26,7 +29,7 @@ function compileMessage(message, parentName, enums, read, write) {
         '%s.%s = {%s};\n', parentName, name, methods.join(', '));
 
     if (message.enums.length) {
-        for (var i = 0; i < message.enums.length; i++) {
+        for (i = 0; i < message.enums.length; i++) {
             var en = message.enums[i];
             enums[en.name] = true;
             console.log('%s.%s = ' + JSON.stringify(en.values, null, 4) + ';\n', name, en.name);
@@ -36,10 +39,10 @@ function compileMessage(message, parentName, enums, read, write) {
     if (read) {
         console.log('function read%s(pbf, end) {', nameCap);
         console.log('    var %s = pbf.readFields(read%sField, %s, end);', nameLow, nameCap, repeatedDest(message.fields));
-        for (var i = 0; i < message.fields.length; i++) {
-            var field = message.fields[i];
-            if (enums[field.type] && field.options['default'] !== undefined) {
-                console.log('    if (%s.%s === undefined) %s.%s = ' + JSON.stringify(field.options['default']) + ';',
+        for (i = 0; i < message.fields.length; i++) {
+            field = message.fields[i];
+            if (enums[field.type] && field.options.default !== undefined) {
+                console.log('    if (%s.%s === undefined) %s.%s = ' + JSON.stringify(field.options.default) + ';',
                     nameLow, field.name, nameLow, field.name);
             }
         }
@@ -48,8 +51,8 @@ function compileMessage(message, parentName, enums, read, write) {
 
         console.log('function read%sField(tag, %s, pbf) {', nameCap, nameLow);
 
-        for (var i = 0; i < message.fields.length; i++) {
-            var field = message.fields[i];
+        for (i = 0; i < message.fields.length; i++) {
+            field = message.fields[i];
             console.log('    ' + (i ? 'else if' : 'if') + ' (tag === %d) %s.%s = %s;',
                 field.tag, nameLow, field.name, readMethod(field, enums));
         }
@@ -61,8 +64,8 @@ function compileMessage(message, parentName, enums, read, write) {
     if (write) {
         console.log('function write%s(%s, pbf) {', nameCap, nameLow);
         var iDeclared;
-        for (var i = 0; i < message.fields.length; i++) {
-            var field = message.fields[i];
+        for (i = 0; i < message.fields.length; i++) {
+            field = message.fields[i];
             if (!iDeclared && field.repeated) {
                 console.log('    var i;');
                 iDeclared = true;

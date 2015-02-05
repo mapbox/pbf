@@ -4,7 +4,7 @@
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
   "scripts": {
-    "test": "eslint index.js buffer.js test/*.js && tape test/*.test.js | faucet",
+    "test": "eslint index.js buffer.js test/*.js bin/pbf && tape test/*.test.js | faucet",
     "cov": "istanbul cover tape test/*.test.js && coveralls < ./coverage/lcov.info",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
     "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js"
@@ -31,7 +31,8 @@
   },
   "homepage": "https://github.com/mapbox/pbf",
   "dependencies": {
-    "ieee754": "~1.1.4"
+    "ieee754": "~1.1.4",
+    "resolve-protobuf-schema": "^1.0.2"
   },
   "devDependencies": {
     "benchmark": "^1.0.0",
