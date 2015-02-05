@@ -6,7 +6,8 @@ var resolve = require('resolve-protobuf-schema');
 
 if (process.argv.length > 2) {
     console.log('\'use strict\';');
-    compileMessages(resolve.sync(process.argv[2]), 'exports', {},
+    compileMessages(resolve.sync(process.argv[2]),
+        process.argv.indexOf('--browser') !== -1 ? 'window' : 'exports', {},
         process.argv.indexOf('--no-read') === -1,
         process.argv.indexOf('--no-write') === -1);
 } else {

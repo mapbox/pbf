@@ -9,6 +9,9 @@
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
     "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js"
   },
+  "bin": {
+    "pbf": "bin/pbf"
+  },
   "repository": {
     "type": "git",
     "url": "git@github.com:mapbox/pbf.git"
