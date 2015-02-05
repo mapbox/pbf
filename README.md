@@ -258,6 +258,10 @@ The resulting code is pretty short and easy to understand, so you can customize 
 
 ## Changelog
 
+#### 1.3.0 (Feb 5, 2015)
+
+- Added `pbf` binary that compiles `.proto` files into `Pbf`-based JavaScript modules.
+
 #### 1.2.0 (Jan 5, 2015)
 
 ##### Breaking API changes
