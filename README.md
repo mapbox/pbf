@@ -8,9 +8,25 @@ Designed to be a building block for writing customized decoders and encoders.
 If you need an all-purpose protobuf JS library that does most of the work for you,
 take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers) too.
 
-## Example
+## Examples
 
-#### Reading
+#### Using Compiled Code
+
+Install `pbf` and compile a JavaScript module from a `.proto` file:
+
+```bash
+$ npm install -g pbf
+$ pbf test.proto > test.js
+```
+
+Then read and write objects using the module like this:
+
+```js
+var obj = Test.read(new Pbf(buffer)); // read
+var buffer = Test.write(obj, new Pbf()); // write
+```
+
+#### Custom Reading
 
 ```js
 var data = new Pbf(buffer).readFields(readData, {});
@@ -26,7 +42,7 @@ function readLayer(tag, layer, pbf) {
 }
 ```
 
-#### Writing
+#### Custom Writing
 
 ```js
 var pbf = new Pbf();
@@ -43,6 +59,7 @@ function writeLayer(layer, pbf) {
     pbf.writeVarintField(2, layer.size);
 }
 ```
+
 
 ## Install
 
@@ -218,6 +235,26 @@ Misc methods:
 * `destroy()` - dispose the buffer
 
 For an example of a real-world usage of the library, see [vector-tile-js](https://github.com/mapbox/vector-tile-js).
+
+
+## Proto Schema to JavaScript
+
+If installed globally, `pbf` provides a binary that compiles `proto` files into JavaScript modules. Usage:
+
+```bash
+$ pbf <proto_path> [--no-write] [--no-read] [--browser]
+```
+
+The `--no-write` and `--no-read` switches remove corresponding code in the output.
+The `--browser` switch makes the module work in browsers instead of Node.
+
+The resulting module exports each message by name with the following methods:
+
+* `read(pbf)` - decodes an object from the given `Pbf` instance
+* `write(obj, pbf)` - encodes an object into the given `Pbf` instance (usually empty)
+
+The resulting code is pretty short and easy to understand, so you can customize it easily.
+
 
 ## Changelog
 
