@@ -5,8 +5,8 @@ var Benchmark = require('benchmark'),
     protobuf = require('protocol-buffers'),
     vt = require('./vector_tile'),
     Pbf = require('../'),
-    readTile = vt.readTile,
-    writeTile = vt.writeTile;
+    readTile = vt.Tile.read,
+    writeTile = vt.Tile.write;
 
 var Tile = protobuf(fs.readFileSync(__dirname + '/vector_tile.proto')).Tile,
     data = fs.readFileSync(__dirname + '/../test/fixtures/12665.vector.pbf'),
@@ -15,6 +15,8 @@ var Tile = protobuf(fs.readFileSync(__dirname + '/vector_tile.proto')).Tile,
 var tile = readTile(new Pbf(data)),
     tileJSON = JSON.stringify(tile),
     tile2 = Tile.decode(data);
+
+writeTile(tile, new Pbf());
 
 suite
 .add('decode vector tile with pbf', function() {
