@@ -258,6 +258,10 @@ The resulting code is pretty short and easy to understand, so you can customize 
 
 ## Changelog
 
+#### 1.3.1 (Feb 20, 2015)
+
+- Fixed pbf proto compile tool generating broken writing code.
+
 #### 1.3.0 (Feb 5, 2015)
 
 - Added `pbf` binary that compiles `.proto` files into `Pbf`-based JavaScript modules.
