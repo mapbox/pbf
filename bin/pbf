@@ -144,7 +144,7 @@ function writeMethod(tag, type, name, repeated, packed, enums) {
     var prefix = 'pbf.write';
     if (packed) prefix += 'Packed';
 
-    var postfix = '(' + tag + ', ' + name + ')';
+    var postfix = (packed ? '' : 'Field') + '(' + tag + ', ' + name + ')';
 
     switch (type) {
     case 'string':   return prefix + 'String' + postfix;
