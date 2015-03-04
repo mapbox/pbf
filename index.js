@@ -16,7 +16,8 @@ Pbf.Bytes   = 2; // length-delimited: string, bytes, embedded messages, packed r
 Pbf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
 
 var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
-    SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
+    SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32,
+    POW_2_63 = Math.pow(2, 63);
 
 Pbf.prototype = {
 
@@ -102,6 +103,26 @@ Pbf.prototype = {
         b = buf[this.pos++]; val += (b & 0x7f) * 0x8000000000000000; if (b < 0x80) return val;
 
         throw new Error('Expected varint not more than 10 bytes');
+    },
+
+    readVarint64: function() {
+        var startPos = this.pos,
+            val = this.readVarint();
+
+        if (val >= POW_2_63) {
+            var pos = this.pos - 2;
+            while (this.buf[pos] === 0xff) pos--; // skip padded bytes
+
+            var len = pos - startPos + 1,
+                buf = new Buffer(len);
+
+            for (var i = 0; i < len - 1; i++) buf[i] = ~this.buf[startPos + i] | 0x80;
+            buf[len - 1] = ~this.buf[startPos + len - 1] & 0x7f;
+
+            return -(new Pbf(buf).readVarint() + 1);
+        }
+
+        return val;
     },
 
     readSVarint: function() {
