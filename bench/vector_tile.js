@@ -36,7 +36,7 @@ function readValueField(tag, value, pbf) {
     if (tag === 1) value.string_value = pbf.readString();
     else if (tag === 2) value.float_value = pbf.readFloat();
     else if (tag === 3) value.double_value = pbf.readDouble();
-    else if (tag === 4) value.int_value = pbf.readVarint();
+    else if (tag === 4) value.int_value = pbf.readVarint64();
     else if (tag === 5) value.uint_value = pbf.readVarint();
     else if (tag === 6) value.sint_value = pbf.readSVarint();
     else if (tag === 7) value.bool_value = pbf.readBoolean();

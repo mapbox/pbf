@@ -109,22 +109,19 @@ Pbf.prototype = {
         var startPos = this.pos,
             val = this.readVarint();
 
-        if (val >= POW_2_63) {
-            var pos = this.pos - 2;
-            while (this.buf[pos] === 0xff) pos--; // skip padded bytes
+        if (val < POW_2_63) return val;
 
-            if (pos < startPos) pos = startPos;
+        var pos = this.pos - 2;
+        while (this.buf[pos] === 0xff) pos--;
+        if (pos < startPos) pos = startPos;
 
-            var len = pos - startPos + 1,
-                buf = new Buffer(len);
-
-            for (var i = 0; i < len - 1; i++) buf[i] = ~this.buf[startPos + i] | 0x80;
-            buf[len - 1] = ~this.buf[startPos + len - 1] & 0x7f;
-
-            return -(new Pbf(buf).readVarint() + 1);
+        val = 0;
+        for (var i = 0; i < pos - startPos + 1; i++) {
+            var b = ~this.buf[startPos + i] & 0x7f;
+            val += i < 4 ? b << i * 7 : b * Math.pow(2, i * 7);
         }
 
-        return val;
+        return -val - 1;
     },
 
     readSVarint: function() {
