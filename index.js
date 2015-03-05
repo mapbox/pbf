@@ -113,6 +113,8 @@ Pbf.prototype = {
             var pos = this.pos - 2;
             while (this.buf[pos] === 0xff) pos--; // skip padded bytes
 
+            if (pos < startPos) pos = startPos;
+
             var len = pos - startPos + 1,
                 buf = new Buffer(len);
 
