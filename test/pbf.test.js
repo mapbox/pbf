@@ -56,6 +56,22 @@ test('readVarint & writeVarint', function(t) {
     t.end();
 });
 
+test('readVarint64', function(t) {
+    var bytes = [0xc8,0xe8,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x01];
+    var buf = new Pbf(new Buffer(bytes));
+    t.equal(buf.readVarint64(), -3000);
+
+    bytes = [0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x01];
+    buf = new Pbf(new Buffer(bytes));
+    t.equal(buf.readVarint64(), -1);
+
+    bytes = [0xc8,0x01];
+    buf = new Pbf(new Buffer(bytes));
+    t.equal(buf.readVarint64(), 200);
+
+    t.end();
+});
+
 test('readVarint & writeVarint handle really big numbers', function(t) {
     var buf = new Pbf();
     var bigNum1 = Math.pow(2, 60);
