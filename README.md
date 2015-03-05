@@ -146,6 +146,7 @@ Scalar reading methods:
 
 * `readVarint()`
 * `readSVarint()`
+* `readVarint64()` (`readVarint` version that handles negative `int64` values)
 * `readFixed32()`
 * `readFixed64()`
 * `readSFixed32()`
@@ -257,6 +258,10 @@ The resulting code is pretty short and easy to understand, so you can customize 
 
 
 ## Changelog
+
+#### 1.3.2 (Mar 5, 2015)
+
+- Added `readVarint64` method for proper decoding of negative `int64`-encoded values.
 
 #### 1.3.1 (Feb 20, 2015)
 
