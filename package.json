@@ -34,20 +34,19 @@
   },
   "homepage": "https://github.com/mapbox/pbf",
   "dependencies": {
-    "ieee754": "~1.1.4",
+    "ieee754": "~1.1.5",
     "resolve-protobuf-schema": "^1.0.2"
   },
   "devDependencies": {
     "benchmark": "^1.0.0",
-    "brfs": "1.2.0",
     "coveralls": "~2.11.2",
-    "eslint": "^0.13.0",
+    "eslint": "^0.21.0",
     "faucet": "0.0.1",
-    "istanbul": "~0.3.5",
+    "istanbul": "~0.3.14",
     "mkdirp": "^0.5.0",
-    "protocol-buffers": "^2.4.6",
-    "tape": "~3.0.3",
-    "uglify-js": "^2.4.16"
+    "protocol-buffers": "^3.0.0",
+    "tape": "~4.0.0",
+    "uglify-js": "^2.4.21"
   },
   "eslintConfig": {
     "rules": {
