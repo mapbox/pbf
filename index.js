@@ -329,9 +329,7 @@ Pbf.prototype = {
         for (var i = 0; i < len; i++) this.buf[this.pos++] = buffer[i];
     },
 
-    writeMessage: function(tag, fn, obj) {
-        this.writeTag(tag, Pbf.Bytes);
-
+    writeRawMessage: function(tag, fn, obj) {
         this.pos++; // reserve 1 byte for short message length
 
         // write the message directly to the buffer and see how much was written
@@ -355,6 +353,11 @@ Pbf.prototype = {
         this.pos = startPos - 1;
         this.writeVarint(len);
         this.pos += len;
+    },
+
+    writeMessage: function(tag, fn, obj) {
+        this.writeTag(tag, Pbf.Bytes);
+        this.writeRawMessage(tag, fn, obj);
     },
 
     writePackedVarint:   function(tag, arr) { this.writeMessage(tag, writePackedVarint, arr);   },

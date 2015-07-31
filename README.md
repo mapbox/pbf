@@ -203,8 +203,6 @@ Field writing methods:
 * `writeDoubleField(tag, val)`
 * `writeStringField(tag, val)`
 * `writeBytesField(tag, buffer)`
-* `writePacked(tag, type, items)`
-* `writeMessage(tag, pbf)`
 
 Packed field writing methods:
 
@@ -227,6 +225,11 @@ Scalar writing methods:
 * `writeDouble(val)`
 * `writeString(val)`
 * `writeBytes(buffer)`
+
+Message writing methods:
+
+* `writeMessage(tag, fn[, obj])`
+* `writeRawMessage(fn[, obj])`
 
 Misc methods:
 
@@ -258,6 +261,10 @@ The resulting code is pretty short and easy to understand, so you can customize 
 
 
 ## Changelog
+
+#### 1.3.3 (Jul 31, 2015)
+
+- Added `writeRawMessage` method for writing a message without a tag, useful for creating pbfs with multiple top-level messages.
 
 #### 1.3.2 (Mar 5, 2015)
 
