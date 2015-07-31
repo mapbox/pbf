@@ -262,7 +262,7 @@ The resulting code is pretty short and easy to understand, so you can customize 
 
 ## Changelog
 
-#### 1.3.3 (Jul 31, 2015)
+#### 1.3.4 (Jul 31, 2015)
 
 - Added `writeRawMessage` method for writing a message without a tag, useful for creating pbfs with multiple top-level messages.
 
