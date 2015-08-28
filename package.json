@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "benchmark": "^1.0.0",
+    "browserify": "^11.0.1",
     "coveralls": "~2.11.2",
     "eslint": "^0.21.0",
     "faucet": "0.0.1",
