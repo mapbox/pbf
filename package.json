@@ -35,7 +35,7 @@
   "homepage": "https://github.com/mapbox/pbf",
   "dependencies": {
     "ieee754": "~1.1.5",
-    "resolve-protobuf-schema": "^1.0.2"
+    "resolve-protobuf-schema": "^2.0.0"
   },
   "devDependencies": {
     "benchmark": "^1.0.0",
