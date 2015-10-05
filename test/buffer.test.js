@@ -1,7 +1,7 @@
 'use strict';
 
 var BufferShim = require('../buffer'),
-    test = require('tape');
+    test = require('tap').test;
 
 /*eslint comma-spacing: 0*/
 

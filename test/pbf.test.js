@@ -3,9 +3,7 @@
 var Pbf = require('../'),
     fs = require('fs'),
     path = require('path'),
-    test = require('tape').test;
-
-require('./buffer.test');
+    test = require('tap').test;
 
 /*eslint comma-spacing: 0*/
 

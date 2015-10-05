@@ -4,8 +4,8 @@
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
   "scripts": {
-    "test": "eslint index.js buffer.js test/*.js bin/pbf && tape test/*.test.js | faucet",
-    "cov": "istanbul cover tape test/*.test.js && coveralls < ./coverage/lcov.info",
+    "test": "eslint index.js buffer.js test/*.js bin/pbf && tap test/*.test.js",
+    "cov": "tap test/*.test.js --cov",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
     "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js"
   },
@@ -40,14 +40,12 @@
   "devDependencies": {
     "benchmark": "^1.0.0",
     "browserify": "^11.0.1",
-    "coveralls": "~2.11.2",
     "eslint": "^0.21.0",
     "faucet": "0.0.1",
-    "istanbul": "~0.3.14",
     "mkdirp": "^0.5.0",
     "protocol-buffers": "^3.0.0",
-    "tape": "~4.0.0",
     "uglify-js": "^2.4.21"
+    "tap": "^2.0.0",
   },
   "eslintConfig": {
     "rules": {
