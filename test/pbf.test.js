@@ -108,7 +108,7 @@ test('readSVarint & writeSVarint', function(t) {
 
 test('writeVarint throws error on a number that is too big', function(t) {
     var buf = new Pbf(new Buffer(0));
-    t.throws(function () {
+    t.throws(function() {
         buf.writeVarint(29234322996241367000012);
     });
     t.end();
@@ -116,7 +116,7 @@ test('writeVarint throws error on a number that is too big', function(t) {
 
 test('readVarint throws error on a number that is longer than 10 bytes', function(t) {
     var buf = new Pbf(new Buffer([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]));
-    t.throws(function () {
+    t.throws(function() {
         buf.readVarint();
     });
     t.end();
@@ -157,7 +157,7 @@ test('readDouble', function(t) {
 test('readPacked and writePacked', function(t) {
     var testNumbers2 = testNumbers.slice(0, 10);
 
-    ['Varint', 'SVarint', 'Float', 'Double', 'Fixed32', 'SFixed32', 'Fixed64', 'SFixed64'].forEach(function (type) {
+    ['Varint', 'SVarint', 'Float', 'Double', 'Fixed32', 'SFixed32', 'Fixed64', 'SFixed64'].forEach(function(type) {
         var buf = new Pbf();
         buf['writePacked' + type](1, testNumbers2);
         buf.finish();
@@ -223,7 +223,7 @@ test('writeFixed32', function(t) {
     t.end();
 });
 
-test('readFixed64', function (t) {
+test('readFixed64', function(t) {
     var buf = new Pbf(new Buffer(8));
     buf.writeFixed64(102451124123);
     buf.finish();
@@ -231,7 +231,7 @@ test('readFixed64', function (t) {
     t.end();
 });
 
-test('writeFixed64', function (t) {
+test('writeFixed64', function(t) {
     var buf = new Pbf(new Buffer(8));
     buf.writeFixed64(102451124123);
     t.same(toArray(buf.buf), [155,23,144,218,23,0,0,0]);
@@ -258,7 +258,7 @@ test('writeSFixed32', function(t) {
     t.end();
 });
 
-test('readSFixed64', function (t) {
+test('readSFixed64', function(t) {
     var buf = new Pbf(new Buffer(8));
     buf.writeSFixed64(-102451124123);
     buf.finish();
@@ -266,14 +266,14 @@ test('readSFixed64', function (t) {
     t.end();
 });
 
-test('writeSFixed64', function (t) {
+test('writeSFixed64', function(t) {
     var buf = new Pbf(new Buffer(8));
     buf.writeSFixed64(-102451124123);
     t.same(toArray(buf.buf), [101,232,111,37,232,255,255,255]);
     t.end();
 });
 
-test('writeString', function (t) {
+test('writeString', function(t) {
     var buffer = new Buffer(32);
     var buf = new Pbf(buffer);
     var len = Buffer.byteLength('Привет');
@@ -285,7 +285,7 @@ test('writeString', function (t) {
     t.end();
 });
 
-test('readString', function (t) {
+test('readString', function(t) {
     var buf = new Pbf(new Buffer(0));
     buf.writeString('Привет');
     buf.finish();
@@ -293,12 +293,12 @@ test('readString', function (t) {
     t.end();
 });
 
-test('readFields', function (t) {
+test('readFields', function(t) {
     var buf = new Pbf(fs.readFileSync(path.join(__dirname, '/fixtures/12665.vector.pbf'))),
         layerOffsets = [],
         foo = {}, res, res2, buf2;
 
-    res2 = buf.readFields(function (tag, result, buf) {
+    res2 = buf.readFields(function(tag, result, buf) {
         if (tag === 3) layerOffsets.push(buf.pos);
         res = result;
         buf2 = buf;
@@ -314,12 +314,12 @@ test('readFields', function (t) {
     t.end();
 });
 
-test('readMessage', function (t) {
+test('readMessage', function(t) {
     var buf = new Pbf(fs.readFileSync(path.join(__dirname, '/fixtures/12665.vector.pbf'))),
         layerNames = [],
         foo = {};
 
-    buf.readFields(function (tag) {
+    buf.readFields(function(tag) {
         if (tag === 3) buf.readMessage(readLayer, foo);
     }, foo);
 
@@ -333,7 +333,7 @@ test('readMessage', function (t) {
     t.end();
 });
 
-test('field writing methods', function (t) {
+test('field writing methods', function(t) {
     var buf = new Pbf();
     buf.writeFixed32Field(1, 100);
     buf.writeFixed64Field(2, 200);
@@ -344,7 +344,7 @@ test('field writing methods', function (t) {
     buf.writeDoubleField(7, 123);
     buf.writeBooleanField(8, true);
     buf.writeBytesField(9, [1, 2, 3]);
-    buf.writeMessage(10, function () {
+    buf.writeMessage(10, function() {
         buf.writeBooleanField(1, true);
         buf.writePackedVarint(2, testNumbers);
     });
@@ -354,7 +354,7 @@ test('field writing methods', function (t) {
 
     buf.finish();
 
-    buf.readFields(function (tag) {
+    buf.readFields(function(tag) {
         if (tag === 1) buf.readFixed32();
         else if (tag === 2) buf.readFixed64();
         else if (tag === 3) buf.readVarint();
@@ -364,7 +364,7 @@ test('field writing methods', function (t) {
         else if (tag === 7) buf.readDouble();
         else if (tag === 8) buf.readBoolean();
         else if (tag === 9) buf.readBytes();
-        else if (tag === 10) buf.readMessage(function () { /* skip */ });
+        else if (tag === 10) buf.readMessage(function() { /* skip */ });
         else if (tag === 11) buf.readSFixed32();
         else if (tag === 12) buf.readSFixed64();
         else t.fail('unknown tag');
@@ -372,7 +372,7 @@ test('field writing methods', function (t) {
     t.end();
 });
 
-test('skip', function (t) {
+test('skip', function(t) {
     var buf = new Pbf();
     buf.writeFixed32Field(1, 100);
     buf.writeFixed64Field(2, 200);
@@ -380,11 +380,11 @@ test('skip', function (t) {
     buf.writeStringField(4, 'Hello world');
     buf.finish();
 
-    buf.readFields(function () { /* skip */ });
+    buf.readFields(function() { /* skip */ });
 
     t.equal(buf.pos, buf.length);
 
-    t.throws(function () {
+    t.throws(function() {
         buf.skip(6);
     });
     t.end();

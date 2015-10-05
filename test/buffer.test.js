@@ -13,13 +13,13 @@ function toArray(buf) {
     return arr;
 }
 
-test('empty buffer', function (t) {
+test('empty buffer', function(t) {
     var buf = new BufferShim();
     t.equal(buf.length, 0);
     t.end();
 });
 
-test('isBuffer', function (t) {
+test('isBuffer', function(t) {
     var buf = new BufferShim();
     t.equal(BufferShim.isBuffer(buf), true);
     t.equal(BufferShim.isBuffer([1, 2, 3]), false);
@@ -27,7 +27,7 @@ test('isBuffer', function (t) {
     t.end();
 });
 
-test('writeUInt32LE', function (t) {
+test('writeUInt32LE', function(t) {
     var shim = new BufferShim(8);
     shim.writeUInt32LE(12562, 0);
     shim.writeUInt32LE(555, 4);
@@ -36,7 +36,7 @@ test('writeUInt32LE', function (t) {
     t.end();
 });
 
-test('readUInt32LE', function (t) {
+test('readUInt32LE', function(t) {
     var shim = new BufferShim(8);
     shim.writeUInt32LE(12562, 0);
     shim.writeUInt32LE(555, 4);
@@ -45,7 +45,7 @@ test('readUInt32LE', function (t) {
     t.end();
 });
 
-test('readInt32LE', function (t) {
+test('readInt32LE', function(t) {
     var shim = new BufferShim(8);
     shim.writeInt32LE(12562, 0);
     shim.writeInt32LE(-555, 4);
@@ -54,7 +54,7 @@ test('readInt32LE', function (t) {
     t.end();
 });
 
-test('writeFloatLE', function (t) {
+test('writeFloatLE', function(t) {
     var shim = new BufferShim(4);
     shim.writeFloatLE(123.456, 0);
 
@@ -62,7 +62,7 @@ test('writeFloatLE', function (t) {
     t.end();
 });
 
-test('readFloatLE', function (t) {
+test('readFloatLE', function(t) {
     var shim = new BufferShim(4);
     shim.writeFloatLE(123.456, 0);
 
@@ -70,7 +70,7 @@ test('readFloatLE', function (t) {
     t.end();
 });
 
-test('writeDoubleLE', function (t) {
+test('writeDoubleLE', function(t) {
     var shim = new BufferShim(8);
     shim.writeDoubleLE(123.4567890123456789, 0);
 
@@ -78,7 +78,7 @@ test('writeDoubleLE', function (t) {
     t.end();
 });
 
-test('readDoubleLE', function (t) {
+test('readDoubleLE', function(t) {
     var shim = new BufferShim(8);
     shim.writeDoubleLE(123.4567890123456789, 0);
 
@@ -89,7 +89,7 @@ test('readDoubleLE', function (t) {
 var testStr = 'Привет 李小龙',
     testBytes = [208,159,209,128,208,184,208,178,208,181,209,130,32,230,157,142,229,176,143,233,190,153];
 
-test('write', function (t) {
+test('write', function(t) {
     var shim = new BufferShim(22);
     shim.write(testStr, 0);
 
@@ -97,7 +97,7 @@ test('write', function (t) {
     t.end();
 });
 
-test('toString', function (t) {
+test('toString', function(t) {
     var shim = new BufferShim(22);
     shim.write(testStr, 0);
 
@@ -105,7 +105,7 @@ test('toString', function (t) {
     t.end();
 });
 
-test('more complicated utf8', function (t) {
+test('more complicated utf8', function(t) {
     var shim = new BufferShim(100);
     // crazy test from github.com/mathiasbynens/utf8.js
     var str = '\uDC00\uDC00\uDC00\uDC00A\uDC00\uD834\uDF06\uDC00\uDEEE\uDFFF\uD800\uDC00\uD800\uD800\uD800\uD800A' +
@@ -117,7 +117,7 @@ test('more complicated utf8', function (t) {
     t.end();
 });
 
-test('wrap', function (t) {
+test('wrap', function(t) {
     var arr = new Uint8Array(testBytes);
     var shim = new BufferShim(arr);
 
@@ -125,12 +125,12 @@ test('wrap', function (t) {
     t.end();
 });
 
-test('byteLength', function (t) {
+test('byteLength', function(t) {
     t.same(BufferShim.byteLength(testStr), 22);
     t.end();
 });
 
-test('copy', function (t) {
+test('copy', function(t) {
     var shim = new BufferShim(new Uint8Array(testBytes));
     var shim2 = new BufferShim(22);
 
@@ -140,7 +140,7 @@ test('copy', function (t) {
     t.end();
 });
 
-test('slice', function (t) {
+test('slice', function(t) {
     var shim = new BufferShim(new Uint8Array(testBytes));
     t.same(toArray(shim.slice(0, 2)), [208, 159]);
     t.end();
