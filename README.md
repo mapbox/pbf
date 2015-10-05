@@ -262,6 +262,10 @@ The resulting code is pretty short and easy to understand, so you can customize 
 
 ## Changelog
 
+#### 1.3.5 (Oct 5, 2015)
+
+- Added support for `syntax` keyword proto files (by updating `resolve-protobuf-schema` dependency).
+
 #### 1.3.4 (Jul 31, 2015)
 
 - Added `writeRawMessage` method for writing a message without a tag, useful for creating pbfs with multiple top-level messages.
