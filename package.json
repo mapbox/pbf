@@ -28,7 +28,7 @@
     "decoder"
   ],
   "author": "Konstantin Kaefer",
-  "license": "BSD",
+  "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/mapbox/pbf/issues"
   },
