@@ -93,7 +93,7 @@ Pbf.prototype = {
         b = buf[this.pos++]; val |= (b & 0x7f) << 14; if (b < 0x80) return val;
         b = buf[this.pos++]; val |= (b & 0x7f) << 21; if (b < 0x80) return val;
 
-        return readVarintExtension(val, this);
+        return readVarintRemainder(val, this);
     },
 
     readVarint64: function() {
@@ -250,7 +250,7 @@ Pbf.prototype = {
         val = +val;
 
         if (val > 0xfffffff) {
-            writeExtendedVarint(val, this);
+            writeBigVarint(val, this);
             return;
         }
 
@@ -374,7 +374,7 @@ Pbf.prototype = {
     }
 };
 
-function readVarintExtension(val, pbf) {
+function readVarintRemainder(val, pbf) {
     var buf = pbf.buf, b;
 
     b = buf[pbf.pos++]; val += (b & 0x7f) * 0x10000000;         if (b < 0x80) return val;
@@ -387,7 +387,7 @@ function readVarintExtension(val, pbf) {
     throw new Error('Expected varint not more than 10 bytes');
 }
 
-function writeExtendedVarint(val, pbf) {
+function writeBigVarint(val, pbf) {
     pbf.realloc(10);
 
     var maxPos = pbf.pos + 10;
