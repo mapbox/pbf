@@ -22,8 +22,14 @@ $ pbf test.proto > test.js
 Then read and write objects using the module like this:
 
 ```js
-var obj = Test.read(new Pbf(buffer)); // read
-var buffer = Test.write(obj, new Pbf()); // write
+// read
+var pbf = new Pbf(buffer);
+var obj = Test.read(pbf);
+
+// write
+var pbf = new Pbf();
+Test.write(obj, pbf);
+var buffer = pbf.finish();
 ```
 
 #### Custom Reading
