@@ -277,10 +277,16 @@ The resulting module exports each message by name with the following methods:
 * `read(pbf)` - decodes an object from the given `Pbf` instance
 * `write(obj, pbf)` - encodes an object into the given `Pbf` instance (usually empty)
 
-The resulting code is pretty short and easy to understand, so you can customize it easily.
-
+The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
+
+#### 2.0.0 (May 28, 2016)
+
+- Significantly improved the proto compiler, which now produces a much safer reading/writing code.
+- Added the ability to compile a read/write module from a protobuf schema directly in the code.
+- Proto compiler: fixed name resolutions and collisions in schemas with nested messages.
+- Proto compiler: fixed broken top-level enums.
 
 #### 1.3.6 (May 27, 2016)
 
