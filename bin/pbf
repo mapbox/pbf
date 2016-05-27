@@ -39,28 +39,7 @@ function compileMessage(message, parentName, enums, read, write) {
 
     if (read) {
         console.log('function read%s(pbf, end) {', nameCap);
-        part = 'pbf.readFields(read' + nameCap + 'Field, ' + repeatedDest(message.fields) + ', end);';
-        var hasDefaults = false;
-        for (i = 0; i < message.fields.length; i++) {
-            field = message.fields[i];
-            if (enums[field.type] && field.options.default !== undefined) {
-                hasDefaults = true;
-                break;
-            }
-        }
-        if (hasDefaults) {
-            console.log('    var ' + nameLow + ' = ' + part);
-            for (i = 0; i < message.fields.length; i++) {
-                field = message.fields[i];
-                if (enums[field.type] && field.options.default !== undefined) {
-                    console.log('    if (%s.%s === undefined) %s.%s = ' + JSON.stringify(field.options.default) + ';',
-                        nameLow, field.name, nameLow, field.name);
-                }
-            }
-            console.log('    return %s;', nameLow);
-        } else {
-            console.log('    return ' + part);
-        }
+        console.log('    return pbf.readFields(read' + nameCap + 'Field, ' + repeatedDest(message.fields, enums) + ', end);');
         console.log('}\n');
 
         console.log('function read%sField(tag, %s, pbf) {', nameCap, nameLow);
@@ -102,10 +81,14 @@ function compileMessages(parent, parentName, enums, read, write) {
     }
 }
 
-function repeatedDest(fields) {
+function repeatedDest(fields, enums) {
     var repeated = [];
     for (var i = 0; i < fields.length; i++) {
-        if (fields[i].repeated && !fields[i].options.packed) repeated.push('"' + fields[i].name + '": []');
+        var field = fields[i];
+        if (field.repeated && !field.options.packed)
+            repeated.push(field.name + ': []');
+        else if (enums[field.type] && field.options.default !== undefined)
+            repeated.push(field.name + ': ' + JSON.stringify(field.options.default));
     }
     return '{' + repeated.join(', ') + '}';
 }

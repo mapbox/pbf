@@ -12,7 +12,7 @@ Tile.GeomType = {
 };
 
 function readTile(pbf, end) {
-    return pbf.readFields(readTileField, {"layers": []}, end);
+    return pbf.readFields(readTileField, {layers: []}, end);
 }
 
 function readTileField(tag, tile, pbf) {
@@ -57,9 +57,7 @@ function writeValue(value, pbf) {
 Tile.Feature = {read: readFeature, write: writeFeature};
 
 function readFeature(pbf, end) {
-    var feature = pbf.readFields(readFeatureField, {}, end);
-    if (feature.type === undefined) feature.type = "UNKNOWN";
-    return feature;
+    return pbf.readFields(readFeatureField, {type: "UNKNOWN"}, end);
 }
 
 function readFeatureField(tag, feature, pbf) {
@@ -81,7 +79,7 @@ function writeFeature(feature, pbf) {
 Tile.Layer = {read: readLayer, write: writeLayer};
 
 function readLayer(pbf, end) {
-    return pbf.readFields(readLayerField, {"features": [], "keys": [], "values": []}, end);
+    return pbf.readFields(readLayerField, {features: [], keys: [], values: []}, end);
 }
 
 function readLayerField(tag, layer, pbf) {
