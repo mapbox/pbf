@@ -2,7 +2,7 @@
 
 [![build status](https://secure.travis-ci.org/mapbox/pbf.png)](http://travis-ci.org/mapbox/pbf) [![Coverage Status](https://coveralls.io/repos/mapbox/pbf/badge.png)](https://coveralls.io/r/mapbox/pbf)
 
-A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers) (a compact binary format for structured data serialization).
+A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers) (a compact binary format for structured data serialization). Works both in Node and the browser.
 
 Designed to be a building block for writing customized decoders and encoders.
 If you need an all-purpose protobuf JS library that does most of the work for you,
@@ -16,20 +16,33 @@ Install `pbf` and compile a JavaScript module from a `.proto` file:
 
 ```bash
 $ npm install -g pbf
-$ pbf test.proto > test.js
+$ pbf example.proto > example.js
 ```
 
 Then read and write objects using the module like this:
 
 ```js
+var Pbf = require('pbf');
+var Example = require('./example.js').Example;
+
 // read
 var pbf = new Pbf(buffer);
-var obj = Test.read(pbf);
+var obj = Example.read(pbf);
 
 // write
 var pbf = new Pbf();
-Test.write(obj, pbf);
+Example.write(obj, pbf);
 var buffer = pbf.finish();
+```
+
+Alternatively, you can compile a module directly in the code:
+
+```js
+var compile = require('pbf/compile');
+var schema = require('protocol-buffers-schema');
+
+var proto = schema.parse(fs.readFileSync('example.proto'));
+var Test = compile(proto).Test;
 ```
 
 #### Custom Reading
@@ -65,7 +78,6 @@ function writeLayer(layer, pbf) {
     pbf.writeVarintField(2, layer.size);
 }
 ```
-
 
 ## Install
 
@@ -265,10 +277,16 @@ The resulting module exports each message by name with the following methods:
 * `read(pbf)` - decodes an object from the given `Pbf` instance
 * `write(obj, pbf)` - encodes an object into the given `Pbf` instance (usually empty)
 
-The resulting code is pretty short and easy to understand, so you can customize it easily.
-
+The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
+
+#### 2.0.0 (May 28, 2016)
+
+- Significantly improved the proto compiler, which now produces a much safer reading/writing code.
+- Added the ability to compile a read/write module from a protobuf schema directly in the code.
+- Proto compiler: fixed name resolutions and collisions in schemas with nested messages.
+- Proto compiler: fixed broken top-level enums.
 
 #### 1.3.6 (May 27, 2016)
 
