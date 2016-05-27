@@ -7,7 +7,8 @@
     "test": "eslint index.js buffer.js test/*.js bin/pbf && tap test/*.test.js",
     "cov": "tap test/*.test.js --cov",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
-    "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js"
+    "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js",
+    "prepublish": "npm run build-dev && npm run build-min"
   },
   "bin": {
     "pbf": "bin/pbf"
