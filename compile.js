@@ -2,7 +2,16 @@
 
 module.exports = compile;
 
-function compile(proto, options) {
+function compile(proto) {
+    var code = 'var exports = {};\n';
+    code += compileRaw(proto) + '\n';
+    code += 'return exports;\n';
+    return new Function(code)();
+}
+
+compile.raw = compileRaw;
+
+function compileRaw(proto, options) {
     var context = buildContext(proto, null);
     return '\'use strict\';\n' + writeContext(context, options || {});
 }

@@ -10,7 +10,7 @@ if (process.argv.length < 3) {
     return;
 }
 
-var code = compile(resolve.sync(process.argv[2]), {
+var code = compile.raw(resolve.sync(process.argv[2]), {
     exports: process.argv.indexOf('--browser') >= 0 ? 'window' : 'exports',
     noRead: process.argv.indexOf('--no-read') >= 0,
     noWrite: process.argv.indexOf('--no-write') >= 0
