@@ -306,7 +306,7 @@ Pbf.prototype = {
         fn(obj, this);
         var len = this.pos - startPos;
 
-        reallocForRawMessage(startPos, len, this);
+        if (len >= 0x80) reallocForRawMessage(startPos, len, this);
 
         // finally, write the message length in the reserved place and restore the position
         this.pos = startPos - 1;
@@ -401,8 +401,6 @@ function writeBigVarint(val, pbf) {
 }
 
 function reallocForRawMessage(startPos, len, pbf) {
-    if (len <= 0x7f) return;
-
     var extraLen =
         len <= 0x3fff ? 1 :
         len <= 0x1fffff ? 2 :
