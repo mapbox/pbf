@@ -4,97 +4,97 @@
 
 var resolve = require('resolve-protobuf-schema');
 
-if (process.argv.length > 2) {
-    console.log('\'use strict\';');
-    compileMessages(resolve.sync(process.argv[2]),
-        process.argv.indexOf('--browser') !== -1 ? 'window' : 'exports', {},
-        process.argv.indexOf('--no-read') === -1,
-        process.argv.indexOf('--no-write') === -1);
-} else {
-    console.warn('Error: no path to proto file given.');
+if (process.argv.length < 3) {
+    console.error('Usage: pbf [file.proto] [--browser] [--no-read] [--no-write]');
+    return;
 }
 
-function compileMessage(message, parentName, enums, read, write) {
-    var name = message.name,
-        nameLow = name.toLowerCase(),
-        nameCap = name.charAt(0).toUpperCase() + name.substr(1),
-        i, field, part;
+var proto = resolve.sync(process.argv[2]);
+var exportsVar = process.argv.indexOf('--browser') >= 0 ? 'window' : 'exports';
+var noRead = process.argv.indexOf('--no-read') >= 0;
+var noWrite = process.argv.indexOf('--no-write') >= 0;
+
+console.log('\'use strict\';');
+
+writeContext(buildContext(proto, null));
+
+function writeContext(ctx) {
+    if (ctx._proto.fields) writeMessage(ctx);
+    if (ctx._proto.values) writeEnum(ctx);
+
+    for (var i = 0; i < ctx._children.length; i++) {
+        writeContext(ctx._children[i]);
+    }
+}
+
+function writeMessage(ctx) {
+    var name = ctx._name;
+    var fields = ctx._proto.fields;
 
     console.log('\n// %s ========================================\n', name);
 
-    var methods = [];
-    if (read) methods.push('read: read' + nameCap);
-    if (write) methods.push('write: write' + nameCap);
+    if (!noRead) {
+        console.log('%s {};\n', compileExport(ctx));
 
-    console.log((message.messages.length ? 'var ' + name + ' = ' : '') +
-        '%s.%s = {%s};\n', parentName, name, methods.join(', '));
-
-    if (message.enums.length) {
-        for (i = 0; i < message.enums.length; i++) {
-            var en = message.enums[i];
-            enums[en.name] = true;
-            console.log('%s.%s = ' + JSON.stringify(en.values, null, 4) + ';\n', name, en.name);
+        console.log('%s.read = function (pbf, end) {', name);
+        console.log('    return pbf.readFields(%s._readField, %s, end);', name, compileDest(ctx));
+        console.log('};');
+        console.log('%s._readField = function (tag, obj, pbf) {', ctx._name);
+        for (var i = 0; i < fields.length; i++) {
+            var field = fields[i];
+            var readCode = compileFieldRead(ctx, field);
+            console.log('    ' + (i ? 'else if' : 'if') + ' (tag === %d) obj.%s' +
+                (field.repeated && !field.options.packed ? '.push(%s);' : ' = %s;'),
+                field.tag, field.name, readCode);
         }
+        console.log('};');
     }
 
-    if (read) {
-        console.log('function read%s(pbf, end) {', nameCap);
-        console.log('    return pbf.readFields(read' + nameCap + 'Field, ' + repeatedDest(message.fields, enums) + ', end);');
-        console.log('}\n');
-
-        console.log('function read%sField(tag, %s, pbf) {', nameCap, nameLow);
-
-        for (i = 0; i < message.fields.length; i++) {
-            field = message.fields[i];
-            part = field.repeated && !field.options.packed ? '.push(' + readMethod(field, enums) + ')' :
-                    ' = ' + readMethod(field, enums);
-            console.log('    ' + (i ? 'else if' : 'if') + ' (tag === %d) %s.%s%s;',
-                field.tag, nameLow, field.name, part);
+    if (!noWrite) {
+        console.log('%s.write = function (obj, pbf) {', name);
+        var numRepeated = 0;
+        for (i = 0; i < fields.length; i++) {
+            field = fields[i];
+            var writeCode = field.repeated && !field.options.packed ?
+                compileRepeatedWrite(ctx, field, numRepeated++) :
+                compileFieldWrite(ctx, field, field.name);
+            console.log('    if (obj.%s !== undefined) %s;', field.name, writeCode);
         }
-        console.log('}');
-    }
-
-    if (read && write) console.log('');
-
-    if (write) {
-        console.log('function write%s(%s, pbf) {', nameCap, nameLow);
-        var iDeclared;
-        for (i = 0; i < message.fields.length; i++) {
-            field = message.fields[i];
-            if (!iDeclared && field.repeated && !field.options.packed) {
-                console.log('    var i;');
-                iDeclared = true;
-            }
-            console.log('    if (%s.%s !== undefined) %s;', nameLow, field.name,
-                writeMethod(field.tag, field.type, nameLow + '.' + field.name,
-                    field.repeated, field.options.packed, enums));
-        }
-        console.log('}');
-    }
-
-    compileMessages(message, name, enums, read, write);
-}
-
-function compileMessages(parent, parentName, enums, read, write) {
-    for (var i = 0; i < parent.messages.length; i++) {
-        compileMessage(parent.messages[i], parentName, enums, read, write);
+        console.log('};');
     }
 }
 
-function repeatedDest(fields, enums) {
-    var repeated = [];
-    for (var i = 0; i < fields.length; i++) {
-        var field = fields[i];
+function writeEnum(ctx) {
+    console.log('\n%s %s;', compileExport(ctx), JSON.stringify(ctx._proto.values, null, 4));
+}
+
+function compileExport(ctx) {
+    return (ctx._root ? 'var ' + ctx._name + ' = ' + exportsVar + '.' : '') + ctx._name + ' =';
+}
+
+function compileDest(ctx) {
+    var props = [];
+    for (var i = 0; i < ctx._proto.fields.length; i++) {
+        var field = ctx._proto.fields[i];
+
         if (field.repeated && !field.options.packed)
-            repeated.push(field.name + ': []');
-        else if (enums[field.type] && field.options.default !== undefined)
-            repeated.push(field.name + ': ' + JSON.stringify(field.options.default));
+            props.push(field.name + ': []');
+
+        var type = ctx[field.type];
+
+        if (type && type._proto.values && field.options.default !== undefined)
+            props.push(field.name + ': ' + JSON.stringify(field.options.default));
     }
-    return '{' + repeated.join(', ') + '}';
+    return '{' + props.join(', ') + '}';
 }
 
-function readMethod(field, enums) {
-    var type = field.type;
+function compileFieldRead(ctx, field) {
+    var type = ctx[field.type];
+    if (type) {
+        if (type._proto.fields) return type._name + '.read(pbf, pbf.readVarint() + pbf.pos)';
+        if (type._proto.values) return 'pbf.readVarint()';
+        throw new Error('Unexpected type: ' + type._name);
+    }
 
     var prefix = 'pbf.read';
     if (field.options.packed) prefix += 'Packed';
@@ -116,20 +116,24 @@ function readMethod(field, enums) {
     case 'sfixed32': return prefix + 'SFixed32()';
     case 'sfixed64': return prefix + 'SFixed64()';
     case 'bytes':    return prefix + 'Bytes()';
-    default:         return enums[field.type] ? prefix + 'Varint()' :
-                        'read' + type.charAt(0).toUpperCase() + type.substr(1) + '(pbf, pbf.readVarint() + pbf.pos)';
+    default:         throw new Error('Unexpected type: ' + field.type);
     }
 }
 
-function writeMethod(tag, type, name, repeated, packed, enums) {
-    if (repeated && !packed) return repeatedWriteMethod(tag, type, name, enums);
-
+function compileFieldWrite(ctx, field, name) {
     var prefix = 'pbf.write';
-    if (packed) prefix += 'Packed';
+    if (field.options.packed) prefix += 'Packed';
 
-    var postfix = (packed ? '' : 'Field') + '(' + tag + ', ' + name + ')';
+    var postfix = (field.options.packed ? '' : 'Field') + '(' + field.tag + ', obj.' + name + ')';
 
-    switch (type) {
+    var type = ctx[field.type];
+    if (type) {
+        if (type._proto.fields) return prefix + 'Message(' + field.tag + ', ' + type._name + '.write, obj.' + name + ')';
+        if (type._proto.values) return prefix + 'Varint' + postfix;
+        throw new Error('Unexpected type: ' + type._name);
+    }
+
+    switch (field.type) {
     case 'string':   return prefix + 'String' + postfix;
     case 'float':    return prefix + 'Float' + postfix;
     case 'double':   return prefix + 'Double' + postfix;
@@ -146,12 +150,40 @@ function writeMethod(tag, type, name, repeated, packed, enums) {
     case 'sfixed32': return prefix + 'SFixed32' + postfix;
     case 'sfixed64': return prefix + 'SFixed64' + postfix;
     case 'bytes':    return prefix + 'Bytes' + postfix;
-    default:         return enums[type] ? prefix + 'Varint' + postfix :
-                                prefix + 'Message(' + tag + ', write' +
-                                type.charAt(0).toUpperCase() + type.substr(1) + ', ' + name + ')';
+    default:         throw new Error('Unexpected type: ' + field.type);
     }
 }
 
-function repeatedWriteMethod(tag, type, name, enums) {
-    return 'for (i = 0; i < ' + name + '.length; i++) ' + writeMethod(tag, type, name + '[i]', false, false, enums);
+function compileRepeatedWrite(ctx, field, numRepeated) {
+    return 'for (' + (numRepeated ? '' : 'var ') +
+        'i = 0; i < obj.' + field.name + '.length; i++) ' +
+        compileFieldWrite(ctx, field, field.name + '[i]');
+}
+
+function buildContext(proto, parent) {
+    var obj = Object.create(parent);
+    obj._proto = proto;
+    obj._children = [];
+
+    if (parent) {
+        parent[proto.name] = obj;
+
+        if (parent._name) {
+            obj._root = false;
+            obj._name = parent._name + '.' + proto.name;
+        } else {
+            obj._root = true;
+            obj._name = proto.name;
+        }
+    }
+
+    for (var i = 0; proto.enums && i < proto.enums.length; i++) {
+        obj._children.push(buildContext(proto.enums[i], obj));
+    }
+
+    for (i = 0; proto.messages && i < proto.messages.length; i++) {
+        obj._children.push(buildContext(proto.messages[i], obj));
+    }
+
+    return obj;
 }

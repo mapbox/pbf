@@ -2,7 +2,17 @@
 
 // Tile ========================================
 
-var Tile = exports.Tile = {read: readTile, write: writeTile};
+var Tile = exports.Tile = {};
+
+Tile.read = function (pbf, end) {
+    return pbf.readFields(Tile._readField, {layers: []}, end);
+};
+Tile._readField = function (tag, obj, pbf) {
+    if (tag === 3) obj.layers.push(Tile.Layer.read(pbf, pbf.readVarint() + pbf.pos));
+};
+Tile.write = function (obj, pbf) {
+    if (obj.layers !== undefined) for (var i = 0; i < obj.layers.length; i++) pbf.writeMessage(3, Tile.Layer.write, obj.layers[i]);
+};
 
 Tile.GeomType = {
     "UNKNOWN": 0,
@@ -11,92 +21,72 @@ Tile.GeomType = {
     "POLYGON": 3
 };
 
-function readTile(pbf, end) {
-    return pbf.readFields(readTileField, {layers: []}, end);
-}
+// Tile.Value ========================================
 
-function readTileField(tag, tile, pbf) {
-    if (tag === 3) tile.layers.push(readLayer(pbf, pbf.readVarint() + pbf.pos));
-}
+Tile.Value = {};
 
-function writeTile(tile, pbf) {
-    var i;
-    if (tile.layers !== undefined) for (i = 0; i < tile.layers.length; i++) pbf.writeMessage(3, writeLayer, tile.layers[i]);
-}
+Tile.Value.read = function (pbf, end) {
+    return pbf.readFields(Tile.Value._readField, {}, end);
+};
+Tile.Value._readField = function (tag, obj, pbf) {
+    if (tag === 1) obj.string_value = pbf.readString();
+    else if (tag === 2) obj.float_value = pbf.readFloat();
+    else if (tag === 3) obj.double_value = pbf.readDouble();
+    else if (tag === 4) obj.int_value = pbf.readVarint();
+    else if (tag === 5) obj.uint_value = pbf.readVarint();
+    else if (tag === 6) obj.sint_value = pbf.readSVarint();
+    else if (tag === 7) obj.bool_value = pbf.readBoolean();
+};
+Tile.Value.write = function (obj, pbf) {
+    if (obj.string_value !== undefined) pbf.writeStringField(1, obj.string_value);
+    if (obj.float_value !== undefined) pbf.writeFloatField(2, obj.float_value);
+    if (obj.double_value !== undefined) pbf.writeDoubleField(3, obj.double_value);
+    if (obj.int_value !== undefined) pbf.writeVarintField(4, obj.int_value);
+    if (obj.uint_value !== undefined) pbf.writeVarintField(5, obj.uint_value);
+    if (obj.sint_value !== undefined) pbf.writeSVarintField(6, obj.sint_value);
+    if (obj.bool_value !== undefined) pbf.writeBooleanField(7, obj.bool_value);
+};
 
-// Value ========================================
+// Tile.Feature ========================================
 
-Tile.Value = {read: readValue, write: writeValue};
+Tile.Feature = {};
 
-function readValue(pbf, end) {
-    return pbf.readFields(readValueField, {}, end);
-}
+Tile.Feature.read = function (pbf, end) {
+    return pbf.readFields(Tile.Feature._readField, {type: "UNKNOWN"}, end);
+};
+Tile.Feature._readField = function (tag, obj, pbf) {
+    if (tag === 1) obj.id = pbf.readVarint();
+    else if (tag === 2) obj.tags = pbf.readPackedVarint();
+    else if (tag === 3) obj.type = pbf.readVarint();
+    else if (tag === 4) obj.geometry = pbf.readPackedVarint();
+};
+Tile.Feature.write = function (obj, pbf) {
+    if (obj.id !== undefined) pbf.writeVarintField(1, obj.id);
+    if (obj.tags !== undefined) pbf.writePackedVarint(2, obj.tags);
+    if (obj.type !== undefined) pbf.writeVarintField(3, obj.type);
+    if (obj.geometry !== undefined) pbf.writePackedVarint(4, obj.geometry);
+};
 
-function readValueField(tag, value, pbf) {
-    if (tag === 1) value.string_value = pbf.readString();
-    else if (tag === 2) value.float_value = pbf.readFloat();
-    else if (tag === 3) value.double_value = pbf.readDouble();
-    else if (tag === 4) value.int_value = pbf.readVarint();
-    else if (tag === 5) value.uint_value = pbf.readVarint();
-    else if (tag === 6) value.sint_value = pbf.readSVarint();
-    else if (tag === 7) value.bool_value = pbf.readBoolean();
-}
+// Tile.Layer ========================================
 
-function writeValue(value, pbf) {
-    if (value.string_value !== undefined) pbf.writeStringField(1, value.string_value);
-    if (value.float_value !== undefined) pbf.writeFloatField(2, value.float_value);
-    if (value.double_value !== undefined) pbf.writeDoubleField(3, value.double_value);
-    if (value.int_value !== undefined) pbf.writeVarintField(4, value.int_value);
-    if (value.uint_value !== undefined) pbf.writeVarintField(5, value.uint_value);
-    if (value.sint_value !== undefined) pbf.writeSVarintField(6, value.sint_value);
-    if (value.bool_value !== undefined) pbf.writeBooleanField(7, value.bool_value);
-}
+Tile.Layer = {};
 
-// Feature ========================================
-
-Tile.Feature = {read: readFeature, write: writeFeature};
-
-function readFeature(pbf, end) {
-    return pbf.readFields(readFeatureField, {type: "UNKNOWN"}, end);
-}
-
-function readFeatureField(tag, feature, pbf) {
-    if (tag === 1) feature.id = pbf.readVarint();
-    else if (tag === 2) feature.tags = pbf.readPackedVarint();
-    else if (tag === 3) feature.type = pbf.readVarint();
-    else if (tag === 4) feature.geometry = pbf.readPackedVarint();
-}
-
-function writeFeature(feature, pbf) {
-    if (feature.id !== undefined) pbf.writeVarintField(1, feature.id);
-    if (feature.tags !== undefined) pbf.writePackedVarint(2, feature.tags);
-    if (feature.type !== undefined) pbf.writeVarintField(3, feature.type);
-    if (feature.geometry !== undefined) pbf.writePackedVarint(4, feature.geometry);
-}
-
-// Layer ========================================
-
-Tile.Layer = {read: readLayer, write: writeLayer};
-
-function readLayer(pbf, end) {
-    return pbf.readFields(readLayerField, {features: [], keys: [], values: []}, end);
-}
-
-function readLayerField(tag, layer, pbf) {
-    if (tag === 15) layer.version = pbf.readVarint();
-    else if (tag === 1) layer.name = pbf.readString();
-    else if (tag === 2) layer.features.push(readFeature(pbf, pbf.readVarint() + pbf.pos));
-    else if (tag === 3) layer.keys.push(pbf.readString());
-    else if (tag === 4) layer.values.push(readValue(pbf, pbf.readVarint() + pbf.pos));
-    else if (tag === 5) layer.extent = pbf.readVarint();
-}
-
-function writeLayer(layer, pbf) {
-    if (layer.version !== undefined) pbf.writeVarintField(15, layer.version);
-    if (layer.name !== undefined) pbf.writeStringField(1, layer.name);
-    var i;
-    if (layer.features !== undefined) for (i = 0; i < layer.features.length; i++) pbf.writeMessage(2, writeFeature, layer.features[i]);
-    if (layer.keys !== undefined) for (i = 0; i < layer.keys.length; i++) pbf.writeStringField(3, layer.keys[i]);
-    if (layer.values !== undefined) for (i = 0; i < layer.values.length; i++) pbf.writeMessage(4, writeValue, layer.values[i]);
-    if (layer.extent !== undefined) pbf.writeVarintField(5, layer.extent);
-}
+Tile.Layer.read = function (pbf, end) {
+    return pbf.readFields(Tile.Layer._readField, {features: [], keys: [], values: []}, end);
+};
+Tile.Layer._readField = function (tag, obj, pbf) {
+    if (tag === 15) obj.version = pbf.readVarint();
+    else if (tag === 1) obj.name = pbf.readString();
+    else if (tag === 2) obj.features.push(Tile.Feature.read(pbf, pbf.readVarint() + pbf.pos));
+    else if (tag === 3) obj.keys.push(pbf.readString());
+    else if (tag === 4) obj.values.push(Tile.Value.read(pbf, pbf.readVarint() + pbf.pos));
+    else if (tag === 5) obj.extent = pbf.readVarint();
+};
+Tile.Layer.write = function (obj, pbf) {
+    if (obj.version !== undefined) pbf.writeVarintField(15, obj.version);
+    if (obj.name !== undefined) pbf.writeStringField(1, obj.name);
+    if (obj.features !== undefined) for (var i = 0; i < obj.features.length; i++) pbf.writeMessage(2, Tile.Feature.write, obj.features[i]);
+    if (obj.keys !== undefined) for (i = 0; i < obj.keys.length; i++) pbf.writeStringField(3, obj.keys[i]);
+    if (obj.values !== undefined) for (i = 0; i < obj.values.length; i++) pbf.writeMessage(4, Tile.Value.write, obj.values[i]);
+    if (obj.extent !== undefined) pbf.writeVarintField(5, obj.extent);
+};
