@@ -2,11 +2,20 @@
 
 [![build status](https://secure.travis-ci.org/mapbox/pbf.png)](http://travis-ci.org/mapbox/pbf) [![Coverage Status](https://coveralls.io/repos/mapbox/pbf/badge.png)](https://coveralls.io/r/mapbox/pbf)
 
-A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers) (a compact binary format for structured data serialization). Works both in Node and the browser.
+A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers), a compact binary format for structured data serialization. Works both in Node and the browser. Supports lazy decoding and detailed customization of the reading/writing code.
 
-Designed to be a building block for writing customized decoders and encoders.
-If you need an all-purpose protobuf JS library that does most of the work for you,
-take a look at [protocol-buffers](https://github.com/mafintosh/protocol-buffers) too.
+## Performance
+
+This library is extremely fast — much faster than native `JSON.parse`/`JSON.stringify`
+and the [protocol-buffers](https://github.com/mafintosh/protocol-buffers) module.
+Here's a result from running `node bench/bench.js` on Node v6.2 (decoding and encoding a vector tile):
+
+- **pbf** decode x 822 ops/sec ±1.51% (85 runs sampled)
+- **pbf** encode x 521 ops/sec ±2.32% (80 runs sampled)
+- **protocol-buffers** decode x 284 ops/sec ±1.25% (80 runs sampled)
+- **protocol-buffers** encode x 80.61 ops/sec ±1.75% (67 runs sampled)
+- **JSON.parse** x 140 ops/sec ±2.48% (69 runs sampled)
+- **JSON.stringify** x 324 ops/sec ±0.82% (83 runs sampled)
 
 ## Examples
 
@@ -95,7 +104,7 @@ npm run build-dev # dist/pbf-dev.js (development build)
 npm run build-min # dist/pbf.js (minified production build)
 ```
 
-CDN link: https://npmcdn.com/pbf@1.3.6/dist/pbf.js
+CDN link: https://npmcdn.com/pbf@2.0.0/dist/pbf.js
 
 ## API
 
