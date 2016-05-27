@@ -83,6 +83,8 @@ npm run build-dev # dist/pbf-dev.js (development build)
 npm run build-min # dist/pbf.js (minified production build)
 ```
 
+CDN link: https://npmcdn.com/pbf@1.3.6/dist/pbf.js
+
 ## API
 
 Create a `Pbf` object, optionally given a `Buffer` or `Uint8Array` as input data:
@@ -267,6 +269,11 @@ The resulting code is pretty short and easy to understand, so you can customize 
 
 
 ## Changelog
+
+#### 1.3.6 (May 27, 2016)
+
+- Improved read and write performance (both ~15% faster).
+- Improved generated code for default values.
 
 #### 1.3.5 (Oct 5, 2015)
 
