@@ -104,7 +104,7 @@ npm run build-dev # dist/pbf-dev.js (development build)
 npm run build-min # dist/pbf.js (minified production build)
 ```
 
-CDN link: https://npmcdn.com/pbf@2.0.0/dist/pbf.js
+CDN link: https://npmcdn.com/pbf@2.0.1/dist/pbf.js
 
 ## API
 
@@ -290,12 +290,20 @@ The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
 
+#### 2.0.1 (May 28, 2016)
+
+- Fixed a regression with `writeVarint` that affected certain numbers.
+
 #### 2.0.0 (May 28, 2016)
 
 - Significantly improved the proto compiler, which now produces a much safer reading/writing code.
 - Added the ability to compile a read/write module from a protobuf schema directly in the code.
 - Proto compiler: fixed name resolutions and collisions in schemas with nested messages.
 - Proto compiler: fixed broken top-level enums.
+
+#### 1.3.7 (May 28, 2016)
+
+- Fixed a regression with `writeVarint` that affected certain numbers.
 
 #### 1.3.6 (May 27, 2016)
 
