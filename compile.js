@@ -93,9 +93,13 @@ function compileDest(ctx) {
     return '{' + props.join(', ') + '}';
 }
 
-function compileFieldRead(ctx, field) {
+function getType(ctx, field) {
     var path = field.type.split('.');
-    var type = path.reduce(function(ctx, name) { return ctx && ctx[name]; }, ctx);
+    return path.reduce(function(ctx, name) { return ctx && ctx[name]; }, ctx);
+}
+
+function compileFieldRead(ctx, field) {
+    var type = getType(ctx, field);
     if (type) {
         if (type._proto.fields) return type._name + '.read(pbf, pbf.readVarint() + pbf.pos)';
         if (type._proto.values) return 'pbf.readVarint()';
@@ -132,8 +136,7 @@ function compileFieldWrite(ctx, field, name) {
 
     var postfix = (field.options.packed ? '' : 'Field') + '(' + field.tag + ', obj.' + name + ')';
 
-    var path = field.type.split('.');
-    var type = path.reduce(function(ctx, name) { return ctx && ctx[name]; }, ctx);
+    var type = getType(ctx, field);
     if (type) {
         if (type._proto.fields) return prefix + 'Message(' + field.tag + ', ' + type._name + '.write, obj.' + name + ')';
         if (type._proto.values) return prefix + 'Varint' + postfix;

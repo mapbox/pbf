@@ -23,3 +23,10 @@ test('compiles vector tile proto', function(t) {
 
     t.end();
 });
+
+test('compiles proto with embedded type reference', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/embedded_type.proto'));
+    compile(proto);
+
+    t.end();
+});
