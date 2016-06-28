@@ -1,0 +1,12 @@
+// Protocol Version 1
+
+package vector_tile;
+
+option optimize_for = LITE_RUNTIME;
+
+message NotPacked {
+  repeated int32 value = 1;
+}
+message FalsePacked {
+  repeated int32 value = 1 [packed=false];
+}
