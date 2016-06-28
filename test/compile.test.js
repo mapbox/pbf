@@ -17,6 +17,7 @@ test('compiles vector tile proto', function(t) {
     t.equal(tile.layers.length, 11);
 
     var pbf = new Pbf();
+    Tile.write(null, pbf);
     Tile.write(tile, pbf);
     var buf = pbf.finish();
     t.equal(buf.length, 125023);
