@@ -46,7 +46,7 @@ function writeMessage(ctx, options) {
             var readCode = compileFieldRead(ctx, field);
             code += '    ' + (i ? 'else if' : 'if') +
                 ' (tag === ' + field.tag + ') obj.' + field.name +
-                (field.repeated && !field.options.packed ?
+                (field.repeated && !isPacked(field) ?
                     '.push(' + readCode + ')' : ' = ' + readCode) + ';\n';
         }
         code += '};\n';
@@ -57,7 +57,7 @@ function writeMessage(ctx, options) {
         var numRepeated = 0;
         for (i = 0; i < fields.length; i++) {
             field = fields[i];
-            var writeCode = field.repeated && !field.options.packed ?
+            var writeCode = field.repeated && !isPacked(field) ?
                 compileRepeatedWrite(ctx, field, numRepeated++) :
                 compileFieldWrite(ctx, field, field.name);
             code += '    if (obj.' + field.name + ' !== undefined) ' + writeCode + ';\n';
@@ -82,7 +82,7 @@ function compileDest(ctx) {
     for (var i = 0; i < ctx._proto.fields.length; i++) {
         var field = ctx._proto.fields[i];
 
-        if (field.repeated && !field.options.packed)
+        if (field.repeated && !isPacked(field))
             props.push(field.name + ': []');
 
         var type = ctx[field.type];
@@ -102,7 +102,7 @@ function compileFieldRead(ctx, field) {
     }
 
     var prefix = 'pbf.read';
-    if (field.options.packed) prefix += 'Packed';
+    if (isPacked(field)) prefix += 'Packed';
 
     switch (field.type) {
     case 'string':   return prefix + 'String()';
@@ -127,9 +127,9 @@ function compileFieldRead(ctx, field) {
 
 function compileFieldWrite(ctx, field, name) {
     var prefix = 'pbf.write';
-    if (field.options.packed) prefix += 'Packed';
+    if (isPacked(field)) prefix += 'Packed';
 
-    var postfix = (field.options.packed ? '' : 'Field') + '(' + field.tag + ', obj.' + name + ')';
+    var postfix = (isPacked(field) ? '' : 'Field') + '(' + field.tag + ', obj.' + name + ')';
 
     var type = ctx[field.type];
     if (type) {
@@ -191,4 +191,8 @@ function buildContext(proto, parent) {
     }
 
     return obj;
+}
+
+function isPacked(field) {
+    return field.options.packed === 'true';
 }
