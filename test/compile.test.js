@@ -48,3 +48,39 @@ test('compiles packed proto', function(t) {
 
     t.end();
 });
+
+test('compiles defaults', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/defaults.proto'));
+    var Envelope = compile(proto).Envelope;
+    var pbf = new Pbf();
+
+    Envelope.write({}, pbf);
+
+    var buf = pbf.finish();
+    var data = Envelope.read(new Pbf(buf));
+
+    t.deepEqual(data, {
+        type: 1,
+        name: 'test',
+        flag: true,
+        weight: 1.5,
+        id: 1
+    });
+
+    t.end();
+});
+
+test('compiles proto3 ignoring defaults', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/defaults_proto3.proto'));
+    var Envelope = compile(proto).Envelope;
+    var pbf = new Pbf();
+
+    Envelope.write({}, pbf);
+
+    var buf = pbf.finish();
+    var data = Envelope.read(new Pbf(buf));
+
+    t.deepEqual(data, {});
+
+    t.end();
+});
