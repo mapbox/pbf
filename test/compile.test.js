@@ -19,7 +19,7 @@ test('compiles vector tile proto', function(t) {
     var pbf = new Pbf();
     Tile.write(tile, pbf);
     var buf = pbf.finish();
-    t.equal(buf.length, 125023);
+    t.equal(buf.length, 197699);
 
     t.end();
 });
@@ -80,7 +80,13 @@ test('compiles proto3 ignoring defaults', function(t) {
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
-    t.deepEqual(data, {});
+    t.deepEqual(data, {
+        type: 0,
+        name: '',
+        flag: false,
+        weight: 0,
+        id: 0
+    });
 
     t.end();
 });

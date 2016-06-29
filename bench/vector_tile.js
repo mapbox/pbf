@@ -26,7 +26,7 @@ Tile.GeomType = {
 Tile.Value = {};
 
 Tile.Value.read = function (pbf, end) {
-    return pbf.readFields(Tile.Value._readField, {}, end);
+    return pbf.readFields(Tile.Value._readField, {string_value: "", float_value: 0, double_value: 0, int_value: 0, uint_value: 0, sint_value: 0, bool_value: false}, end);
 };
 Tile.Value._readField = function (tag, obj, pbf) {
     if (tag === 1) obj.string_value = pbf.readString();
@@ -72,7 +72,7 @@ Tile.Feature.write = function (obj, pbf) {
 Tile.Layer = {};
 
 Tile.Layer.read = function (pbf, end) {
-    return pbf.readFields(Tile.Layer._readField, {version: 1, features: [], keys: [], values: [], extent: 4096}, end);
+    return pbf.readFields(Tile.Layer._readField, {version: 1, name: "", features: [], keys: [], values: [], extent: 4096}, end);
 };
 Tile.Layer._readField = function (tag, obj, pbf) {
     if (tag === 15) obj.version = pbf.readVarint();

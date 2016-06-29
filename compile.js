@@ -216,6 +216,27 @@ function castDefaultValue(field, value) {
     }
 }
 
+function getDefaultValue(field) {
+    switch (field.type) {
+    case 'float':
+    case 'double':
+    case 'enum':
+    case 'uint32':
+    case 'uint64':
+    case 'int32':
+    case 'int64':
+    case 'sint32':
+    case 'sint64':
+    case 'fixed32':
+    case 'fixed64':
+    case 'sfixed32':
+    case 'sfixed64': return 0;
+    case 'string':   return '';
+    case 'bool':     return false;
+    default:         return undefined;
+    }
+}
+
 function setDefaultValue(ctx, field, syntax) {
     var options = field.options;
     var type = ctx[field.type];
@@ -224,14 +245,24 @@ function setDefaultValue(ctx, field, syntax) {
     // Proto3 does not support overriding defaults
     if (syntax === 3) {
         delete options.default;
+    }
 
-    // Convert enum strings to number
-    } else if (values) {
-        options.default = values[options.default];
+    // Set default for enum values
+    if (values) {
+        options.default = values[options.default] || 0;
 
     // Defaults are always strings, cast them to appropriate type
     } else if (options.default !== undefined) {
         options.default = castDefaultValue(field, options.default);
+
+    // Set field type appropriate default
+    } else {
+        options.default = getDefaultValue(field);
+    }
+
+    // Defaults not supported for repeated fields
+    if (field.repeated) {
+        delete options.default;
     }
 }
 
