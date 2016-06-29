@@ -19,7 +19,7 @@ test('compiles vector tile proto', function(t) {
     var pbf = new Pbf();
     Tile.write(tile, pbf);
     var buf = pbf.finish();
-    t.equal(buf.length, 197699);
+    t.equal(buf.length, 124946);
 
     t.end();
 });
@@ -59,6 +59,7 @@ test('compiles defaults', function(t) {
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
+    t.equals(buf.length, 0);
     t.deepEqual(data, {
         type: 1,
         name: 'test',
@@ -80,6 +81,7 @@ test('compiles proto3 ignoring defaults', function(t) {
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
+    t.equals(buf.length, 0);
     t.deepEqual(data, {
         type: 0,
         name: '',

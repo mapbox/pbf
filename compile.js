@@ -60,7 +60,9 @@ function writeMessage(ctx, options) {
             var writeCode = field.repeated && !isPacked(field) ?
                 compileRepeatedWrite(ctx, field, numRepeated++) :
                 compileFieldWrite(ctx, field, field.name);
-            code += '    if (obj.' + field.name + ' !== undefined) ' + writeCode + ';\n';
+            code += '    if (obj.' + field.name + ' !== undefined';
+            code += getDefaultWriteTest(field);
+            code += ') ' + writeCode + ';\n';
         }
         code += '};\n';
     }
@@ -280,6 +282,23 @@ function buildDefaults(ctx, syntax) {
     }
 
     return ctx;
+}
+
+function getDefaultWriteTest(field) {
+    var prefix = ' && obj.' + field.name;
+    var def = field.options.default;
+
+    // Special case for strings to avoid creating unnecessary strings
+    // and comparing.
+    if (def === '') {
+        return prefix + '.length !== 0';
+    }
+
+    if (def !== undefined) {
+        return prefix + ' !== ' + JSON.stringify(def);
+    }
+
+    return '';
 }
 
 function isPacked(field) {
