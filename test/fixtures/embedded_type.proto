@@ -1,4 +1,4 @@
-// Protocol Version 1
+syntax = "proto2";
 
 package embedded_type;
 
@@ -13,6 +13,7 @@ message EmbeddedType {
         repeated Inner values = 1;
     }
 
+    optional string value = 1 [default = test];
     optional Container sub_field = 4;
     optional Container.Inner sub_sub_field = 5;
 }

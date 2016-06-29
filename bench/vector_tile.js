@@ -83,10 +83,10 @@ Tile.Layer._readField = function (tag, obj, pbf) {
     else if (tag === 5) obj.extent = pbf.readVarint();
 };
 Tile.Layer.write = function (obj, pbf) {
-    if (obj.version !== undefined && obj.version !== 1) pbf.writeVarintField(15, obj.version);
+    if (obj.version != undefined && obj.version !== 1) pbf.writeVarintField(15, obj.version);
     if (obj.name) pbf.writeStringField(1, obj.name);
     if (obj.features) for (var i = 0; i < obj.features.length; i++) pbf.writeMessage(2, Tile.Feature.write, obj.features[i]);
     if (obj.keys) for (i = 0; i < obj.keys.length; i++) pbf.writeStringField(3, obj.keys[i]);
     if (obj.values) for (i = 0; i < obj.values.length; i++) pbf.writeMessage(4, Tile.Value.write, obj.values[i]);
-    if (obj.extent !== undefined && obj.extent !== 4096) pbf.writeVarintField(5, obj.extent);
+    if (obj.extent != undefined && obj.extent !== 4096) pbf.writeVarintField(5, obj.extent);
 };

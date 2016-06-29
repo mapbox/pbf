@@ -60,7 +60,7 @@ function writeMessage(ctx, options) {
             var writeCode = field.repeated && !isPacked(field) ?
                 compileRepeatedWrite(ctx, field, numRepeated++) :
                 compileFieldWrite(ctx, field, field.name);
-            code += getDefaultWriteTest(field);
+            code += getDefaultWriteTest(ctx, field);
             code += writeCode + ';\n';
         }
         code += '};\n';
@@ -240,7 +240,7 @@ function getDefaultValue(field) {
 
 function setDefaultValue(ctx, field, syntax) {
     var options = field.options;
-    var type = ctx[field.type];
+    var type = getType(ctx, field);
     var values = type && type._proto.values;
 
     // Proto3 does not support overriding defaults
@@ -283,13 +283,14 @@ function buildDefaults(ctx, syntax) {
     return ctx;
 }
 
-function getDefaultWriteTest(field) {
+function getDefaultWriteTest(ctx, field) {
     var def = field.options.default;
+    var type = getType(ctx, field);
     var code = '    if (obj.' + field.name;
 
-    if (!field.repeated) {
+    if (!field.repeated && (!type || !type._proto.fields)) {
         if (def === undefined || def) {
-            code += ' !== undefined';
+            code += ' != undefined';
         }
 
         if (def) {

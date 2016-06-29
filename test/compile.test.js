@@ -92,3 +92,21 @@ test('compiles proto3 ignoring defaults', function(t) {
 
     t.end();
 });
+
+test('should not write undefined or null values', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/embedded_type.proto'));
+    var EmbeddedType = compile(proto).EmbeddedType;
+    var pbf = new Pbf();
+
+    EmbeddedType.write({}, pbf);
+
+    EmbeddedType.write({
+        'sub_field': null
+    }, pbf);
+
+    EmbeddedType.write({
+        value: null
+    });
+
+    t.end();
+});
