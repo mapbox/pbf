@@ -60,9 +60,8 @@ function writeMessage(ctx, options) {
             var writeCode = field.repeated && !isPacked(field) ?
                 compileRepeatedWrite(ctx, field, numRepeated++) :
                 compileFieldWrite(ctx, field, field.name);
-            code += '    if (obj.' + field.name + ' !== undefined';
             code += getDefaultWriteTest(field);
-            code += ') ' + writeCode + ';\n';
+            code += writeCode + ';\n';
         }
         code += '};\n';
     }
@@ -285,20 +284,20 @@ function buildDefaults(ctx, syntax) {
 }
 
 function getDefaultWriteTest(field) {
-    var prefix = ' && obj.' + field.name;
     var def = field.options.default;
+    var code = '    if (obj.' + field.name;
 
-    // Special case for strings to avoid creating unnecessary strings
-    // and comparing.
-    if (def === '') {
-        return prefix + '.length !== 0';
+    if (!field.repeated) {
+        if (def === undefined || def) {
+            code += ' !== undefined';
+        }
+
+        if (def) {
+            code += ' && obj.' + field.name + ' !== ' + JSON.stringify(def);
+        }
     }
 
-    if (def !== undefined) {
-        return prefix + ' !== ' + JSON.stringify(def);
-    }
-
-    return '';
+    return code + ') ';
 }
 
 function isPacked(field) {

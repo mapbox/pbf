@@ -11,7 +11,7 @@ Tile._readField = function (tag, obj, pbf) {
     if (tag === 3) obj.layers.push(Tile.Layer.read(pbf, pbf.readVarint() + pbf.pos));
 };
 Tile.write = function (obj, pbf) {
-    if (obj.layers !== undefined) for (var i = 0; i < obj.layers.length; i++) pbf.writeMessage(3, Tile.Layer.write, obj.layers[i]);
+    if (obj.layers) for (var i = 0; i < obj.layers.length; i++) pbf.writeMessage(3, Tile.Layer.write, obj.layers[i]);
 };
 
 Tile.GeomType = {
@@ -38,13 +38,13 @@ Tile.Value._readField = function (tag, obj, pbf) {
     else if (tag === 7) obj.bool_value = pbf.readBoolean();
 };
 Tile.Value.write = function (obj, pbf) {
-    if (obj.string_value !== undefined && obj.string_value.length !== 0) pbf.writeStringField(1, obj.string_value);
-    if (obj.float_value !== undefined && obj.float_value !== 0) pbf.writeFloatField(2, obj.float_value);
-    if (obj.double_value !== undefined && obj.double_value !== 0) pbf.writeDoubleField(3, obj.double_value);
-    if (obj.int_value !== undefined && obj.int_value !== 0) pbf.writeVarintField(4, obj.int_value);
-    if (obj.uint_value !== undefined && obj.uint_value !== 0) pbf.writeVarintField(5, obj.uint_value);
-    if (obj.sint_value !== undefined && obj.sint_value !== 0) pbf.writeSVarintField(6, obj.sint_value);
-    if (obj.bool_value !== undefined && obj.bool_value !== false) pbf.writeBooleanField(7, obj.bool_value);
+    if (obj.string_value) pbf.writeStringField(1, obj.string_value);
+    if (obj.float_value) pbf.writeFloatField(2, obj.float_value);
+    if (obj.double_value) pbf.writeDoubleField(3, obj.double_value);
+    if (obj.int_value) pbf.writeVarintField(4, obj.int_value);
+    if (obj.uint_value) pbf.writeVarintField(5, obj.uint_value);
+    if (obj.sint_value) pbf.writeSVarintField(6, obj.sint_value);
+    if (obj.bool_value) pbf.writeBooleanField(7, obj.bool_value);
 };
 
 // Tile.Feature ========================================
@@ -61,10 +61,10 @@ Tile.Feature._readField = function (tag, obj, pbf) {
     else if (tag === 4) obj.geometry = pbf.readPackedVarint();
 };
 Tile.Feature.write = function (obj, pbf) {
-    if (obj.id !== undefined && obj.id !== 0) pbf.writeVarintField(1, obj.id);
-    if (obj.tags !== undefined) pbf.writePackedVarint(2, obj.tags);
-    if (obj.type !== undefined && obj.type !== 0) pbf.writeVarintField(3, obj.type);
-    if (obj.geometry !== undefined) pbf.writePackedVarint(4, obj.geometry);
+    if (obj.id) pbf.writeVarintField(1, obj.id);
+    if (obj.tags) pbf.writePackedVarint(2, obj.tags);
+    if (obj.type) pbf.writeVarintField(3, obj.type);
+    if (obj.geometry) pbf.writePackedVarint(4, obj.geometry);
 };
 
 // Tile.Layer ========================================
@@ -84,9 +84,9 @@ Tile.Layer._readField = function (tag, obj, pbf) {
 };
 Tile.Layer.write = function (obj, pbf) {
     if (obj.version !== undefined && obj.version !== 1) pbf.writeVarintField(15, obj.version);
-    if (obj.name !== undefined && obj.name.length !== 0) pbf.writeStringField(1, obj.name);
-    if (obj.features !== undefined) for (var i = 0; i < obj.features.length; i++) pbf.writeMessage(2, Tile.Feature.write, obj.features[i]);
-    if (obj.keys !== undefined) for (i = 0; i < obj.keys.length; i++) pbf.writeStringField(3, obj.keys[i]);
-    if (obj.values !== undefined) for (i = 0; i < obj.values.length; i++) pbf.writeMessage(4, Tile.Value.write, obj.values[i]);
+    if (obj.name) pbf.writeStringField(1, obj.name);
+    if (obj.features) for (var i = 0; i < obj.features.length; i++) pbf.writeMessage(2, Tile.Feature.write, obj.features[i]);
+    if (obj.keys) for (i = 0; i < obj.keys.length; i++) pbf.writeStringField(3, obj.keys[i]);
+    if (obj.values) for (i = 0; i < obj.values.length; i++) pbf.writeMessage(4, Tile.Value.write, obj.values[i]);
     if (obj.extent !== undefined && obj.extent !== 4096) pbf.writeVarintField(5, obj.extent);
 };
