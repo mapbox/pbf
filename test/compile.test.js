@@ -19,7 +19,7 @@ test('compiles vector tile proto', function(t) {
     var pbf = new Pbf();
     Tile.write(tile, pbf);
     var buf = pbf.finish();
-    t.equal(buf.length, 125023);
+    t.equal(buf.length, 124946);
 
     t.end();
 });
@@ -45,6 +45,68 @@ test('compiles packed proto', function(t) {
 
     var decompressed = FalsePacked.read(new Pbf(buf));
     t.deepEqual(original, decompressed);
+
+    t.end();
+});
+
+test('compiles defaults', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/defaults.proto'));
+    var Envelope = compile(proto).Envelope;
+    var pbf = new Pbf();
+
+    Envelope.write({}, pbf);
+
+    var buf = pbf.finish();
+    var data = Envelope.read(new Pbf(buf));
+
+    t.equals(buf.length, 0);
+    t.deepEqual(data, {
+        type: 1,
+        name: 'test',
+        flag: true,
+        weight: 1.5,
+        id: 1
+    });
+
+    t.end();
+});
+
+test('compiles proto3 ignoring defaults', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/defaults_proto3.proto'));
+    var Envelope = compile(proto).Envelope;
+    var pbf = new Pbf();
+
+    Envelope.write({}, pbf);
+
+    var buf = pbf.finish();
+    var data = Envelope.read(new Pbf(buf));
+
+    t.equals(buf.length, 0);
+    t.deepEqual(data, {
+        type: 0,
+        name: '',
+        flag: false,
+        weight: 0,
+        id: 0
+    });
+
+    t.end();
+});
+
+test('should not write undefined or null values', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/embedded_type.proto'));
+    var EmbeddedType = compile(proto).EmbeddedType;
+    var pbf = new Pbf();
+
+    EmbeddedType.write({}, pbf);
+
+    EmbeddedType.write({
+        'sub_field': null
+    }, pbf);
+
+    EmbeddedType.write({
+        value: null
+    });
 
     t.end();
 });
