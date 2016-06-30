@@ -5,6 +5,9 @@ enum MessageType {
      GREETING = 1;
 }
 
+message CustomType {
+}
+
 message Envelope {
     MessageType type = 1;
     string name = 2;
@@ -13,4 +16,6 @@ message Envelope {
     int32 id = 5;
     repeated string tags = 6;
     repeated int32 numbers = 7 [packed = true];
+    bytes bytes = 8;
+    CustomType custom = 9;
 }

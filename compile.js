@@ -212,7 +212,7 @@ function getDefaultValue(field, value) {
     case 'sfixed64': return value ? parseInt(value, 10) : 0;
     case 'string':   return value || '';
     case 'bool':     return value === 'true';
-    default:         return undefined;
+    default:         return null;
     }
 }
 

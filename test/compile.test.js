@@ -128,6 +128,8 @@ test('handles all implicit default values', function(t) {
     t.equals(data.id, 0);
     t.deepEqual(data.tags, []);
     t.deepEqual(data.numbers, []);
+    t.equals(data.bytes, null);
+    t.equals(data.custom, null);
 
     t.end();
 });
