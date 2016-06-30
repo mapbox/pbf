@@ -82,12 +82,7 @@ function compileDest(ctx) {
     var props = [];
     for (var i = 0; i < ctx._proto.fields.length; i++) {
         var field = ctx._proto.fields[i];
-
-        if (field.repeated && !isPacked(field))
-            props.push(field.name + ': []');
-
-        if (field.options.default !== undefined)
-            props.push(field.name + ': ' + JSON.stringify(field.options.default));
+        props.push(field.name + ': ' + JSON.stringify(ctx._defaults[field.name]));
     }
     return '{' + props.join(', ') + '}';
 }
@@ -173,6 +168,7 @@ function buildContext(proto, parent) {
     var obj = Object.create(parent);
     obj._proto = proto;
     obj._children = [];
+    obj._defaults = {};
 
     if (parent) {
         parent[proto.name] = obj;
@@ -244,27 +240,26 @@ function setDefaultValue(ctx, field, syntax) {
     var values = type && type._proto.values;
 
     // Proto3 does not support overriding defaults
-    if (syntax === 3) {
-        delete options.default;
-    }
-
-    // Set default for enum values
-    if (values) {
-        options.default = values[options.default] || 0;
-
-    // Defaults are always strings, cast them to appropriate type
-    } else if (options.default !== undefined) {
-        options.default = castDefaultValue(field, options.default);
-
-    // Set field type appropriate default
-    } else {
-        options.default = getDefaultValue(field);
-    }
+    var value = syntax < 3 ? options.default : undefined;
 
     // Defaults not supported for repeated fields
     if (field.repeated) {
-        delete options.default;
+        value = [];
+
+    // Set default for enum values
+    } else if (values) {
+        value = values[value] || 0;
+
+    // Defaults are always strings, cast them to appropriate type
+    } else if (value !== undefined) {
+        value = castDefaultValue(field, value);
+
+    // Set field type appropriate default
+    } else {
+        value = getDefaultValue(field);
     }
+
+    ctx._defaults[field.name] = value;
 }
 
 function buildDefaults(ctx, syntax) {
@@ -284,7 +279,7 @@ function buildDefaults(ctx, syntax) {
 }
 
 function getDefaultWriteTest(ctx, field) {
-    var def = field.options.default;
+    var def = ctx._defaults[field.name];
     var type = getType(ctx, field);
     var code = '    if (obj.' + field.name;
 

@@ -52,7 +52,7 @@ Tile.Value.write = function (obj, pbf) {
 Tile.Feature = {};
 
 Tile.Feature.read = function (pbf, end) {
-    return pbf.readFields(Tile.Feature._readField, {id: 0, type: 0}, end);
+    return pbf.readFields(Tile.Feature._readField, {id: 0, tags: [], type: 0, geometry: []}, end);
 };
 Tile.Feature._readField = function (tag, obj, pbf) {
     if (tag === 1) obj.id = pbf.readVarint();
