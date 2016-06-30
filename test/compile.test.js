@@ -82,18 +82,17 @@ test('compiles proto3 ignoring defaults', function(t) {
     var data = Envelope.read(new Pbf(buf));
 
     t.equals(buf.length, 0);
-    t.deepEqual(data, {
-        type: 0,
-        name: '',
-        flag: false,
-        weight: 0,
-        id: 0
-    });
+
+    t.equals(data.type, 0);
+    t.equals(data.name, '');
+    t.equals(data.flag, false);
+    t.equals(data.weight, 0);
+    t.equals(data.id, 0);
 
     t.end();
 });
 
-test('should not write undefined or null values', function(t) {
+test('does not write undefined or null values', function(t) {
     var proto = resolve(path.join(__dirname, './fixtures/embedded_type.proto'));
     var EmbeddedType = compile(proto).EmbeddedType;
     var pbf = new Pbf();
@@ -107,6 +106,28 @@ test('should not write undefined or null values', function(t) {
     EmbeddedType.write({
         value: null
     });
+
+    t.end();
+});
+
+test('handles all implicit default values', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/defaults_implicit.proto'));
+    var Envelope = compile(proto).Envelope;
+    var pbf = new Pbf();
+
+    Envelope.write({}, pbf);
+    var buf = pbf.finish();
+    var data = Envelope.read(new Pbf(buf));
+
+    t.equals(buf.length, 0);
+
+    t.equals(data.type, 0);
+    t.equals(data.name, '');
+    t.equals(data.flag, false);
+    t.equals(data.weight, 0);
+    t.equals(data.id, 0);
+    t.deepEqual(data.tags, []);
+    t.deepEqual(data.numbers, []);
 
     t.end();
 });

@@ -82,12 +82,7 @@ function compileDest(ctx) {
     var props = [];
     for (var i = 0; i < ctx._proto.fields.length; i++) {
         var field = ctx._proto.fields[i];
-
-        if (field.repeated && !isPacked(field))
-            props.push(field.name + ': []');
-
-        if (field.options.default !== undefined)
-            props.push(field.name + ': ' + JSON.stringify(field.options.default));
+        props.push(field.name + ': ' + JSON.stringify(ctx._defaults[field.name]));
     }
     return '{' + props.join(', ') + '}';
 }
@@ -173,6 +168,7 @@ function buildContext(proto, parent) {
     var obj = Object.create(parent);
     obj._proto = proto;
     obj._children = [];
+    obj._defaults = {};
 
     if (parent) {
         parent[proto.name] = obj;
@@ -197,31 +193,13 @@ function buildContext(proto, parent) {
     return obj;
 }
 
-function castDefaultValue(field, value) {
-    switch (field.type) {
-    case 'string':   return value;
-    case 'float':
-    case 'double':   return parseFloat(value);
-    case 'bool':     return value === 'true';
-    case 'uint32':
-    case 'uint64':
-    case 'int32':
-    case 'int64':
-    case 'sint32':
-    case 'sint64':
-    case 'fixed32':
-    case 'fixed64':
-    case 'sfixed32':
-    case 'sfixed64': return parseInt(value, 10);
-    default:         throw new Error('Unexpected type: ' + field.type);
-    }
-}
+function getDefaultValue(field, value) {
+    // Defaults not supported for repeated fields
+    if (field.repeated) return [];
 
-function getDefaultValue(field) {
     switch (field.type) {
     case 'float':
-    case 'double':
-    case 'enum':
+    case 'double':   return value ? parseFloat(value) : 0;
     case 'uint32':
     case 'uint64':
     case 'int32':
@@ -231,9 +209,9 @@ function getDefaultValue(field) {
     case 'fixed32':
     case 'fixed64':
     case 'sfixed32':
-    case 'sfixed64': return 0;
-    case 'string':   return '';
-    case 'bool':     return false;
+    case 'sfixed64': return value ? parseInt(value, 10) : 0;
+    case 'string':   return value || '';
+    case 'bool':     return value === 'true';
     default:         return undefined;
     }
 }
@@ -241,29 +219,17 @@ function getDefaultValue(field) {
 function setDefaultValue(ctx, field, syntax) {
     var options = field.options;
     var type = getType(ctx, field);
-    var values = type && type._proto.values;
+    var enumValues = type && type._proto.values;
 
     // Proto3 does not support overriding defaults
-    if (syntax === 3) {
-        delete options.default;
-    }
+    var explicitDefault = syntax < 3 ? options.default : undefined;
 
     // Set default for enum values
-    if (values) {
-        options.default = values[options.default] || 0;
+    if (enumValues) {
+        ctx._defaults[field.name] = enumValues[explicitDefault] || 0;
 
-    // Defaults are always strings, cast them to appropriate type
-    } else if (options.default !== undefined) {
-        options.default = castDefaultValue(field, options.default);
-
-    // Set field type appropriate default
     } else {
-        options.default = getDefaultValue(field);
-    }
-
-    // Defaults not supported for repeated fields
-    if (field.repeated) {
-        delete options.default;
+        ctx._defaults[field.name] = getDefaultValue(field, explicitDefault);
     }
 }
 
@@ -284,7 +250,7 @@ function buildDefaults(ctx, syntax) {
 }
 
 function getDefaultWriteTest(ctx, field) {
-    var def = field.options.default;
+    var def = ctx._defaults[field.name];
     var type = getType(ctx, field);
     var code = '    if (obj.' + field.name;
 
@@ -292,7 +258,6 @@ function getDefaultWriteTest(ctx, field) {
         if (def === undefined || def) {
             code += ' != undefined';
         }
-
         if (def) {
             code += ' && obj.' + field.name + ' !== ' + JSON.stringify(def);
         }
