@@ -50,7 +50,13 @@ function writeMessage(ctx, options) {
             code += '    ' + (i ? 'else if' : 'if') +
                 ' (tag === ' + field.tag + ') obj.' + field.name +
                 (field.repeated && !isPacked(field) ?
-                    '.push(' + readCode + ')' : ' = ' + readCode) + ';\n';
+                    '.push(' + readCode + ')' : ' = ' + readCode);
+
+            if (field.oneof) {
+                code += ', obj.' + field.oneof + ' = ' + JSON.stringify(field.name);
+            }
+
+            code += ';\n';
         }
         code += '};\n';
     }
@@ -82,12 +88,13 @@ function compileExport(ctx, options) {
 }
 
 function compileDest(ctx) {
-    var props = [];
+    var props = {};
     for (var i = 0; i < ctx._proto.fields.length; i++) {
         var field = ctx._proto.fields[i];
-        props.push(field.name + ': ' + JSON.stringify(ctx._defaults[field.name]));
+        props[field.name + ': ' + JSON.stringify(ctx._defaults[field.name])] = true;
+        if (field.oneof) props[field.oneof + ': null'] = true;
     }
-    return '{' + props.join(', ') + '}';
+    return '{' + Object.keys(props).join(', ') + '}';
 }
 
 function getType(ctx, field) {
