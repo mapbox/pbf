@@ -111,10 +111,14 @@ function compileFieldRead(ctx, field) {
     }
 
     var prefix = 'pbf.read';
-    var suffix = '()';
+    var signed =
+        field.type === 'uint32' || field.type === 'uint64' ? 'false' :
+        field.type === 'int32' || field.type === 'int64' ? 'true' : '';
+    var suffix = '(' + signed + ')';
+
     if (isPacked(field)) {
         prefix += 'Packed';
-        suffix = '(obj.' + field.name + ')';
+        suffix = '(obj.' + field.name + (signed ? ', ' + signed : '') + ')';
     }
 
     switch (field.type) {
