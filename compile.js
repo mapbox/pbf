@@ -226,6 +226,29 @@ function getDefaultValue(field, value) {
     }
 }
 
+function setPackedOption(ctx, field, syntax) {
+    var type = field.repeated && field.type;
+
+    // No default packed in older protobuf versions
+    if (syntax < 3) return;
+
+    switch (type) {
+    case 'float':
+    case 'double':
+    case 'uint32':
+    case 'uint64':
+    case 'int32':
+    case 'int64':
+    case 'sint32':
+    case 'sint64':
+    case 'fixed32':
+    case 'fixed64':
+    case 'sfixed32':
+    case 'bool':     field.options.packed = 'true'; break;
+    default:         delete field.options.packed;
+    }
+}
+
 function setDefaultValue(ctx, field, syntax) {
     var options = field.options;
     var type = getType(ctx, field);
@@ -252,6 +275,7 @@ function buildDefaults(ctx, syntax) {
 
     if (proto.fields) {
         for (i = 0; i < proto.fields.length; i++) {
+            setPackedOption(ctx, proto.fields[i], syntax);
             setDefaultValue(ctx, proto.fields[i], syntax);
         }
     }

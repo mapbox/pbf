@@ -44,6 +44,26 @@ test('compiles packed proto', function(t) {
     var buf = pbf.finish();
 
     var decompressed = FalsePacked.read(new Pbf(buf));
+    t.equals(buf.length, 9);
+    t.deepEqual(original, decompressed);
+
+    t.end();
+});
+
+test('compiles packed proto3', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/packed_proto3.proto'));
+    var NotPacked = compile(proto).NotPacked;
+    var FalsePacked = compile(proto).FalsePacked;
+
+    var original = {
+        value: [300, 400, 500]
+    };
+    var pbf = new Pbf();
+    NotPacked.write(original, pbf);
+    var buf = pbf.finish();
+
+    var decompressed = FalsePacked.read(new Pbf(buf));
+    t.equals(buf.length, 8);
     t.deepEqual(original, decompressed);
 
     t.end();
