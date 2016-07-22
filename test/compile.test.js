@@ -133,3 +133,26 @@ test('handles all implicit default values', function(t) {
 
     t.end();
 });
+
+test('sets oneof field name', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/oneof.proto'));
+    var Envelope = compile(proto).Envelope;
+    var pbf = new Pbf();
+
+    Envelope.write({}, pbf);
+    var data = Envelope.read(new Pbf(pbf.finish()));
+
+    t.equals(data.value, null);
+    t.equals(data.id, 0);
+
+    pbf = new Pbf();
+    Envelope.write({
+        float: 1.5
+    }, pbf);
+    data = Envelope.read(new Pbf(pbf.finish()));
+
+    t.equals(data.value, 'float');
+    t.equals(data[data.value], 1.5);
+
+    t.end();
+});
