@@ -55,6 +55,25 @@ test('readVarint & writeVarint', function(t) {
     t.end();
 });
 
+test('writeVarint writes 0 for NaN', function(t) {
+    var buf = new Buffer(16);
+    var pbf = new Pbf(buf);
+
+    // Initialize buffer to ensure consistent tests
+    buf.write('0123456789abcdef', 0);
+
+    pbf.writeVarint('not a number');
+    pbf.writeVarint(NaN);
+    pbf.writeVarint(50);
+    pbf.finish();
+
+    t.equal(pbf.readVarint(), 0);
+    t.equal(pbf.readVarint(), 0);
+    t.equal(pbf.readVarint(), 50);
+
+    t.end();
+});
+
 test('readVarint64', function(t) {
     var bytes = [0xc8,0xe8,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x01];
     var buf = new Pbf(new Buffer(bytes));

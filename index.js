@@ -247,7 +247,7 @@ Pbf.prototype = {
     },
 
     writeVarint: function(val) {
-        val = +val;
+        val = +val || 0;
 
         if (val > 0xfffffff) {
             writeBigVarint(val, this);
