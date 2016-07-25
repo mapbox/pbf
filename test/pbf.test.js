@@ -31,7 +31,7 @@ test('realloc', function(t) {
 });
 
 var testNumbers = [1,0,0,4,14,23,40,86,127,141,113,925,258,1105,1291,6872,12545,16256,65521,126522,133028,444205,
-    846327,1883372, 2080768, 266338304, 34091302912,
+    846327,1883372, 2080768, 266338304, 34091302912, 17179869184,
     3716678,674158,15203102,27135056,42501689,110263473,6449928,65474499,943840723,1552431153,407193337,2193544970,
     8167778088,5502125480,14014009728,56371207648,9459068416,410595966336,673736830976,502662539776,2654996269056,
     5508583663616,6862782705664,34717688324096,1074895093760,95806297440256,130518477701120,197679237955584,
@@ -42,14 +42,16 @@ test('readVarint & writeVarint', function(t) {
 
     for (var i = 0; i < testNumbers.length; i++) {
         buf.writeVarint(testNumbers[i]);
+        buf.writeVarint(-testNumbers[i]);
     }
     var len = buf.finish().length;
-    t.equal(len, 244);
+    t.equal(len, 841);
     buf.finish();
 
     i = 0;
     while (buf.pos < len) {
-        t.equal(buf.readVarint(), testNumbers[i++]);
+        t.equal(buf.readVarint(), testNumbers[i]);
+        t.equal(buf.readVarint(true), -testNumbers[i++]);
     }
 
     t.end();
@@ -93,7 +95,7 @@ test('readVarint64', function(t) {
 test('readVarint & writeVarint handle really big numbers', function(t) {
     var buf = new Pbf();
     var bigNum1 = Math.pow(2, 60);
-    var bigNum2 = Math.pow(2, 69);
+    var bigNum2 = Math.pow(2, 63);
     buf.writeVarint(bigNum1);
     buf.writeVarint(bigNum2);
     buf.finish();
@@ -128,9 +130,15 @@ test('readSVarint & writeSVarint', function(t) {
 
 test('writeVarint throws error on a number that is too big', function(t) {
     var buf = new Pbf(new Buffer(0));
+
     t.throws(function() {
         buf.writeVarint(29234322996241367000012);
     });
+
+    t.throws(function() {
+        buf.writeVarint(-29234322996241367000012);
+    });
+
     t.end();
 });
 

@@ -120,9 +120,9 @@ function compileFieldRead(ctx, field) {
     case 'bool':     return prefix + 'Boolean()';
     case 'enum':
     case 'uint32':
-    case 'uint64':
+    case 'uint64':   return prefix + 'Varint(false)';
     case 'int32':
-    case 'int64':    return prefix + 'Varint()';
+    case 'int64':    return prefix + 'Varint(true)';
     case 'sint32':
     case 'sint64':   return prefix + 'SVarint()';
     case 'fixed32':  return prefix + 'Fixed32()';
