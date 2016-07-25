@@ -397,8 +397,7 @@ function readVarintRemainder(val, pbf) {
 }
 
 function readPackedEnd(pbf) {
-    return (pbf.buf[pbf.pos - 1] & 0x7) === Pbf.Bytes ?
-        pbf.readVarint() + pbf.pos : pbf.pos + 1;
+    return ((pbf.buf[pbf.pos - 1] & 0x7) === Pbf.Bytes ? pbf.readVarint() : 1) + pbf.pos;
 }
 
 function writeBigVarint(val, pbf) {
