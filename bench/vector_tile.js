@@ -33,7 +33,7 @@ Tile.Value._readField = function (tag, obj, pbf) {
     else if (tag === 2) obj.float_value = pbf.readFloat();
     else if (tag === 3) obj.double_value = pbf.readDouble();
     else if (tag === 4) obj.int_value = pbf.readVarint(true);
-    else if (tag === 5) obj.uint_value = pbf.readVarint(false);
+    else if (tag === 5) obj.uint_value = pbf.readVarint();
     else if (tag === 6) obj.sint_value = pbf.readSVarint();
     else if (tag === 7) obj.bool_value = pbf.readBoolean();
 };
@@ -55,10 +55,10 @@ Tile.Feature.read = function (pbf, end) {
     return pbf.readFields(Tile.Feature._readField, {id: 0, tags: [], type: 0, geometry: []}, end);
 };
 Tile.Feature._readField = function (tag, obj, pbf) {
-    if (tag === 1) obj.id = pbf.readVarint(false);
-    else if (tag === 2) obj.tags = pbf.readPackedVarint(obj.tags, false);
+    if (tag === 1) obj.id = pbf.readVarint();
+    else if (tag === 2) obj.tags = pbf.readPackedVarint(obj.tags);
     else if (tag === 3) obj.type = pbf.readVarint();
-    else if (tag === 4) obj.geometry = pbf.readPackedVarint(obj.geometry, false);
+    else if (tag === 4) obj.geometry = pbf.readPackedVarint(obj.geometry);
 };
 Tile.Feature.write = function (obj, pbf) {
     if (obj.id) pbf.writeVarintField(1, obj.id);
@@ -75,12 +75,12 @@ Tile.Layer.read = function (pbf, end) {
     return pbf.readFields(Tile.Layer._readField, {version: 1, name: "", features: [], keys: [], values: [], extent: 4096}, end);
 };
 Tile.Layer._readField = function (tag, obj, pbf) {
-    if (tag === 15) obj.version = pbf.readVarint(false);
+    if (tag === 15) obj.version = pbf.readVarint();
     else if (tag === 1) obj.name = pbf.readString();
     else if (tag === 2) obj.features.push(Tile.Feature.read(pbf, pbf.readVarint() + pbf.pos));
     else if (tag === 3) obj.keys.push(pbf.readString());
     else if (tag === 4) obj.values.push(Tile.Value.read(pbf, pbf.readVarint() + pbf.pos));
-    else if (tag === 5) obj.extent = pbf.readVarint(false);
+    else if (tag === 5) obj.extent = pbf.readVarint();
 };
 Tile.Layer.write = function (obj, pbf) {
     if (obj.version != undefined && obj.version !== 1) pbf.writeVarintField(15, obj.version);
