@@ -282,11 +282,20 @@ Pbf.prototype = {
 
     writeString: function(str) {
         str = String(str);
-        var bytes = utf8Length(str);
-        this.writeVarint(bytes);
-        this.realloc(bytes);
-        writeUtf8(this.buf, str, this.pos);
-        this.pos += bytes;
+        this.realloc(str.length * 4);
+
+        this.pos++; // reserve 1 byte for short string length
+
+        // write the string directly to the buffer and see how much was written
+        var newPos = writeUtf8(this.buf, str, this.pos);
+        var len = newPos - this.pos;
+
+        if (len >= 0x80) makeRoomForExtraLength(this.pos, len, this);
+
+        // finally, write the message length in the reserved place and restore the position
+        this.pos--;
+        this.writeVarint(len);
+        this.pos += len;
     },
 
     writeFloat: function(val) {
@@ -316,7 +325,7 @@ Pbf.prototype = {
         fn(obj, this);
         var len = this.pos - startPos;
 
-        if (len >= 0x80) reallocForRawMessage(startPos, len, this);
+        if (len >= 0x80) makeRoomForExtraLength(startPos, len, this);
 
         // finally, write the message length in the reserved place and restore the position
         this.pos = startPos - 1;
@@ -458,7 +467,7 @@ function writeBigVarintHigh(high, pbf) {
     pbf.buf[pbf.pos++]  = high & 0x7f;
 }
 
-function reallocForRawMessage(startPos, len, pbf) {
+function makeRoomForExtraLength(startPos, len, pbf) {
     var extraLen =
         len <= 0x3fff ? 1 :
         len <= 0x1fffff ? 2 :
@@ -568,57 +577,55 @@ function readUtf8(buf, pos, end) {
     return str;
 }
 
-var lastStr, lastStrEncoded;
-
-function utf8Length(str) {
-    lastStr = str;
-    lastStrEncoded = encodeUtf8(str);
-    return lastStrEncoded.length;
-}
-
 function writeUtf8(buf, str, pos) {
-    var bytes = str === lastStr ? lastStrEncoded : encodeUtf8(str);
-    for (var i = 0; i < bytes.length; i++) {
-        buf[pos + i] = bytes[i];
-    }
-}
-
-function encodeUtf8(str) {
-    var length = str.length,
-        bytes = [];
-
-    for (var i = 0, c, lead; i < length; i++) {
+    for (var i = 0, c, lead; i < str.length; i++) {
         c = str.charCodeAt(i); // code point
 
         if (c > 0xD7FF && c < 0xE000) {
-
             if (lead) {
                 if (c < 0xDC00) {
-                    bytes.push(0xEF, 0xBF, 0xBD);
+                    buf[pos++] = 0xEF;
+                    buf[pos++] = 0xBF;
+                    buf[pos++] = 0xBD;
                     lead = c;
                     continue;
-
                 } else {
                     c = lead - 0xD800 << 10 | c - 0xDC00 | 0x10000;
                     lead = null;
                 }
-
             } else {
-                if (c > 0xDBFF || (i + 1 === length)) bytes.push(0xEF, 0xBF, 0xBD);
-                else lead = c;
-
+                if (c > 0xDBFF || (i + 1 === str.length)) {
+                    buf[pos++] = 0xEF;
+                    buf[pos++] = 0xBF;
+                    buf[pos++] = 0xBD;
+                } else {
+                    lead = c;
+                }
                 continue;
             }
-
         } else if (lead) {
-            bytes.push(0xEF, 0xBF, 0xBD);
+            buf[pos++] = 0xEF;
+            buf[pos++] = 0xBF;
+            buf[pos++] = 0xBD;
             lead = null;
         }
 
-        if (c < 0x80) bytes.push(c);
-        else if (c < 0x800) bytes.push(c >> 0x6 | 0xC0, c & 0x3F | 0x80);
-        else if (c < 0x10000) bytes.push(c >> 0xC | 0xE0, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
-        else bytes.push(c >> 0x12 | 0xF0, c >> 0xC & 0x3F | 0x80, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
+        if (c < 0x80) {
+            buf[pos++] = c;
+        } else {
+            if (c < 0x800) {
+                buf[pos++] = c >> 0x6 | 0xC0;
+            } else {
+                if (c < 0x10000) {
+                    buf[pos++] = c >> 0xC | 0xE0;
+                } else {
+                    buf[pos++] = c >> 0x12 | 0xF0;
+                    buf[pos++] = c >> 0xC & 0x3F | 0x80;
+                }
+                buf[pos++] = c >> 0x6 & 0x3F | 0x80;
+            }
+            buf[pos++] = c & 0x3F | 0x80;
+        }
     }
-    return bytes;
+    return pos;
 }
