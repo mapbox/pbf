@@ -32,7 +32,7 @@ Tile.Value._readField = function (tag, obj, pbf) {
     if (tag === 1) obj.string_value = pbf.readString();
     else if (tag === 2) obj.float_value = pbf.readFloat();
     else if (tag === 3) obj.double_value = pbf.readDouble();
-    else if (tag === 4) obj.int_value = pbf.readVarint();
+    else if (tag === 4) obj.int_value = pbf.readVarint(true);
     else if (tag === 5) obj.uint_value = pbf.readVarint();
     else if (tag === 6) obj.sint_value = pbf.readSVarint();
     else if (tag === 7) obj.bool_value = pbf.readBoolean();
