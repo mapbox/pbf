@@ -47,10 +47,13 @@ function writeMessage(ctx, options) {
         for (var i = 0; i < fields.length; i++) {
             var field = fields[i];
             var readCode = compileFieldRead(ctx, field);
+            var packed = isPacked(field);
             code += '    ' + (i ? 'else if' : 'if') +
-                ' (tag === ' + field.tag + ') obj.' + field.name +
-                (field.repeated && !isPacked(field) ?
-                    '.push(' + readCode + ')' : ' = ' + readCode);
+                ' (tag === ' + field.tag + ') ' +
+                (
+                    field.repeated && !packed ? 'obj.' + field.name + '.push(' + readCode + ')' :
+                    field.repeated && packed ? readCode : 'obj.' + field.name + ' = ' + readCode
+                );
 
             if (field.oneof) {
                 code += ', obj.' + field.oneof + ' = ' + JSON.stringify(field.name);

@@ -56,9 +56,9 @@ Tile.Feature.read = function (pbf, end) {
 };
 Tile.Feature._readField = function (tag, obj, pbf) {
     if (tag === 1) obj.id = pbf.readVarint();
-    else if (tag === 2) obj.tags = pbf.readPackedVarint(obj.tags);
+    else if (tag === 2) pbf.readPackedVarint(obj.tags);
     else if (tag === 3) obj.type = pbf.readVarint();
-    else if (tag === 4) obj.geometry = pbf.readPackedVarint(obj.geometry);
+    else if (tag === 4) pbf.readPackedVarint(obj.geometry);
 };
 Tile.Feature.write = function (obj, pbf) {
     if (obj.id) pbf.writeVarintField(1, obj.id);
