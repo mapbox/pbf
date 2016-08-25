@@ -479,6 +479,8 @@ function writePackedSFixed32(arr, pbf) { for (var i = 0; i < arr.length; i++) pb
 function writePackedFixed64(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);  }
 function writePackedSFixed64(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]); }
 
+// Buffer code below from https://github.com/feross/buffer, MIT-licensed
+
 function readUInt32(buf, pos) {
     return ((buf[pos]) |
         (buf[pos + 1] << 8) |
@@ -505,67 +507,61 @@ function readUtf8(buf, pos, end) {
     var i = pos;
 
     while (i < end) {
-        var firstByte = buf[i];
-        var codePoint = null;
+        var b0 = buf[i];
+        var c = null; // codepoint
         var bytesPerSequence =
-            firstByte > 0xEF ? 4 :
-            firstByte > 0xDF ? 3 :
-            firstByte > 0xBF ? 2 : 1;
+            b0 > 0xEF ? 4 :
+            b0 > 0xDF ? 3 :
+            b0 > 0xBF ? 2 : 1;
 
-        if (i + bytesPerSequence <= end) {
-            var secondByte, thirdByte, fourthByte, tempCodePoint;
+        if (i + bytesPerSequence > end) break;
 
-            switch (bytesPerSequence) {
-            case 1:
-                if (firstByte < 0x80) {
-                    codePoint = firstByte;
+        var b1, b2, b3;
+
+        if (bytesPerSequence === 1) {
+            if (b0 < 0x80) {
+                c = b0;
+            }
+        } else if (bytesPerSequence === 2) {
+            b1 = buf[i + 1];
+            if ((b1 & 0xC0) === 0x80) {
+                c = (b0 & 0x1F) << 0x6 | (b1 & 0x3F);
+                if (c <= 0x7F) {
+                    c = null;
                 }
-                break;
-            case 2:
-                secondByte = buf[i + 1];
-                if ((secondByte & 0xC0) === 0x80) {
-                    tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F);
-                    if (tempCodePoint > 0x7F) {
-                        codePoint = tempCodePoint;
-                    }
+            }
+        } else if (bytesPerSequence === 3) {
+            b1 = buf[i + 1];
+            b2 = buf[i + 2];
+            if ((b1 & 0xC0) === 0x80 && (b2 & 0xC0) === 0x80) {
+                c = (b0 & 0xF) << 0xC | (b1 & 0x3F) << 0x6 | (b2 & 0x3F);
+                if (c <= 0x7FF || (c >= 0xD800 && c <= 0xDFFF)) {
+                    c = null;
                 }
-                break;
-            case 3:
-                secondByte = buf[i + 1];
-                thirdByte = buf[i + 2];
-                if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
-                    tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F);
-                    if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
-                        codePoint = tempCodePoint;
-                    }
-                }
-                break;
-            case 4:
-                secondByte = buf[i + 1];
-                thirdByte = buf[i + 2];
-                fourthByte = buf[i + 3];
-                if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
-                    tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F);
-                    if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
-                        codePoint = tempCodePoint;
-                    }
+            }
+        } else if (bytesPerSequence === 4) {
+            b1 = buf[i + 1];
+            b2 = buf[i + 2];
+            b3 = buf[i + 3];
+            if ((b1 & 0xC0) === 0x80 && (b2 & 0xC0) === 0x80 && (b3 & 0xC0) === 0x80) {
+                c = (b0 & 0xF) << 0x12 | (b1 & 0x3F) << 0xC | (b2 & 0x3F) << 0x6 | (b3 & 0x3F);
+                if (c <= 0xFFFF || c >= 0x110000) {
+                    c = null;
                 }
             }
         }
 
-        if (codePoint === null) {
-            // we did not generate a valid codePoint so insert a
-            // replacement char (U+FFFD) and advance only 1 byte
-            codePoint = 0xFFFD;
+        if (c === null) {
+            c = 0xFFFD;
             bytesPerSequence = 1;
-        } else if (codePoint > 0xFFFF) {
-            // encode to utf16 (surrogate pair dance)
-            codePoint -= 0x10000;
-            str += String.fromCharCode(codePoint >>> 10 & 0x3FF | 0xD800);
-            codePoint = 0xDC00 | codePoint & 0x3FF;
+
+        } else if (c > 0xFFFF) {
+            c -= 0x10000;
+            str += String.fromCharCode(c >>> 10 & 0x3FF | 0xD800);
+            c = 0xDC00 | c & 0x3FF;
         }
 
-        str += String.fromCharCode(codePoint);
+        str += String.fromCharCode(c);
         i += bytesPerSequence;
     }
 
