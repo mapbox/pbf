@@ -326,23 +326,24 @@ test('writeSFixed64', function(t) {
     t.end();
 });
 
-test('writeString', function(t) {
-    var buffer = new Buffer(32);
-    var buf = new Pbf(buffer);
-    var len = Buffer.byteLength('Привет');
-    buf.writeVarint(len);
-    buffer.write('Привет', buf.pos);
-    buf.pos += len;
-    buf.finish();
-    t.equal(buf.readString(), 'Привет');
+test('writeString & readString', function(t) {
+    var buf = new Pbf();
+    buf.writeString('Привет 李小龙');
+    var bytes = buf.finish();
+    t.same(bytes, new Uint8Array([22, 208,159,209,128,208,184,208,178,208,181,209,130,32,230,157,142,229,176,143,233,190,153]));
+    t.equal(buf.readString(), 'Привет 李小龙');
     t.end();
 });
 
-test('readString', function(t) {
-    var buf = new Pbf(new Buffer(0));
-    buf.writeString('Привет');
+test('more complicated utf8', function(t) {
+    var buf = new Pbf();
+    // crazy test from github.com/mathiasbynens/utf8.js
+    var str = '\uDC00\uDC00\uDC00\uDC00A\uDC00\uD834\uDF06\uDC00\uDEEE\uDFFF\uD800\uDC00\uD800\uD800\uD800\uD800A' +
+        '\uD800\uD834\uDF06';
+    buf.writeString(str);
     buf.finish();
-    t.equal(buf.readString(), 'Привет');
+    var str2 = buf.readString();
+    t.same(new Uint8Array(str2), new Uint8Array(str));
     t.end();
 });
 
