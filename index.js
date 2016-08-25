@@ -140,48 +140,57 @@ Pbf.prototype = {
 
     // verbose for performance reasons; doesn't affect gzipped size
 
-    readPackedVarint: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedVarint: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readVarint());
         return arr;
     },
-    readPackedSVarint: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedSVarint: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readSVarint());
         return arr;
     },
-    readPackedBoolean: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedBoolean: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readBoolean());
         return arr;
     },
-    readPackedFloat: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedFloat: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readFloat());
         return arr;
     },
-    readPackedDouble: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedDouble: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readDouble());
         return arr;
     },
-    readPackedFixed32: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedFixed32: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readFixed32());
         return arr;
     },
-    readPackedSFixed32: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedSFixed32: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readSFixed32());
         return arr;
     },
-    readPackedFixed64: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedFixed64: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readFixed64());
         return arr;
     },
-    readPackedSFixed64: function() {
-        var end = this.readVarint() + this.pos, arr = [];
+    readPackedSFixed64: function(arr) {
+        var end = readPackedEnd(this);
+        arr = arr || [];
         while (this.pos < end) arr.push(this.readSFixed64());
         return arr;
     },
@@ -385,6 +394,11 @@ function readVarintRemainder(val, pbf) {
     b = buf[pbf.pos++]; val += (b & 0x7f) * 0x8000000000000000; if (b < 0x80) return val;
 
     throw new Error('Expected varint not more than 10 bytes');
+}
+
+function readPackedEnd(pbf) {
+    return (pbf.buf[pbf.pos - 1] & 0x7) === Pbf.Bytes ?
+        pbf.readVarint() + pbf.pos : pbf.pos + 1;
 }
 
 function writeBigVarint(val, pbf) {
