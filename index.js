@@ -2,10 +2,10 @@
 
 module.exports = Pbf;
 
-var Buffer = global.Buffer || require('./buffer');
+var ieee754 = require('ieee754');
 
 function Pbf(buf) {
-    this.buf = !Buffer.isBuffer(buf) ? new Buffer(buf || 0) : buf;
+    this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf || 0);
     this.pos = 0;
     this.length = this.buf.length;
 }
@@ -47,13 +47,13 @@ Pbf.prototype = {
     },
 
     readFixed32: function() {
-        var val = this.buf.readUInt32LE(this.pos);
+        var val = readUInt32(this.buf, this.pos);
         this.pos += 4;
         return val;
     },
 
     readSFixed32: function() {
-        var val = this.buf.readInt32LE(this.pos);
+        var val = readInt32(this.buf, this.pos);
         this.pos += 4;
         return val;
     },
@@ -61,25 +61,25 @@ Pbf.prototype = {
     // 64-bit int handling is based on github.com/dpw/node-buffer-more-ints (MIT-licensed)
 
     readFixed64: function() {
-        var val = this.buf.readUInt32LE(this.pos) + this.buf.readUInt32LE(this.pos + 4) * SHIFT_LEFT_32;
+        var val = readUInt32(this.buf, this.pos) + readUInt32(this.buf, this.pos + 4) * SHIFT_LEFT_32;
         this.pos += 8;
         return val;
     },
 
     readSFixed64: function() {
-        var val = this.buf.readUInt32LE(this.pos) + this.buf.readInt32LE(this.pos + 4) * SHIFT_LEFT_32;
+        var val = readUInt32(this.buf, this.pos) + readInt32(this.buf, this.pos + 4) * SHIFT_LEFT_32;
         this.pos += 8;
         return val;
     },
 
     readFloat: function() {
-        var val = this.buf.readFloatLE(this.pos);
+        var val = ieee754.read(this.buf, this.pos, true, 23, 4);
         this.pos += 4;
         return val;
     },
 
     readDouble: function() {
-        var val = this.buf.readDoubleLE(this.pos);
+        var val = ieee754.read(this.buf, this.pos, true, 52, 8);
         this.pos += 8;
         return val;
     },
@@ -127,14 +127,14 @@ Pbf.prototype = {
 
     readString: function() {
         var end = this.readVarint() + this.pos,
-            str = this.buf.toString('utf8', this.pos, end);
+            str = readUtf8(this.buf, this.pos, end);
         this.pos = end;
         return str;
     },
 
     readBytes: function() {
         var end = this.readVarint() + this.pos,
-            buffer = this.buf.slice(this.pos, end);
+            buffer = this.buf.subarray(this.pos, end);
         this.pos = end;
         return buffer;
     },
@@ -217,8 +217,8 @@ Pbf.prototype = {
         while (length < this.pos + min) length *= 2;
 
         if (length !== this.length) {
-            var buf = new Buffer(length);
-            this.buf.copy(buf);
+            var buf = new Uint8Array(length);
+            buf.set(this.buf);
             this.buf = buf;
             this.length = length;
         }
@@ -227,32 +227,32 @@ Pbf.prototype = {
     finish: function() {
         this.length = this.pos;
         this.pos = 0;
-        return this.buf.slice(0, this.length);
+        return this.buf.subarray(0, this.length);
     },
 
     writeFixed32: function(val) {
         this.realloc(4);
-        this.buf.writeUInt32LE(val, this.pos);
+        writeInt32(this.buf, val, this.pos);
         this.pos += 4;
     },
 
     writeSFixed32: function(val) {
         this.realloc(4);
-        this.buf.writeInt32LE(val, this.pos);
+        writeInt32(this.buf, val, this.pos);
         this.pos += 4;
     },
 
     writeFixed64: function(val) {
         this.realloc(8);
-        this.buf.writeInt32LE(val & -1, this.pos);
-        this.buf.writeUInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
+        writeInt32(this.buf, val & -1, this.pos);
+        writeInt32(this.buf, Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
         this.pos += 8;
     },
 
     writeSFixed64: function(val) {
         this.realloc(8);
-        this.buf.writeInt32LE(val & -1, this.pos);
-        this.buf.writeInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
+        writeInt32(this.buf, val & -1, this.pos);
+        writeInt32(this.buf, Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
         this.pos += 8;
     },
 
@@ -282,22 +282,31 @@ Pbf.prototype = {
 
     writeString: function(str) {
         str = String(str);
-        var bytes = Buffer.byteLength(str);
-        this.writeVarint(bytes);
-        this.realloc(bytes);
-        this.buf.write(str, this.pos);
-        this.pos += bytes;
+        this.realloc(str.length * 4);
+
+        this.pos++; // reserve 1 byte for short string length
+
+        // write the string directly to the buffer and see how much was written
+        var newPos = writeUtf8(this.buf, str, this.pos);
+        var len = newPos - this.pos;
+
+        if (len >= 0x80) makeRoomForExtraLength(this.pos, len, this);
+
+        // finally, write the message length in the reserved place and restore the position
+        this.pos--;
+        this.writeVarint(len);
+        this.pos += len;
     },
 
     writeFloat: function(val) {
         this.realloc(4);
-        this.buf.writeFloatLE(val, this.pos);
+        ieee754.write(this.buf, val, this.pos, true, 23, 4);
         this.pos += 4;
     },
 
     writeDouble: function(val) {
         this.realloc(8);
-        this.buf.writeDoubleLE(val, this.pos);
+        ieee754.write(this.buf, val, this.pos, true, 52, 8);
         this.pos += 8;
     },
 
@@ -316,7 +325,7 @@ Pbf.prototype = {
         fn(obj, this);
         var len = this.pos - startPos;
 
-        if (len >= 0x80) reallocForRawMessage(startPos, len, this);
+        if (len >= 0x80) makeRoomForExtraLength(startPos, len, this);
 
         // finally, write the message length in the reserved place and restore the position
         this.pos = startPos - 1;
@@ -458,7 +467,7 @@ function writeBigVarintHigh(high, pbf) {
     pbf.buf[pbf.pos++]  = high & 0x7f;
 }
 
-function reallocForRawMessage(startPos, len, pbf) {
+function makeRoomForExtraLength(startPos, len, pbf) {
     var extraLen =
         len <= 0x3fff ? 1 :
         len <= 0x1fffff ? 2 :
@@ -478,3 +487,145 @@ function writePackedFixed32(arr, pbf)  { for (var i = 0; i < arr.length; i++) pb
 function writePackedSFixed32(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed32(arr[i]); }
 function writePackedFixed64(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);  }
 function writePackedSFixed64(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]); }
+
+// Buffer code below from https://github.com/feross/buffer, MIT-licensed
+
+function readUInt32(buf, pos) {
+    return ((buf[pos]) |
+        (buf[pos + 1] << 8) |
+        (buf[pos + 2] << 16)) +
+        (buf[pos + 3] * 0x1000000);
+}
+
+function writeInt32(buf, val, pos) {
+    buf[pos] = val;
+    buf[pos + 1] = (val >>> 8);
+    buf[pos + 2] = (val >>> 16);
+    buf[pos + 3] = (val >>> 24);
+}
+
+function readInt32(buf, pos) {
+    return ((buf[pos]) |
+        (buf[pos + 1] << 8) |
+        (buf[pos + 2] << 16)) +
+        (buf[pos + 3] << 24);
+}
+
+function readUtf8(buf, pos, end) {
+    var str = '';
+    var i = pos;
+
+    while (i < end) {
+        var b0 = buf[i];
+        var c = null; // codepoint
+        var bytesPerSequence =
+            b0 > 0xEF ? 4 :
+            b0 > 0xDF ? 3 :
+            b0 > 0xBF ? 2 : 1;
+
+        if (i + bytesPerSequence > end) break;
+
+        var b1, b2, b3;
+
+        if (bytesPerSequence === 1) {
+            if (b0 < 0x80) {
+                c = b0;
+            }
+        } else if (bytesPerSequence === 2) {
+            b1 = buf[i + 1];
+            if ((b1 & 0xC0) === 0x80) {
+                c = (b0 & 0x1F) << 0x6 | (b1 & 0x3F);
+                if (c <= 0x7F) {
+                    c = null;
+                }
+            }
+        } else if (bytesPerSequence === 3) {
+            b1 = buf[i + 1];
+            b2 = buf[i + 2];
+            if ((b1 & 0xC0) === 0x80 && (b2 & 0xC0) === 0x80) {
+                c = (b0 & 0xF) << 0xC | (b1 & 0x3F) << 0x6 | (b2 & 0x3F);
+                if (c <= 0x7FF || (c >= 0xD800 && c <= 0xDFFF)) {
+                    c = null;
+                }
+            }
+        } else if (bytesPerSequence === 4) {
+            b1 = buf[i + 1];
+            b2 = buf[i + 2];
+            b3 = buf[i + 3];
+            if ((b1 & 0xC0) === 0x80 && (b2 & 0xC0) === 0x80 && (b3 & 0xC0) === 0x80) {
+                c = (b0 & 0xF) << 0x12 | (b1 & 0x3F) << 0xC | (b2 & 0x3F) << 0x6 | (b3 & 0x3F);
+                if (c <= 0xFFFF || c >= 0x110000) {
+                    c = null;
+                }
+            }
+        }
+
+        if (c === null) {
+            c = 0xFFFD;
+            bytesPerSequence = 1;
+
+        } else if (c > 0xFFFF) {
+            c -= 0x10000;
+            str += String.fromCharCode(c >>> 10 & 0x3FF | 0xD800);
+            c = 0xDC00 | c & 0x3FF;
+        }
+
+        str += String.fromCharCode(c);
+        i += bytesPerSequence;
+    }
+
+    return str;
+}
+
+function writeUtf8(buf, str, pos) {
+    for (var i = 0, c, lead; i < str.length; i++) {
+        c = str.charCodeAt(i); // code point
+
+        if (c > 0xD7FF && c < 0xE000) {
+            if (lead) {
+                if (c < 0xDC00) {
+                    buf[pos++] = 0xEF;
+                    buf[pos++] = 0xBF;
+                    buf[pos++] = 0xBD;
+                    lead = c;
+                    continue;
+                } else {
+                    c = lead - 0xD800 << 10 | c - 0xDC00 | 0x10000;
+                    lead = null;
+                }
+            } else {
+                if (c > 0xDBFF || (i + 1 === str.length)) {
+                    buf[pos++] = 0xEF;
+                    buf[pos++] = 0xBF;
+                    buf[pos++] = 0xBD;
+                } else {
+                    lead = c;
+                }
+                continue;
+            }
+        } else if (lead) {
+            buf[pos++] = 0xEF;
+            buf[pos++] = 0xBF;
+            buf[pos++] = 0xBD;
+            lead = null;
+        }
+
+        if (c < 0x80) {
+            buf[pos++] = c;
+        } else {
+            if (c < 0x800) {
+                buf[pos++] = c >> 0x6 | 0xC0;
+            } else {
+                if (c < 0x10000) {
+                    buf[pos++] = c >> 0xC | 0xE0;
+                } else {
+                    buf[pos++] = c >> 0x12 | 0xF0;
+                    buf[pos++] = c >> 0xC & 0x3F | 0x80;
+                }
+                buf[pos++] = c >> 0x6 & 0x3F | 0x80;
+            }
+            buf[pos++] = c & 0x3F | 0x80;
+        }
+    }
+    return pos;
+}
