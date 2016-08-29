@@ -97,25 +97,6 @@ Pbf.prototype = {
         return readVarintRemainder(val, isSigned, this);
     },
 
-    readVarint64: function() {
-        var startPos = this.pos,
-            val = this.readVarint();
-
-        if (val < POW_2_63) return val;
-
-        var pos = this.pos - 2;
-        while (this.buf[pos] === 0xff) pos--;
-        if (pos < startPos) pos = startPos;
-
-        val = 0;
-        for (var i = 0; i < pos - startPos + 1; i++) {
-            var b = ~this.buf[startPos + i] & 0x7f;
-            val += i < 4 ? b << i * 7 : b * Math.pow(2, i * 7);
-        }
-
-        return -val - 1;
-    },
-
     readSVarint: function() {
         var num = this.readVarint();
         return num % 2 === 1 ? (num + 1) / -2 : num / 2; // zigzag encoding
