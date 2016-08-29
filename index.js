@@ -16,8 +16,7 @@ Pbf.Bytes   = 2; // length-delimited: string, bytes, embedded messages, packed r
 Pbf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
 
 var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
-    SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32,
-    POW_2_63 = Math.pow(2, 63);
+    SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
 
 Pbf.prototype = {
 
@@ -95,25 +94,6 @@ Pbf.prototype = {
         b = buf[this.pos];   val |= (b & 0x0f) << 28;
 
         return readVarintRemainder(val, isSigned, this);
-    },
-
-    readVarint64: function() {
-        var startPos = this.pos,
-            val = this.readVarint();
-
-        if (val < POW_2_63) return val;
-
-        var pos = this.pos - 2;
-        while (this.buf[pos] === 0xff) pos--;
-        if (pos < startPos) pos = startPos;
-
-        val = 0;
-        for (var i = 0; i < pos - startPos + 1; i++) {
-            var b = ~this.buf[startPos + i] & 0x7f;
-            val += i < 4 ? b << i * 7 : b * Math.pow(2, i * 7);
-        }
-
-        return -val - 1;
     },
 
     readSVarint: function() {

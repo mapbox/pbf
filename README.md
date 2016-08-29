@@ -173,9 +173,8 @@ pbf.readMessage(readFoo);
 
 Scalar reading methods:
 
-* `readVarint()`
+* `readVarint(isSigned)` (pass `true` if you expect negative varints)
 * `readSVarint()`
-* `readVarint64()` (`readVarint` version that handles negative `int64` values)
 * `readFixed32()`
 * `readFixed64()`
 * `readSFixed32()`
@@ -189,15 +188,15 @@ Scalar reading methods:
 
 Packed reading methods:
 
-* `readPackedVarint()`
-* `readPackedSVarint()`
-* `readPackedFixed32()`
-* `readPackedFixed64()`
-* `readPackedSFixed32()`
-* `readPackedSFixed64()`
-* `readPackedBoolean()`
-* `readPackedFloat()`
-* `readPackedDouble()`
+* `readPackedVarint(arr, isSigned)` (appends read items to `arr`)
+* `readPackedSVarint(arr)`
+* `readPackedFixed32(arr)`
+* `readPackedFixed64(arr)`
+* `readPackedSFixed32(arr)`
+* `readPackedSFixed64(arr)`
+* `readPackedBoolean(arr)`
+* `readPackedFloat(arr)`
+* `readPackedDouble(arr)`
 
 #### Writing
 
