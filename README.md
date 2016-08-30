@@ -8,14 +8,15 @@ A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decodi
 
 This library is extremely fast — much faster than native `JSON.parse`/`JSON.stringify`
 and the [protocol-buffers](https://github.com/mafintosh/protocol-buffers) module.
-Here's a result from running `node bench/bench.js` on Node v6.2 (decoding and encoding a vector tile):
+Here's a result from running a real-world benchmark on Node v6.5
+(decoding and encoding a sample of 439 vector tiles, 22.6 MB total):
 
-- **pbf** decode x 822 ops/sec ±1.51% (85 runs sampled)
-- **pbf** encode x 521 ops/sec ±2.32% (80 runs sampled)
-- **protocol-buffers** decode x 284 ops/sec ±1.25% (80 runs sampled)
-- **protocol-buffers** encode x 80.61 ops/sec ±1.75% (67 runs sampled)
-- **JSON.parse** x 140 ops/sec ±2.48% (69 runs sampled)
-- **JSON.stringify** x 324 ops/sec ±0.82% (83 runs sampled)
+- **pbf** decode: 387ms, or 57 MB/s
+- **pbf** encode: 396ms, or 56 MB/s
+- **protocol-buffers** decode: 837ms, or 26 MB/s
+- **protocol-buffers** encode: 4197ms, or 5 MB/s
+- **JSON.parse**: 1540ms, or 125 MB/s (parsing an equivalent 77.5 MB JSON file)
+- **JSON.stringify**: 607ms, or 49 MB/s
 
 ## Examples
 
@@ -104,7 +105,7 @@ npm run build-dev # dist/pbf-dev.js (development build)
 npm run build-min # dist/pbf.js (minified production build)
 ```
 
-CDN link: https://npmcdn.com/pbf@2.0.1/dist/pbf.js
+CDN link: https://npmcdn.com/pbf@3.0.0/dist/pbf.js
 
 ## API
 
@@ -295,7 +296,7 @@ This release include tons of compatibility/robustness fixes, and a more reliable
 
 ##### Encoder/decoder
 
-- **Breaking**: changed Node implementation to use `Uint8Array` instead of `Buffer` inernally (and produce corresponding result on `finish()`), making it fully match the browser implementation for consistency and simplicity.
+- **Breaking**: changed Node implementation to use `Uint8Array` instead of `Buffer` internally (and produce corresponding result on `finish()`), making it fully match the browser implementation for consistency and simplicity.
 - Fixed `writeVarint` to write `0` when given `NaN` or other non-number to avoid producing a broken Protobuf message.
 - Changed `readPacked*` methods signature to accept an optional `arr` argument to append the results to (to support messages with repeated fields that mix packed/non-packed encoding).
 - Added an optional `isSigned` argument to `readVarint` that enables proper reading of negative varints.
