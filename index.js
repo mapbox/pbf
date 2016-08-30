@@ -96,6 +96,10 @@ Pbf.prototype = {
         return readVarintRemainder(val, isSigned, this);
     },
 
+    readVarint64: function() { // for compatibility with v2.0.1
+        return this.readVarint(true);
+    },
+
     readSVarint: function() {
         var num = this.readVarint();
         return num % 2 === 1 ? (num + 1) / -2 : num / 2; // zigzag encoding

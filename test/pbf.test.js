@@ -76,7 +76,7 @@ test('writeVarint writes 0 for NaN', function(t) {
     t.end();
 });
 
-test('readVarint64', function(t) {
+test('readVarint signed', function(t) {
     var bytes = [0xc8,0xe8,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x01];
     var buf = new Pbf(new Buffer(bytes));
     t.equal(buf.readVarint(true), -3000);
@@ -89,6 +89,13 @@ test('readVarint64', function(t) {
     buf = new Pbf(new Buffer(bytes));
     t.equal(buf.readVarint(true), 200);
 
+    t.end();
+});
+
+test('readVarint64 (compatibility)', function(t) {
+    var bytes = [0xc8,0xe8,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x01];
+    var buf = new Pbf(new Buffer(bytes));
+    t.equal(buf.readVarint64(), -3000);
     t.end();
 });
 
