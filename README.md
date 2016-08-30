@@ -289,6 +289,30 @@ The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
 
+#### 3.0.0 (Aug 30, 2016)
+
+This release include tons of compatibility/robustness fixes, and a more reliable Node implementation. Decoding performance is expected to get up to ~15% slower than v2.0 in Node (browsers are unaffected), but encoding got faster by ~15% in return.
+
+##### Encoder/decoder
+
+- **Breaking**: changed Node implementation to use `Uint8Array` instead of `Buffer` inernally (and produce corresponding result on `finish()`), making it fully match the browser implementation for consistency and simplicity.
+- Fixed `writeVarint` to write `0` when given `NaN` or other non-number to avoid producing a broken Protobuf message.
+- Changed `readPacked*` methods signature to accept an optional `arr` argument to append the results to (to support messages with repeated fields that mix packed/non-packed encoding).
+- Added an optional `isSigned` argument to `readVarint` that enables proper reading of negative varints.
+- Deprecated `readVarint64()` (it still works, but it's recommended to be changed to `readVarint(true)`).
+- Faster string encoding.
+
+##### Proto compiler
+
+- **Breaking:** Full support for defaults field values (both implicit and explicit); they're now included in the decoded JSON objects.
+- Fixed reading of repeated fields with mixed packed/non-packed encoding for compatibility.
+- Fixed proto3 compiler to use packed by default for repeated scalar fields.
+- Fixed reading of negative varint types.
+- Fixed packed fields to decode into `[]` if they're not present.
+- Fixed nested message references handling.
+- Fixed `packed=false` being interpreted as packed.
+- Added a comment to generated code with pbf version number.
+
 #### 2.0.1 (May 28, 2016)
 
 - Fixed a regression with `writeVarint` that affected certain numbers.
