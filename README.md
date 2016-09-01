@@ -105,7 +105,7 @@ npm run build-dev # dist/pbf-dev.js (development build)
 npm run build-min # dist/pbf.js (minified production build)
 ```
 
-CDN link: https://npmcdn.com/pbf@3.0.0/dist/pbf.js
+CDN link: https://unpkg.com/pbf@3.0.0/dist/pbf.js
 
 ## API
 
