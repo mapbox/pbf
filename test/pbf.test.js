@@ -342,6 +342,15 @@ test('writeString & readString', function(t) {
     t.end();
 });
 
+test('writeString & readString longer', function(t) {
+    var str = '{"Feature":"http://example.com/vocab#Feature","datetime":{"@id":"http://www.w3.org/2006/time#inXSDDateTime","@type":"http://www.w3.org/2001/XMLSchema#dateTime"},"when":"http://example.com/vocab#when"}';
+    var buf = new Pbf();
+    buf.writeString(str);
+    buf.finish();
+    t.equal(buf.readString(), str);
+    t.end();
+});
+
 test('more complicated utf8', function(t) {
     var buf = new Pbf();
     // crazy test from github.com/mathiasbynens/utf8.js

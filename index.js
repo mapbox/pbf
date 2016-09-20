@@ -270,14 +270,15 @@ Pbf.prototype = {
 
         this.pos++; // reserve 1 byte for short string length
 
+        var startPos = this.pos;
         // write the string directly to the buffer and see how much was written
-        var newPos = writeUtf8(this.buf, str, this.pos);
-        var len = newPos - this.pos;
+        this.pos = writeUtf8(this.buf, str, this.pos);
+        var len = this.pos - startPos;
 
-        if (len >= 0x80) makeRoomForExtraLength(this.pos, len, this);
+        if (len >= 0x80) makeRoomForExtraLength(startPos, len, this);
 
         // finally, write the message length in the reserved place and restore the position
-        this.pos--;
+        this.pos = startPos - 1;
         this.writeVarint(len);
         this.pos += len;
     },
