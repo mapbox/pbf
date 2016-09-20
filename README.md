@@ -105,7 +105,7 @@ npm run build-dev # dist/pbf-dev.js (development build)
 npm run build-min # dist/pbf.js (minified production build)
 ```
 
-CDN link: https://unpkg.com/pbf@3.0.0/dist/pbf.js
+CDN link: https://unpkg.com/pbf@3.0.1/dist/pbf.js
 
 ## API
 
@@ -289,6 +289,10 @@ The resulting module exports each message by name with the following methods:
 The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
+
+#### 3.0.1 (Sep 20, 2016)
+
+- Fixed a regression that broke encoding of long strings.
 
 #### 3.0.0 (Aug 30, 2016)
 
