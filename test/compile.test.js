@@ -69,20 +69,19 @@ test('compiles packed proto3', function(t) {
     t.end();
 });
 
-test('compiles packed proto3', function(t) {
+test('compiles packed with multi-byte tags', function(t) {
     var proto = resolve(path.join(__dirname, './fixtures/packed_proto3.proto'));
-    var NotPacked = compile(proto).NotPacked;
-    var FalsePacked = compile(proto).FalsePacked;
+    var Packed = compile(proto).Packed;
 
     var original = {
         value: [300, 400, 500]
     };
     var pbf = new Pbf();
-    NotPacked.write(original, pbf);
+    Packed.write(original, pbf);
     var buf = pbf.finish();
 
-    var decompressed = FalsePacked.read(new Pbf(buf));
-    t.equals(buf.length, 8);
+    var decompressed = Packed.read(new Pbf(buf));
+    t.equals(buf.length, 9);
     t.deepEqual(original, decompressed);
 
     t.end();
