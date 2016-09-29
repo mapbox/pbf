@@ -7,6 +7,7 @@ var ieee754 = require('ieee754');
 function Pbf(buf) {
     this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf || 0);
     this.pos = 0;
+    this.type = 0;
     this.length = this.buf.length;
 }
 
@@ -34,6 +35,7 @@ Pbf.prototype = {
                 tag = val >> 3,
                 startPos = this.pos;
 
+            this.type = val & 0x7;
             readField(tag, result, this);
 
             if (this.pos === startPos) this.skip(val);
@@ -393,7 +395,7 @@ function readVarintRemainder(l, s, p) {
 }
 
 function readPackedEnd(pbf) {
-    return (pbf.buf[pbf.pos - 1] & 0x7) === Pbf.Bytes ?
+    return pbf.type === Pbf.Bytes ?
         pbf.readVarint() + pbf.pos : pbf.pos + 1;
 }
 

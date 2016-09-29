@@ -10,3 +10,6 @@ message NotPacked {
 message FalsePacked {
   repeated int32 value = 1 [packed=false];
 }
+message Packed {
+  repeated int32 value = 16;
+}
