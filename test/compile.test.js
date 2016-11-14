@@ -37,6 +37,7 @@ test('compiles packed proto', function(t) {
     var FalsePacked = compile(proto).FalsePacked;
 
     var original = {
+        types: [0, 1, 0, 1],
         value: [300, 400, 500]
     };
     var pbf = new Pbf();
@@ -44,7 +45,7 @@ test('compiles packed proto', function(t) {
     var buf = pbf.finish();
 
     var decompressed = FalsePacked.read(new Pbf(buf));
-    t.equals(buf.length, 9);
+    t.equals(buf.length, 17);
     t.deepEqual(original, decompressed);
 
     t.end();
@@ -56,6 +57,7 @@ test('compiles packed proto3', function(t) {
     var FalsePacked = compile(proto).FalsePacked;
 
     var original = {
+        types: [0, 1, 0, 1],
         value: [300, 400, 500]
     };
     var pbf = new Pbf();
@@ -63,7 +65,7 @@ test('compiles packed proto3', function(t) {
     var buf = pbf.finish();
 
     var decompressed = FalsePacked.read(new Pbf(buf));
-    t.equals(buf.length, 8);
+    t.equals(buf.length, 14);
     t.deepEqual(original, decompressed);
 
     t.end();
