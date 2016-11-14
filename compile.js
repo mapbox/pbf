@@ -100,6 +100,10 @@ function compileDest(ctx) {
     return '{' + Object.keys(props).join(', ') + '}';
 }
 
+function isEnum(type) {
+    return type && type._proto.values;
+}
+
 function getType(ctx, field) {
     var path = field.type.split('.');
     return path.reduce(function(ctx, name) { return ctx && ctx[name]; }, ctx);
@@ -109,12 +113,12 @@ function compileFieldRead(ctx, field) {
     var type = getType(ctx, field);
     if (type) {
         if (type._proto.fields) return type._name + '.read(pbf, pbf.readVarint() + pbf.pos)';
-        if (type._proto.values) return 'pbf.readVarint()';
-        throw new Error('Unexpected type: ' + type._name);
+        if (!isEnum(type)) throw new Error('Unexpected type: ' + type._name);
     }
 
     var prefix = 'pbf.read';
-    var signed = field.type === 'int32' || field.type === 'int64' ? 'true' : '';
+    var fieldType = isEnum(type) ? 'enum' : field.type;
+    var signed = fieldType === 'int32' || fieldType === 'int64' ? 'true' : '';
     var suffix = '(' + signed + ')';
 
     if (isPacked(field)) {
@@ -122,7 +126,7 @@ function compileFieldRead(ctx, field) {
         suffix = '(obj.' + field.name + (signed ? ', ' + signed : '') + ')';
     }
 
-    switch (field.type) {
+    switch (fieldType) {
     case 'string':   return prefix + 'String' + suffix;
     case 'float':    return prefix + 'Float' + suffix;
     case 'double':   return prefix + 'Double' + suffix;
@@ -236,12 +240,12 @@ function getDefaultValue(field, value) {
 }
 
 function setPackedOption(ctx, field, syntax) {
-    var type = field.repeated && field.type;
-
     // No default packed in older protobuf versions
     if (syntax < 3) return;
 
-    switch (type) {
+    var fieldType = isEnum(getType(ctx, field)) ? 'enum' : field.type;
+
+    switch (field.repeated && fieldType) {
     case 'float':
     case 'double':
     case 'uint32':
@@ -253,6 +257,7 @@ function setPackedOption(ctx, field, syntax) {
     case 'fixed32':
     case 'fixed64':
     case 'sfixed32':
+    case 'enum':
     case 'bool':     field.options.packed = 'true'; break;
     default:         delete field.options.packed;
     }
