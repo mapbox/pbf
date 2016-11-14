@@ -168,6 +168,7 @@ test('handles all implicit default values', function(t) {
     t.deepEqual(data.numbers, []);
     t.equals(data.bytes, null);
     t.equals(data.custom, null);
+    t.deepEqual(data.types, []);
 
     t.end();
 });

@@ -267,7 +267,7 @@ function setDefaultValue(ctx, field, syntax) {
     var explicitDefault = syntax < 3 ? options.default : undefined;
 
     // Set default for enum values
-    if (enumValues) {
+    if (enumValues && !field.repeated) {
         ctx._defaults[field.name] = enumValues[explicitDefault] || 0;
 
     } else {
