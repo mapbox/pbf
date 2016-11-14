@@ -18,4 +18,5 @@ message Envelope {
     repeated int32 numbers = 7;
     bytes bytes = 8;
     CustomType custom = 9;
+    repeated MessageType types = 10;
 }
