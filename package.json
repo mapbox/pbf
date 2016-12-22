@@ -1,5 +1,5 @@
 {
-  "name": "pbf",
+  "name": "@mapbox/pbf",
   "version": "3.0.5",
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
