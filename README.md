@@ -55,6 +55,17 @@ var proto = schema.parse(fs.readFileSync('example.proto'));
 var Test = compile(proto).Test;
 ```
 
+If you use `webpack` as your module bundler, you can use [pbf-loader](https://github.com/trivago/pbf-loader)
+to load .proto files directly. It returns a compiled module ready to be used.
+
+Given you already configured your `webpack.config.js`, the code above would look like:
+```js
+var Pbf = require('pbf');
+var proto = require('./example.proto');
+
+var Test = proto.Test;
+```
+
 #### Custom Reading
 
 ```js
