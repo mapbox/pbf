@@ -66,6 +66,8 @@ function writeMessage(ctx, options) {
 
     if (!options.noWrite) {
         code += name + '.write = function (obj, pbf) {\n';
+        code += 'if (!obj) return;';
+
         var numRepeated = 0;
         for (i = 0; i < fields.length; i++) {
             field = fields[i];
