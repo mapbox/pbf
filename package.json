@@ -40,14 +40,14 @@
   },
   "devDependencies": {
     "benchmark": "^2.1.0",
-    "browserify": "^13.0.1",
-    "eslint": "^3.0.0",
+    "browserify": "^14.4.0",
+    "eslint": "^4.2.0",
     "eslint-config-mourner": "^2.0.1",
     "mkdirp": "^0.5.1",
     "protocol-buffers": "^3.1.6",
-    "tap": "^6.1.1",
+    "tap": "^10.7.0",
     "tile-stats-runner": "^1.0.0",
-    "uglify-js": "^2.6.2"
+    "uglify-js": "^3.0.25"
   },
   "eslintConfig": {
     "extends": "mourner",
@@ -58,7 +58,8 @@
       ],
       "key-spacing": 0,
       "no-empty": 0,
-      "global-require": 0
+      "global-require": 0,
+      "indent": [2, 4, {"flatTernaryExpressions": true}]
     }
   }
 }
