@@ -33,6 +33,7 @@ function writeContext(ctx, options) {
 function writeMessage(ctx, options) {
     var name = ctx._name;
     var fields = ctx._proto.fields;
+    var numRepeated = 0;
 
     var code = '\n// ' + name + ' ========================================\n\n';
 
@@ -50,7 +51,9 @@ function writeMessage(ctx, options) {
             var packed = isPacked(field);
             code += '    ' + (i ? 'else if' : 'if') +
                 ' (tag === ' + field.tag + ') ' +
+                (field.type === 'map' ? ' { ' : '') +
                 (
+                    field.type === 'map' ? compileMapRead(readCode, field.name, numRepeated++) :
                     field.repeated && !packed ? 'obj.' + field.name + '.push(' + readCode + ')' :
                     field.repeated && packed ? readCode : 'obj.' + field.name + ' = ' + readCode
                 );
@@ -59,19 +62,20 @@ function writeMessage(ctx, options) {
                 code += ', obj.' + field.oneof + ' = ' + JSON.stringify(field.name);
             }
 
-            code += ';\n';
+            code += ';' + (field.type === 'map' ? ' }' : '') + '\n';
         }
         code += '};\n';
     }
 
     if (!options.noWrite) {
         code += name + '.write = function (obj, pbf) {\n';
-        var numRepeated = 0;
+        numRepeated = 0;
         for (i = 0; i < fields.length; i++) {
             field = fields[i];
             var writeCode = field.repeated && !isPacked(field) ?
                 compileRepeatedWrite(ctx, field, numRepeated++) :
-                compileFieldWrite(ctx, field, field.name);
+                field.type === 'map' ? compileMapWrite(ctx, field, numRepeated++) :
+                compileFieldWrite(ctx, field, 'obj.' + field.name);
             code += getDefaultWriteTest(ctx, field);
             code += writeCode + ';\n';
         }
@@ -105,6 +109,10 @@ function isEnum(type) {
 }
 
 function getType(ctx, field) {
+    if (field.type === 'map') {
+        return ctx[getMapMessageName(field.tag)];
+    }
+
     var path = field.type.split('.');
     return path.reduce(function(ctx, name) { return ctx && ctx[name]; }, ctx);
 }
@@ -116,8 +124,9 @@ function compileFieldRead(ctx, field) {
         if (!isEnum(type)) throw new Error('Unexpected type: ' + type._name);
     }
 
-    var prefix = 'pbf.read';
     var fieldType = isEnum(type) ? 'enum' : field.type;
+
+    var prefix = 'pbf.read';
     var signed = fieldType === 'int32' || fieldType === 'int64' ? 'true' : '';
     var suffix = '(' + signed + ')';
 
@@ -151,11 +160,11 @@ function compileFieldWrite(ctx, field, name) {
     var prefix = 'pbf.write';
     if (isPacked(field)) prefix += 'Packed';
 
-    var postfix = (isPacked(field) ? '' : 'Field') + '(' + field.tag + ', obj.' + name + ')';
+    var postfix = (isPacked(field) ? '' : 'Field') + '(' + field.tag + ', ' + name + ')';
 
     var type = getType(ctx, field);
     if (type) {
-        if (type._proto.fields) return prefix + 'Message(' + field.tag + ', ' + type._name + '.write, obj.' + name + ')';
+        if (type._proto.fields) return prefix + 'Message(' + field.tag + ', ' + type._name + '.write, ' + name + ')';
         if (type._proto.values) return prefix + 'Varint' + postfix;
         throw new Error('Unexpected type: ' + type._name);
     }
@@ -181,10 +190,52 @@ function compileFieldWrite(ctx, field, name) {
     }
 }
 
+function compileMapRead(readCode, name, numRepeated) {
+    return (numRepeated ? '' : 'var ') + 'entry = ' + readCode + '; obj.' + name + '[entry.key] = entry.value';
+}
+
 function compileRepeatedWrite(ctx, field, numRepeated) {
     return 'for (' + (numRepeated ? '' : 'var ') +
         'i = 0; i < obj.' + field.name + '.length; i++) ' +
-        compileFieldWrite(ctx, field, field.name + '[i]');
+        compileFieldWrite(ctx, field, 'obj.' + field.name + '[i]');
+}
+
+function compileMapWrite(ctx, field, numRepeated) {
+    var name = 'obj.' + field.name;
+
+    return 'for (' + (numRepeated ? '' : 'var ') +
+        'i in ' + name + ') if (Object.prototype.hasOwnProperty.call(' + name + ', i)) ' +
+        compileFieldWrite(ctx, field, '{ key: i, value: ' + name + '[i] }');
+}
+
+function getMapMessageName(tag) {
+    return '_FieldEntry' + tag;
+}
+
+function getMapField(name, type, tag) {
+    return {
+        name: name,
+        type: type,
+        tag: tag,
+        map: null,
+        oneof: null,
+        required: false,
+        repeated: false,
+        options: {}
+    };
+}
+
+function getMapMessage(field) {
+    return {
+        name: getMapMessageName(field.tag),
+        enums: [],
+        messages: [],
+        extensions: null,
+        fields: [
+            getMapField('key', field.map.from, 1),
+            getMapField('value', field.map.to, 2)
+        ]
+    };
 }
 
 function buildContext(proto, parent) {
@@ -213,6 +264,12 @@ function buildContext(proto, parent) {
         obj._children.push(buildContext(proto.messages[i], obj));
     }
 
+    for (i = 0; proto.fields && i < proto.fields.length; i++) {
+        if (proto.fields[i].type === 'map') {
+            obj._children.push(buildContext(getMapMessage(proto.fields[i]), obj));
+        }
+    }
+
     return obj;
 }
 
@@ -235,6 +292,7 @@ function getDefaultValue(field, value) {
     case 'sfixed64': return value ? parseInt(value, 10) : 0;
     case 'string':   return value || '';
     case 'bool':     return value === 'true';
+    case 'map':      return {};
     default:         return null;
     }
 }
