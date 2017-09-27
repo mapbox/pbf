@@ -132,6 +132,32 @@ test('compiles proto3 ignoring defaults', function(t) {
     t.end();
 });
 
+test('compiles maps', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/map.proto'));
+    var Envelope = compile(proto).Envelope;
+
+    var original = {
+        kv : {
+            a: 'value a',
+            b: 'value b'
+        },
+        kn : {
+            a : 1,
+            b : 2
+        }
+    };
+
+    var pbf = new Pbf();
+    Envelope.write(original, pbf);
+    var buf = pbf.finish();
+
+    var decompressed = Envelope.read(new Pbf(buf));
+
+    t.deepEqual(original, decompressed);
+
+    t.end();
+});
+
 test('does not write undefined or null values', function(t) {
     var proto = resolve(path.join(__dirname, './fixtures/embedded_type.proto'));
     var EmbeddedType = compile(proto).EmbeddedType;
