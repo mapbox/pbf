@@ -301,6 +301,10 @@ The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
 
+#### 3.1.0 (Sep 27, 2017)
+
+- Added support for Protocol Buffer 3 [maps](https://developers.google.com/protocol-buffers/docs/proto3#maps) to proto compiler.
+
 #### 3.0.5 (Nov 30, 2016)
 
 - Fixed an error appearing in some versions of IE11 and old Android browsers.
