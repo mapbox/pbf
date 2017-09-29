@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var test = require('tap').test;
 var resolve = require('resolve-protobuf-schema').sync;
+var camelCase = require('camelcase');
 
 var Pbf = require('../');
 var compile = require('../compile');
@@ -259,5 +260,18 @@ test('handles unsigned varint', function(t) {
     t.equals(data.uint, Math.pow(2, 31));
     t.equals(data.ulong, Math.pow(2, 63));
 
+    t.end();
+});
+
+test('compoile proto with custom fields name formatter (camelize fields name)', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/paramCase.proto'));
+    var nameTransformer = function(name) {
+        return camelCase(name);
+    };
+    var code = compile.raw(proto, {
+        nameTransformer: nameTransformer
+    });
+    t.equals(code.indexOf('intParamCase') !== -1, true);
+    t.equals(code.indexOf('intParamCaseTwo') !== -1, true);
     t.end();
 });

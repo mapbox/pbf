@@ -21,10 +21,21 @@ function compileRaw(proto, options) {
 
 function writeContext(ctx, options) {
     var code = '';
-    if (ctx._proto.fields) code += writeMessage(ctx, options);
+    var fields = ctx._proto.fields;
+    if (typeof options.nameTransformer === 'function' && ctx._proto.fields) {
+        Object.keys(ctx._defaults).forEach(function(key) {
+            var defaultValue = ctx._defaults[key];
+            delete ctx._defaults[key];
+            ctx._defaults[options.nameTransformer(key, ctx)] = defaultValue;
+        });
+        for (var i = 0; i < fields.length; i++) {
+            ctx._proto.fields[i].name = options.nameTransformer(ctx._proto.fields[i].name, ctx);
+        }
+    }
+    if (fields) code += writeMessage(ctx, options);
     if (ctx._proto.values) code += writeEnum(ctx, options);
 
-    for (var i = 0; i < ctx._children.length; i++) {
+    for (i = 0; i < ctx._children.length; i++) {
         code += writeContext(ctx._children[i], options);
     }
     return code;

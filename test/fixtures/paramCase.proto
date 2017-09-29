@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message ParamCase {
+    int32 int_param_case = 1;
+    int32 int_param_case_two = 1;
+}
