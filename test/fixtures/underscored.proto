@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message Underscored {
+    int32 int_underscored = 1;
+    int32 int_underscored_two = 1;
+}

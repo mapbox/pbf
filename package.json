@@ -41,7 +41,6 @@
   "devDependencies": {
     "benchmark": "^2.1.0",
     "browserify": "^14.4.0",
-    "camelcase": "^4.1.0",
     "eslint": "^4.2.0",
     "eslint-config-mourner": "^2.0.1",
     "mkdirp": "^0.5.1",
