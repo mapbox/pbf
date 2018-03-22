@@ -316,7 +316,9 @@ function setPackedOption(ctx, field, syntax) {
     case 'fixed64':
     case 'sfixed32':
     case 'enum':
-    case 'bool':     field.options.packed = 'true'; break;
+    case 'bool':
+        if (field.options.packed !== 'false') field.options.packed = 'true';
+        break;
     default:         delete field.options.packed;
     }
 }

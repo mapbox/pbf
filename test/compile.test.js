@@ -61,12 +61,17 @@ test('compiles packed proto3', function(t) {
         value: [300, 400, 500]
     };
     var pbf = new Pbf();
-    NotPacked.write(original, pbf);
-    var buf = pbf.finish();
+    FalsePacked.write(original, pbf);
+    var falsePackedBuf = pbf.finish();
 
-    var decompressed = FalsePacked.read(new Pbf(buf));
-    t.equals(buf.length, 14);
+    pbf = new Pbf();
+    NotPacked.write(original, pbf);
+    var notPackedBuf = pbf.finish();
+
+    var decompressed = NotPacked.read(new Pbf(falsePackedBuf));
     t.deepEqual(original, decompressed);
+    t.equals(notPackedBuf.length, 14);
+    t.ok(falsePackedBuf.length > notPackedBuf.length, 'Did not respect [packed=false]');
 
     t.end();
 });
