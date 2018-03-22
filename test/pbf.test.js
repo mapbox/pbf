@@ -239,6 +239,13 @@ test('readPacked and writePacked', function(t) {
     t.end();
 });
 
+test('writePacked skips empty arrays', function(t) {
+    var buf = new Pbf();
+    buf.writePackedBoolean(1, []);
+    t.equal(buf.length, 0);
+    t.end();
+});
+
 test('writeDouble', function(t) {
     var buf = new Pbf(new Buffer(8));
     buf.writeDouble(12345.6789012345);
