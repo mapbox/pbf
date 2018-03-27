@@ -48,7 +48,7 @@ function writeMessage(ctx, options) {
         for (var i = 0; i < fields.length; i++) {
             var field = fields[i];
             var readCode = compileFieldRead(ctx, field);
-            var packed = isPacked(field);
+            var packed = willSupportPacked(ctx, field);
             code += '    ' + (i ? 'else if' : 'if') +
                 ' (tag === ' + field.tag + ') ' +
                 (field.type === 'map' ? ' { ' : '') +
@@ -130,7 +130,7 @@ function compileFieldRead(ctx, field) {
     var signed = fieldType === 'int32' || fieldType === 'int64' ? 'true' : '';
     var suffix = '(' + signed + ')';
 
-    if (isPacked(field)) {
+    if (willSupportPacked(ctx, field)) {
         prefix += 'Packed';
         suffix = '(obj.' + field.name + (signed ? ', ' + signed : '') + ')';
     }
@@ -297,10 +297,7 @@ function getDefaultValue(field, value) {
     }
 }
 
-function setPackedOption(ctx, field, syntax) {
-    // No default packed in older protobuf versions
-    if (syntax < 3) return;
-
+function willSupportPacked(ctx, field) {
     var fieldType = isEnum(getType(ctx, field)) ? 'enum' : field.type;
 
     switch (field.repeated && fieldType) {
@@ -316,9 +313,23 @@ function setPackedOption(ctx, field, syntax) {
     case 'fixed64':
     case 'sfixed32':
     case 'enum':
-    case 'bool':     field.options.packed = 'true'; break;
-    default:         delete field.options.packed;
+    case 'bool': return true;
     }
+
+    return false;
+}
+
+function setPackedOption(ctx, field, syntax) {
+    // No default packed in older protobuf versions
+    if (syntax < 3) return;
+
+    // Packed option already set
+    if (field.options.packed !== undefined) return;
+
+    // Not a packed field type
+    if (!willSupportPacked(ctx, field)) return;
+
+    field.options.packed = 'true';
 }
 
 function setDefaultValue(ctx, field, syntax) {
