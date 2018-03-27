@@ -17,3 +17,7 @@ message FalsePacked {
   repeated int32 value = 1 [packed=false];
   repeated MessageType types = 2 [packed=false];
 }
+message Packed {
+  repeated int32 value = 1 [packed=true];
+  repeated MessageType types = 2 [packed=true];
+}

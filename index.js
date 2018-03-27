@@ -128,54 +128,63 @@ Pbf.prototype = {
     // verbose for performance reasons; doesn't affect gzipped size
 
     readPackedVarint: function(arr, isSigned) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readVarint(isSigned));
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readVarint(isSigned));
         return arr;
     },
     readPackedSVarint: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readSVarint());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readSVarint());
         return arr;
     },
     readPackedBoolean: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readBoolean());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readBoolean());
         return arr;
     },
     readPackedFloat: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readFloat());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readFloat());
         return arr;
     },
     readPackedDouble: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readDouble());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readDouble());
         return arr;
     },
     readPackedFixed32: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readFixed32());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readFixed32());
         return arr;
     },
     readPackedSFixed32: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readSFixed32());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readSFixed32());
         return arr;
     },
     readPackedFixed64: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readFixed64());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readFixed64());
         return arr;
     },
     readPackedSFixed64: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readSFixed64());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readSFixed64());
