@@ -286,3 +286,16 @@ test('handles unsigned varint', function(t) {
 
     t.end();
 });
+
+test('compoile proto with custom fields name formatter (camelize fields name)', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/underscored.proto'));
+    var nameTransformer = function(name) {
+        return name.replace(/^[_.\- ]+/, '').toLowerCase().replace(/[_.\- ]+(\w|$)/g, (m, p1) => p1.toUpperCase());
+    };
+    var code = compile.raw(proto, {
+        nameTransformer: nameTransformer
+    });
+    t.equals(code.indexOf('intUnderscored') !== -1, true);
+    t.equals(code.indexOf('intUnderscoredTwo') !== -1, true);
+    t.end();
+});
