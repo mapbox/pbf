@@ -508,7 +508,7 @@ function readInt32(buf, pos) {
 }
 
 function readUtf8(buf, pos, end) {
-    var str = '';
+    var str = [];
     var i = pos;
 
     while (i < end) {
@@ -562,15 +562,15 @@ function readUtf8(buf, pos, end) {
 
         } else if (c > 0xFFFF) {
             c -= 0x10000;
-            str += String.fromCharCode(c >>> 10 & 0x3FF | 0xD800);
+            str.push(String.fromCharCode(c >>> 10 & 0x3FF | 0xD800));
             c = 0xDC00 | c & 0x3FF;
         }
 
-        str += String.fromCharCode(c);
+        str.push(String.fromCharCode(c));
         i += bytesPerSequence;
     }
 
-    return str;
+    return str.join('');
 }
 
 function writeUtf8(buf, str, pos) {
