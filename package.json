@@ -4,6 +4,7 @@
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
   "scripts": {
+    "bench": "node bench/bench.js",
     "test": "eslint index.js compile.js test/*.js bench/bench-tiles.js bin/pbf && tap test/*.test.js",
     "cov": "tap test/*.test.js --cov --coverage-report=html",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
@@ -44,6 +45,7 @@
     "eslint": "^4.2.0",
     "eslint-config-mourner": "^2.0.1",
     "mkdirp": "^0.5.1",
+    "protobufjs": "^6.8.6",
     "protocol-buffers": "^3.1.6",
     "tap": "^10.7.0",
     "tile-stats-runner": "^1.0.0",
