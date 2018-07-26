@@ -1,0 +1,21 @@
+Error ---------------------------------------------------------------------------- test/fixtures/flow.input.js.flow:26:9
+
+Cannot call `Pbf` with `'wrong type'` bound to `buf` because:
+ - Either string [1] is incompatible with `ArrayBuffer` [2].
+ - Or string [1] is incompatible with `Uint8Array` [3].
+
+   test/fixtures/flow.input.js.flow:26:9
+   26| new Pbf('wrong type');
+               ^^^^^^^^^^^^ [1]
+
+References:
+   index.js.flow:6:23
+    6|     constructor(buf?: ArrayBuffer | Uint8Array): Pbf;
+                             ^^^^^^^^^^^ [2]
+   index.js.flow:6:37
+    6|     constructor(buf?: ArrayBuffer | Uint8Array): Pbf;
+                                           ^^^^^^^^^^ [3]
+
+
+
+Found 1 error
