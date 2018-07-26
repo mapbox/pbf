@@ -37,13 +37,14 @@
   "homepage": "https://github.com/mapbox/pbf",
   "dependencies": {
     "ieee754": "^1.1.6",
-    "resolve-protobuf-schema": "^2.0.0"
+    "resolve-protobuf-schema": "~2.0.0"
   },
   "devDependencies": {
     "benchmark": "^2.1.0",
     "browserify": "^14.4.0",
     "eslint": "^4.2.0",
     "eslint-config-mourner": "^2.0.1",
+    "flow-bin": "^0.77.0",
     "mkdirp": "^0.5.1",
     "protobufjs": "^6.8.6",
     "protocol-buffers": "^3.1.6",

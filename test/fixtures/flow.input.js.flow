@@ -1,0 +1,26 @@
+// @flow strict
+/* eslint-disable */
+
+const Pbf = require('../..');
+
+// Success:
+const pbf = new Pbf(new ArrayBuffer(0));
+let result: number;
+result = pbf.readFixed32();
+result = pbf.readSFixed32();
+result = pbf.readFixed64();
+result = pbf.readSFixed64();
+result = pbf.readFloat();
+result = pbf.readDouble();
+result = pbf.readVarint();
+result = pbf.readVarint64();
+result = pbf.readSVarint();
+const boolResult: boolean = pbf.readBoolean();
+const stringResult: string = pbf.readString();
+const rawResult: Uint8Array = pbf.readBytes();
+
+let readResult: string = pbf.readFields((tag: number, data: string, p: Pbf) => {}, 'dummy', 1);
+readResult = pbf.readMessage((tag: number, data: string, p: Pbf) => {}, 'dummy');
+
+// Type errors:
+new Pbf('wrong type');
