@@ -466,3 +466,31 @@ test('skip', function(t) {
     });
     t.end();
 });
+
+test('write a raw message > 0x10000000', function(t) {
+    var buf = new Pbf();
+    var marker = 0xdeadbeef;
+    var encodedMarker = new Uint8Array([0xef, 0xbe, 0xad, 0xde]);
+    var markerSize = encodedMarker.length;
+    var rawMessageSize = 0x10000004;
+    var encodedSize = new Uint8Array([0x84, 0x80, 0x80,0x80, 0x01]);
+
+    buf.writeRawMessage(function(_obj, pbf) {
+        // Repeatedly fill with the marker until it reaches the size target.
+        var n = rawMessageSize / markerSize;
+        for (var i = 0; i < n; i++) {
+            pbf.writeFixed32(marker);
+        }
+    }, null);
+
+    var bytes = buf.finish();
+    t.equal(bytes.length, rawMessageSize + encodedSize.length);
+
+    // The encoded size in varint should go first
+    t.same(bytes.subarray(0, encodedSize.length), encodedSize);
+
+    // Then the message itself. Verify that the first few bytes match the marker.
+    t.same(bytes.subarray(encodedSize.length, encodedSize.length + markerSize), encodedMarker);
+
+    t.end();
+});
