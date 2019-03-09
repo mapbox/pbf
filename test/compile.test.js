@@ -126,7 +126,10 @@ test('compiles defaults', function(t) {
 
     t.equals(buf.length, 0);
     t.deepEqual(data, {
-        type: 1,
+        type: {
+            options: {},
+            value: 1
+        },
         name: 'test',
         flag: true,
         weight: 1.5,
