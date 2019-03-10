@@ -301,6 +301,10 @@ The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
 
+#### 3.1.1 (March 8, 2019)
+
+- Fixed an off-by-one data corruption bug when writing a message larger than 0x10000000 bytes.
+
 #### 3.1.0 (Sep 27, 2017)
 
 - Added support for Protocol Buffer 3 [maps](https://developers.google.com/protocol-buffers/docs/proto3#maps) to proto compiler.
