@@ -3,14 +3,21 @@
   "version": "3.1.1",
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
+  "unpkg": "dist/pbf.js",
+  "jsdelivr": "dist/pbf.js",
   "scripts": {
     "bench": "node bench/bench.js",
     "test": "eslint index.js compile.js test/*.js bench/bench-tiles.js bin/pbf && tap test/*.test.js",
     "cov": "tap test/*.test.js --cov --coverage-report=html",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
     "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js",
-    "prepublish": "npm run build-dev && npm run build-min"
+    "prepublishOnly": "npm run build-dev && npm run build-min"
   },
+  "files": [
+    "bin",
+    "dist",
+    "compile.js"
+  ],
   "bin": {
     "pbf": "bin/pbf"
   },
@@ -36,20 +43,20 @@
   },
   "homepage": "https://github.com/mapbox/pbf",
   "dependencies": {
-    "ieee754": "^1.1.6",
-    "resolve-protobuf-schema": "^2.0.0"
+    "ieee754": "^1.1.12",
+    "resolve-protobuf-schema": "^2.1.0"
   },
   "devDependencies": {
-    "benchmark": "^2.1.0",
-    "browserify": "^14.4.0",
-    "eslint": "^4.2.0",
-    "eslint-config-mourner": "^2.0.1",
+    "benchmark": "^2.1.4",
+    "browserify": "^16.2.3",
+    "eslint": "^5.15.1",
+    "eslint-config-mourner": "^2.0.3",
     "mkdirp": "^0.5.1",
-    "protobufjs": "^6.8.6",
-    "protocol-buffers": "^3.1.6",
-    "tap": "^10.7.0",
+    "protobufjs": "^6.8.8",
+    "protocol-buffers": "^4.1.0",
+    "tap": "^12.6.0",
     "tile-stats-runner": "^1.0.0",
-    "uglify-js": "^3.0.25"
+    "uglify-js": "^3.4.9"
   },
   "eslintConfig": {
     "extends": "mourner",
@@ -61,6 +68,7 @@
       "key-spacing": 0,
       "no-empty": 0,
       "global-require": 0,
+      "no-cond-assign": 0,
       "indent": [
         2,
         4,
