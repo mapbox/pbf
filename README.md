@@ -301,8 +301,10 @@ The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
 
-#### 3.1.1 (March 8, 2019)
+#### 3.2.0 (March 11, 2019)
 
+- Improved decoding to be able to parse repeated fields even if they were specified as packed, and vise versa.
+- Improved packed encoding to skip empty arrays (previously, it would write a tag).
 - Fixed an off-by-one data corruption bug when writing a message larger than 0x10000000 bytes.
 
 #### 3.1.0 (Sep 27, 2017)
