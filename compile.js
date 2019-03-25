@@ -37,9 +37,11 @@ function writeMessage(ctx, options) {
 
     var code = '\n// ' + name + ' ========================================\n\n';
 
-    if (!options.noRead) {
+    if (!options.noRead || !options.noWrite) {
         code += compileExport(ctx, options) + ' {};\n\n';
+    }
 
+    if (!options.noRead) {
         code += name + '.read = function (pbf, end) {\n';
         code += '    return pbf.readFields(' + name + '._readField, ' + compileDest(ctx) + ', end);\n';
         code += '};\n';
