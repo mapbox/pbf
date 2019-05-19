@@ -234,6 +234,15 @@ test('sets oneof field name', () => {
 
     assert.equal(data.value, 'float');
     assert.equal(data[data.value], 1.5);
+
+    pbf = new Pbf();
+    writeEnvelope({
+        float: 0
+    }, pbf);
+    data = readEnvelope(new Pbf(pbf.finish()));
+
+    assert.equal(data.value, 'float');
+    assert.equal(data[data.value], 0);
 });
 
 test('handles jstype=JS_STRING', () => {
