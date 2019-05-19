@@ -249,6 +249,15 @@ test('sets oneof field name', function(t) {
     t.equals(data.value, 'float');
     t.equals(data[data.value], 1.5);
 
+    pbf = new Pbf();
+    Envelope.write({
+        float: 0
+    }, pbf);
+    data = Envelope.read(new Pbf(pbf.finish()));
+
+    t.equals(data.value, 'float');
+    t.equals(data[data.value], 0);
+
     t.end();
 });
 

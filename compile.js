@@ -374,7 +374,7 @@ function getDefaultWriteTest(ctx, field) {
     var code = '    if (obj.' + field.name;
 
     if (!field.repeated && (!type || !type._proto.fields)) {
-        if (def === undefined || def) {
+        if (def === undefined || def || field.oneof) {
             code += ' != undefined';
         }
         if (def) {
