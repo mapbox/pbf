@@ -281,16 +281,22 @@ Misc methods:
 For an example of a real-world usage of the library, see [vector-tile-js](https://github.com/mapbox/vector-tile-js).
 
 
-## Proto Schema to JavaScript
+## Proto Schema to JavaScript / TypeScript
 
 If installed globally, `pbf` provides a binary that compiles `proto` files into JavaScript modules. Usage:
 
 ```bash
-$ pbf <proto_path> [--no-write] [--no-read] [--browser]
+$ pbf <proto_path> [--no-write] [--no-read] [--browser|--es6|--typescript]
 ```
 
 The `--no-write` and `--no-read` switches remove corresponding code in the output.
-The `--browser` switch makes the module work in browsers instead of Node.
+
+You can select the JavaScript module type to generate:
+
+* By default a CommonJS module is generated which works in Node.
+* The `--browser` switch generates JavaScript which adds everything to the global namespace which works in a browser.
+* The `--es6` switch generates a ES6 module.
+* The `--typescript` switch generates a TypeScript module.
 
 The resulting module exports each message by name with the following methods:
 
