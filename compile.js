@@ -62,6 +62,14 @@ function writeTypes(ctx, options) {
         code += '}\n\n';
     }
 
+    var values = ctx._proto.values;
+    if (values) {
+        code += 'export type ' + getTypescriptEnumKeyTypeName(ctx) + ' = ' +
+            Object.keys(values).map(function(key) { return JSON.stringify(key); }).join(' | ') + ';\n';
+        code += 'export type ' + getTypescriptEnumValueTypeName(ctx) + ' = ' +
+            Object.values(values).map(function(item) { return item.value; }).join(' | ') + ';\n\n';
+    }
+
     for (i = 0; i < ctx._children.length; i++) {
         code += writeTypes(ctx._children[i], options);
     }
@@ -119,6 +127,9 @@ function writeContext(ctx, options) {
             code += '\n' + ctx._indent + '}' + (ctx._root ? ';\n\n' : '');
         } else if (ctx._proto.values) {
             code += writeEnum(ctx);
+            if (options.moduleType === 'typescript') {
+                code += ' as { [K in ' + getTypescriptEnumKeyTypeName(ctx) + ']: { value: ' + getTypescriptEnumValueTypeName(ctx) + ', options: any } }';
+            }
             code += (ctx._root ? ';' : '') + '\n\n';
         }
 
@@ -440,6 +451,14 @@ function getTypescriptInterfaceName(type) {
     return 'I' + type._fullName.replace(/\./g, '_');
 }
 
+function getTypescriptEnumKeyTypeName(type) {
+    return type._fullName.replace(/\./g, '_') + '_Key';
+}
+
+function getTypescriptEnumValueTypeName(type) {
+    return type._fullName.replace(/\./g, '_') + '_Value';
+}
+
 function getTypescriptType(ctx, field) {
     var type;
     switch (field.type) {
@@ -467,7 +486,7 @@ function getTypescriptType(ctx, field) {
     default:
         type = getType(ctx, field);
         if (isEnum(type)) {
-            return '{ value: number, options: any }';
+            return getTypescriptEnumValueTypeName(type);
         } else {
             return getTypescriptInterfaceName(type);
         }
