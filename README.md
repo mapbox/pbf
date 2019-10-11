@@ -301,7 +301,11 @@ The resulting code is clean and simple, so feel free to customize it.
 
 ## Changelog
 
-#### 3.2.0 (March 11, 2019)
+#### 3.2.1 (Oct 11, 2019)
+
+- Significantly improved performance when decoding large strings in the browser.
+
+#### 3.2.0 (Mar 11, 2019)
 
 - Improved decoding to be able to parse repeated fields even if they were specified as packed, and vise versa.
 - Improved packed encoding to skip empty arrays (previously, it would write a tag).
