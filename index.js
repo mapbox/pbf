@@ -19,6 +19,12 @@ Pbf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
 var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
     SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
 
+// Threshold chosen based on both benchmarking and knowledge about browser string
+// data structures (which currently switch structure types at 12 bytes or more)
+const TEXT_DECODER_MIN_LENGTH = 12;
+const utf8TextDecoder = (typeof TextDecoder === 'undefined') ?
+    null : new TextDecoder('utf8');
+
 Pbf.prototype = {
 
     destroy: function() {
@@ -112,9 +118,18 @@ Pbf.prototype = {
     },
 
     readString: function() {
-        var end = this.readVarint() + this.pos,
+        const end = this.readVarint() + this.pos;
+
+        let str;
+        if (end - this.pos >= TEXT_DECODER_MIN_LENGTH && utf8TextDecoder) {
+            // longer strings are fast with the built-in browser TextDecoder API
+            str = readUtf8TextDecoder(this.buf, this.pos, end);
+        } else {
+            // short strings are fast with our custom implementation
             str = readUtf8(this.buf, this.pos, end);
+        }
         this.pos = end;
+
         return str;
     },
 
@@ -571,6 +586,10 @@ function readUtf8(buf, pos, end) {
     }
 
     return str;
+}
+
+function readUtf8TextDecoder(buf, pos, end) {
+    return utf8TextDecoder.decode(buf.subarray(pos, end));
 }
 
 function writeUtf8(buf, str, pos) {
