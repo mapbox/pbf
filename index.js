@@ -21,8 +21,8 @@ var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
 
 // Threshold chosen based on both benchmarking and knowledge about browser string
 // data structures (which currently switch structure types at 12 bytes or more)
-const TEXT_DECODER_MIN_LENGTH = 12;
-const utf8TextDecoder = typeof TextDecoder === 'undefined' ? null : new TextDecoder('utf8');
+var TEXT_DECODER_MIN_LENGTH = 12;
+var utf8TextDecoder = typeof TextDecoder === 'undefined' ? null : new TextDecoder('utf8');
 
 Pbf.prototype = {
 
@@ -117,8 +117,8 @@ Pbf.prototype = {
     },
 
     readString: function() {
-        const end = this.readVarint() + this.pos;
-        const pos = this.pos;
+        var end = this.readVarint() + this.pos;
+        var pos = this.pos;
         this.pos = end;
 
         if (end - pos >= TEXT_DECODER_MIN_LENGTH && utf8TextDecoder) {

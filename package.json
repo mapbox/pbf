@@ -7,7 +7,7 @@
   "jsdelivr": "dist/pbf.js",
   "scripts": {
     "bench": "node bench/bench.js",
-    "test": "eslint index.js compile.js test/*.js bench/bench-tiles.js bin/pbf && tap test/*.test.js",
+    "test": "eslint index.js compile.js test/*.js bench/bench-tiles.js bin/pbf && tap test/*.test.js && npm run build-min",
     "cov": "tap test/*.test.js --cov --coverage-report=html",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
     "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js",
