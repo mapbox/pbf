@@ -9,7 +9,7 @@
     "bench": "node bench/bench.js",
     "test": "eslint index.js compile.js test/*.js bench/bench-tiles.js bin/pbf && tap test/*.test.js && npm run build-min",
     "cov": "tap test/*.test.js --cov --coverage-report=html",
-    "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c warnings=false -m > dist/pbf.js",
+    "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c -m > dist/pbf.js",
     "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js",
     "prepublishOnly": "npm run build-dev && npm run build-min"
   },
@@ -56,7 +56,7 @@
     "protocol-buffers": "^4.1.0",
     "tap": "^12.6.0",
     "tile-stats-runner": "^1.0.0",
-    "uglify-js": "^3.4.9"
+    "uglify-js": "^3.6.1"
   },
   "eslintConfig": {
     "extends": "mourner",
