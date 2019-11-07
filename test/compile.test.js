@@ -222,8 +222,8 @@ test('handles all implicit default values', function(t) {
     t.equals(data.id, 0);
     t.deepEqual(data.tags, []);
     t.deepEqual(data.numbers, []);
-    t.equals(data.bytes, null);
-    t.equals(data.custom, null);
+    t.equals(data.bytes, undefined);
+    t.equals(data.custom, undefined);
     t.deepEqual(data.types, []);
 
     t.end();
@@ -237,7 +237,7 @@ test('sets oneof field name', function(t) {
     Envelope.write({}, pbf);
     var data = Envelope.read(new Pbf(pbf.finish()));
 
-    t.equals(data.value, null);
+    t.equals(data.value, undefined);
     t.equals(data.id, 0);
 
     pbf = new Pbf();
