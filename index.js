@@ -22,7 +22,7 @@ var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
 // Threshold chosen based on both benchmarking and knowledge about browser string
 // data structures (which currently switch structure types at 12 bytes or more)
 var TEXT_DECODER_MIN_LENGTH = 12;
-var utf8TextDecoder = typeof TextDecoder === 'undefined' ? null : new TextDecoder('utf8');
+var utf8TextDecoder = typeof TextDecoder === 'undefined' ? null : new TextDecoder('utf-8');
 
 Pbf.prototype = {
 
