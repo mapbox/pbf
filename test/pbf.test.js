@@ -95,7 +95,7 @@ test('readVarint signed', function(t) {
 test('readVarint64 (compatibility)', function(t) {
     var bytes = [0xc8,0xe8,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x01];
     var buf = new Pbf(new Buffer(bytes));
-    t.equal(buf.readVarint64(), -3000);
+    t.equal(buf.readVarint64(true), '-3000');
     t.end();
 });
 
