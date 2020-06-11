@@ -71,11 +71,27 @@ Pbf.prototype = {
         this.pos += 8;
         return val;
     },
+    readFixed64ToBigInt: function() {
+        var val = Bigint(readUInt32(this.buf, this.pos)) + Bigint(readUInt32(this.buf, this.pos + 4)) << 32n;
+        this.pos += 8;
+        return val;
+    },
+    readFixed64ToString: function() {
+        return this.readFixed64ToBigInt().toString();
+    },
 
     readSFixed64: function() {
         var val = readUInt32(this.buf, this.pos) + readInt32(this.buf, this.pos + 4) * SHIFT_LEFT_32;
         this.pos += 8;
         return val;
+    },
+    readSFixed64ToBigInt: function() {
+        var val = Bigint(readUInt32(this.buf, this.pos)) + Bigint(readInt32(this.buf, this.pos + 4)) << 32n;
+        this.pos += 8;
+        return val;
+    },
+    readSFixed64ToString: function() {
+        return this.readFixed64ToBigInt().toString();
     },
 
     readFloat: function() {
@@ -103,6 +119,22 @@ Pbf.prototype = {
         return readVarintRemainder(val, isSigned, this);
     },
 
+    readVarintToBigInt: function(isSigned) {
+        var buf = this.buf,
+            val, b;
+
+        b = buf[this.pos++]; val  =  b & 0x7f;        if (b < 0x80) return BigInt(val);
+        b = buf[this.pos++]; val |= (b & 0x7f) << 7;  if (b < 0x80) return BigInt(val);
+        b = buf[this.pos++]; val |= (b & 0x7f) << 14; if (b < 0x80) return BigInt(val);
+        b = buf[this.pos++]; val |= (b & 0x7f) << 21; if (b < 0x80) return BigInt(val);
+        b = buf[this.pos];   val |= (b & 0x0f) << 28;
+
+        return readVarintToBigIntRemainder(val, isSigned, this);
+    },
+    readVarintToString: function(isSigned) {
+        return this.readVarintToBigInt(isSigned).toString()
+    },
+
     readVarint64: function() { // for compatibility with v2.0.1
         return this.readVarint(true);
     },
@@ -110,6 +142,13 @@ Pbf.prototype = {
     readSVarint: function() {
         var num = this.readVarint();
         return num % 2 === 1 ? (num + 1) / -2 : num / 2; // zigzag encoding
+    },
+    readSVarintToBigInt: function() {
+        var num = this.readVarintToBigInt();
+        return num % 2n === 1n ? (num + 1n) / -2n : num / 2n; // zigzag encoding
+    },
+    readSVarintToString: function() {
+        return this.readSVarintToBigInt().toString();
     },
 
     readBoolean: function() {
@@ -145,11 +184,39 @@ Pbf.prototype = {
         while (this.pos < end) arr.push(this.readVarint(isSigned));
         return arr;
     },
+    readPackedVarintToBigInt: function(arr, isSigned) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readVarintToBigInt(isSigned));
+        var end = readPackedEnd(this);
+        arr = arr || [];
+        while (this.pos < end) arr.push(this.readVarintToBigInt(isSigned));
+        return arr;
+    },
+    readPackedVarintToString: function(arr, isSigned) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readVarintToString(isSigned));
+        var end = readPackedEnd(this);
+        arr = arr || [];
+        while (this.pos < end) arr.push(this.readVarintToString(isSigned));
+        return arr;
+    },
     readPackedSVarint: function(arr) {
         if (this.type !== Pbf.Bytes) return arr.push(this.readSVarint());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readSVarint());
+        return arr;
+    },
+    readPackedSVarintToBigInt: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readSVarintToBigInt());
+        var end = readPackedEnd(this);
+        arr = arr || [];
+        while (this.pos < end) arr.push(this.readSVarintToBigInt());
+        return arr;
+    },
+    readPackedSVarintToString: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readSVarintToString());
+        var end = readPackedEnd(this);
+        arr = arr || [];
+        while (this.pos < end) arr.push(this.readSVarintToString());
         return arr;
     },
     readPackedBoolean: function(arr) {
@@ -194,11 +261,40 @@ Pbf.prototype = {
         while (this.pos < end) arr.push(this.readFixed64());
         return arr;
     },
+    readPackedFixed64ToBigInt: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readFixed64ToBigInt());
+        var end = readPackedEnd(this);
+        arr = arr || [];
+        while (this.pos < end) arr.push(this.readFixed64ToBigInt());
+        return arr;
+    },
+    readPackedFixed64ToString: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readFixed64ToString());
+        var end = readPackedEnd(this);
+        arr = arr || [];
+        while (this.pos < end) arr.push(this.readFixed64ToString());
+        return arr;
+    },
+
     readPackedSFixed64: function(arr) {
         if (this.type !== Pbf.Bytes) return arr.push(this.readSFixed64());
         var end = readPackedEnd(this);
         arr = arr || [];
         while (this.pos < end) arr.push(this.readSFixed64());
+        return arr;
+    },
+    readPackedSFixed64ToBigInt: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readSFixed64ToBigInt());
+        var end = readPackedEnd(this);
+        arr = arr || [];
+        while (this.pos < end) arr.push(this.readSFixed64ToBigInt());
+        return arr;
+    },
+    readPackedSFixed64ToString: function(arr) {
+        if (this.type !== Pbf.Bytes) return arr.push(this.readSFixed64ToString());
+        var end = readPackedEnd(this);
+        arr = arr || [];
+        while (this.pos < end) arr.push(this.readSFixed64ToString());
         return arr;
     },
 
@@ -254,12 +350,29 @@ Pbf.prototype = {
         writeInt32(this.buf, Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
         this.pos += 8;
     },
-
+    writeFixed64FromBigInt: function(val) {
+        this.realloc(8);
+        writeInt32(this.buf, Number(val % 0xffffffffn), this.pos);
+        writeInt32(this.buf, Number((val >> 32n) % 0xffffffffn), this.pos + 4);
+        this.pos += 8;
+    },
+    writeFixed64FromString: function(val) {
+        this.writeFixed64FromBigInt(BigInt(val));
+    },
     writeSFixed64: function(val) {
         this.realloc(8);
         writeInt32(this.buf, val & -1, this.pos);
         writeInt32(this.buf, Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
         this.pos += 8;
+    },
+    writeSFixed64FromBigInt: function(val) {
+        this.realloc(8);
+        writeInt32(this.buf, Number(val % 0xffffffffn), this.pos);
+        writeInt32(this.buf, Number((val >> 32n) % 0xffffffffn), this.pos + 4);
+        this.pos += 8;
+    },
+    writeSFixed64: function(val) {
+        this.writeSFixed64FromBigInt(BigInt(val));
     },
 
     writeVarint: function(val) {
@@ -277,9 +390,31 @@ Pbf.prototype = {
         this.buf[this.pos++] = ((val >>>= 7) & 0x7f) | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
         this.buf[this.pos++] =   (val >>> 7) & 0x7f;
     },
+    writeVarintFromBigInt: function(val) {
+        if (val > 0xfffffff || val < 0) {
+            writeBigVarintFromBigInt(val, this);
+            return;
+        }
+
+        this.realloc(4);
+        val = Number(val);
+        this.buf[this.pos++] =           val & 0x7f  | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
+        this.buf[this.pos++] = ((val >>>= 7) & 0x7f) | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
+        this.buf[this.pos++] = ((val >>>= 7) & 0x7f) | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
+        this.buf[this.pos++] =   (val >>> 7) & 0x7f;
+    },
+    writeVarintFromString: function(val) {
+        this.writeVarintFromBigInt(BigInt(val));
+    },
 
     writeSVarint: function(val) {
         this.writeVarint(val < 0 ? -val * 2 - 1 : val * 2);
+    },
+    writeSVarintFromBigInt: function(val) {
+        this.writeVarintFromBigInt(val < 0 ? -val * 2n - 1n : val * 2n);
+    },
+    writeSVarintFromString: function(val) {
+        this.writeSVarintFromBigInt(BigInt(val));
     },
 
     writeBoolean: function(val) {
@@ -371,17 +506,49 @@ Pbf.prototype = {
         this.writeTag(tag, Pbf.Fixed64);
         this.writeFixed64(val);
     },
+    writeFixed64FromBigIntField: function(tag, val) {
+        this.writeTag(tag, Pbf.Fixed64);
+        this.writeFixed64FromBigInt(val);
+    },
+    writeFixed64FromStringField: function(tag, val) {
+        this.writeTag(tag, Pbf.Fixed64);
+        this.writeFixed64FromBigInt(BigInt(val));
+    },
     writeSFixed64Field: function(tag, val) {
         this.writeTag(tag, Pbf.Fixed64);
         this.writeSFixed64(val);
+    },
+    writeSFixed64FromBigIntField: function(tag, val) {
+        this.writeTag(tag, Pbf.Fixed64);
+        this.writeSFixed64FromBigInt(val);
+    },
+    writeSFixed64FromStringField: function(tag, val) {
+        this.writeTag(tag, Pbf.Fixed64);
+        this.writeSFixed64FromBigInt(BigInt(val));
     },
     writeVarintField: function(tag, val) {
         this.writeTag(tag, Pbf.Varint);
         this.writeVarint(val);
     },
+    writeVarintFromBigIntField: function(tag, val) {
+        this.writeTag(tag, Pbf.Varint);
+        this.writeVarintFromBigInt(val);
+    },
+    writeVarintFromStringField: function(tag, val) {
+        this.writeTag(tag, Pbf.Varint);
+        this.writeVarintFromBigInt(BigInt(val));
+    },
     writeSVarintField: function(tag, val) {
         this.writeTag(tag, Pbf.Varint);
         this.writeSVarint(val);
+    },
+    writeSVarintFromBigIntField: function(tag, val) {
+        this.writeTag(tag, Pbf.Varint);
+        this.writeSVarintFromBigInt(val);
+    },
+    writeSVarintFromStringField: function(tag, val) {
+        this.writeTag(tag, Pbf.Varint);
+        this.writeSVarintFromBigInt(BigInt(val));
     },
     writeStringField: function(tag, str) {
         this.writeTag(tag, Pbf.Bytes);
@@ -414,6 +581,20 @@ function readVarintRemainder(l, s, p) {
     throw new Error('Expected varint not more than 10 bytes');
 }
 
+function readVarintToBigIntRemainder(l, s, p) {
+    var buf = p.buf,
+        h, b;
+
+    b = buf[p.pos++]; h  = (b & 0x70) >> 4;  if (b < 0x80) return ToBigIntNum(l, h, s);
+    b = buf[p.pos++]; h |= (b & 0x7f) << 3;  if (b < 0x80) return ToBigIntNum(l, h, s);
+    b = buf[p.pos++]; h |= (b & 0x7f) << 10; if (b < 0x80) return ToBigIntNum(l, h, s);
+    b = buf[p.pos++]; h |= (b & 0x7f) << 17; if (b < 0x80) return ToBigIntNum(l, h, s);
+    b = buf[p.pos++]; h |= (b & 0x7f) << 24; if (b < 0x80) return ToBigIntNum(l, h, s);
+    b = buf[p.pos++]; h |= (b & 0x01) << 31; if (b < 0x80) return ToBigIntNum(l, h, s);
+
+    throw new Error('Expected varint not more than 10 bytes');
+}
+
 function readPackedEnd(pbf) {
     return pbf.type === Pbf.Bytes ?
         pbf.readVarint() + pbf.pos : pbf.pos + 1;
@@ -425,6 +606,13 @@ function toNum(low, high, isSigned) {
     }
 
     return ((high >>> 0) * 0x100000000) + (low >>> 0);
+}
+function ToBigIntNum(low, high, isSigned) {
+    if (isSigned) {
+        return BigInt(high) * 0x100000000n + BigInt(low >>> 0);
+    }
+
+    return (BigInt(high >>> 0) * 0x100000000n) + BigInt(low >>> 0);
 }
 
 function writeBigVarint(val, pbf) {
@@ -453,6 +641,33 @@ function writeBigVarint(val, pbf) {
 
     writeBigVarintLow(low, high, pbf);
     writeBigVarintHigh(high, pbf);
+}
+function writeBigVarintFromBigInt(val, pbf) {
+    var low, high;
+
+    if (val >= 0) {
+        low  = (val % 0x100000000n);
+        high = (val / 0x100000000n);
+    } else {
+        low  = ~(-val % 0x100000000n);
+        high = ~(-val / 0x100000000n);
+
+        if (low ^ 0xffffffffn) {
+            low = low + 1n;
+        } else {
+            low = 0;
+            high = high + 1n;
+        }
+    }
+
+    if (val >= 0x10000000000000000 || val < -0x10000000000000000) {
+        throw new Error('Given varint doesn\'t fit into 10 bytes');
+    }
+
+    pbf.realloc(10);
+
+    writeBigVarintLow(Number(low), Number(high), pbf);
+    writeBigVarintHigh(Number(high), pbf);
 }
 
 function writeBigVarintLow(low, high, pbf) {
@@ -485,15 +700,23 @@ function makeRoomForExtraLength(startPos, len, pbf) {
     for (var i = pbf.pos - 1; i >= startPos; i--) pbf.buf[i + extraLen] = pbf.buf[i];
 }
 
-function writePackedVarint(arr, pbf)   { for (var i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);   }
-function writePackedSVarint(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeSVarint(arr[i]);  }
-function writePackedFloat(arr, pbf)    { for (var i = 0; i < arr.length; i++) pbf.writeFloat(arr[i]);    }
-function writePackedDouble(arr, pbf)   { for (var i = 0; i < arr.length; i++) pbf.writeDouble(arr[i]);   }
-function writePackedBoolean(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeBoolean(arr[i]);  }
-function writePackedFixed32(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed32(arr[i]);  }
-function writePackedSFixed32(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed32(arr[i]); }
-function writePackedFixed64(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);  }
-function writePackedSFixed64(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]); }
+function writePackedVarint(arr, pbf)             { for (var i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);                     }
+function writePackedVarintFromBigInt(arr, pbf)   { for (var i = 0; i < arr.length; i++) pbf.writeVarintFromBigInt(arr[i]);           }
+function writePackedVarintFromString(arr, pbf)   { for (var i = 0; i < arr.length; i++) pbf.writeVarintFromBigInt(BigInt(arr[i]));   }
+function writePackedSVarint(arr, pbf)            { for (var i = 0; i < arr.length; i++) pbf.writeSVarint(arr[i]);                    }
+function writePackedSVarintFromBigInt(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeSVarintFromBigInt(arr[i]);          }
+function writePackedSVarintFromString(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeSVarintFromBigInt(BigInt(arr[i]));  }
+function writePackedFloat(arr, pbf)              { for (var i = 0; i < arr.length; i++) pbf.writeFloat(arr[i]);                      }
+function writePackedDouble(arr, pbf)             { for (var i = 0; i < arr.length; i++) pbf.writeDouble(arr[i]);                     }
+function writePackedBoolean(arr, pbf)            { for (var i = 0; i < arr.length; i++) pbf.writeBoolean(arr[i]);                    }
+function writePackedFixed32(arr, pbf)            { for (var i = 0; i < arr.length; i++) pbf.writeFixed32(arr[i]);                    }
+function writePackedSFixed32(arr, pbf)           { for (var i = 0; i < arr.length; i++) pbf.writeSFixed32(arr[i]);                   }
+function writePackedFixed64(arr, pbf)            { for (var i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);                    }
+function writePackedFixed64FromBigInt(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed64FromBigInt(arr[i]);          }
+function writePackedFixed64FromString(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed64FromBigInt(BigInt(arr[i]));  }
+function writePackedSFixed64(arr, pbf)           { for (var i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]);                   }
+function writePackedSFixed64FromBigInt(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed64FromBigInt(arr[i]);         }
+function writePackedSFixed64FromString(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed64FromBigInt(BigInt(arr[i])); }
 
 // Buffer code below from https://github.com/feross/buffer, MIT-licensed
 

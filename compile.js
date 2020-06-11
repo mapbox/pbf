@@ -1,5 +1,7 @@
 'use strict';
 
+const { options } = require('benchmark');
+
 module.exports = compile;
 
 var version = require('./package.json').version;
@@ -137,6 +139,17 @@ function compileFieldRead(ctx, field) {
         suffix = '(obj.' + field.name + (signed ? ', ' + signed : '') + ')';
     }
 
+    if (fieldType.indexOf("64")!== -1 && field.options.jstype !== undefined) {
+        switch (field.options.jstype) {
+            case 'JS_STRING':
+                suffix = 'ToString' + suffix;
+                break;
+            case 'JS_NUMBER':
+                suffix = 'ToBigInt' + suffix;
+                break;
+        }
+    }
+
     switch (fieldType) {
     case 'string':   return prefix + 'String' + suffix;
     case 'float':    return prefix + 'Float' + suffix;
@@ -171,6 +184,16 @@ function compileFieldWrite(ctx, field, name) {
         throw new Error('Unexpected type: ' + type._name);
     }
 
+    if (field.type.indexOf("64")!== -1 && field.options.jstype !== undefined) {
+        switch (field.options.jstype) {
+            case "JS_STRING":
+                postfix = "FromString" + postfix;
+                break;
+            case "JS_NUMBER":
+                postfix = "FromBigInt" + postfix;
+                break;
+        }
+    }
     switch (field.type) {
     case 'string':   return prefix + 'String' + postfix;
     case 'float':    return prefix + 'Float' + postfix;
@@ -283,15 +306,22 @@ function getDefaultValue(field, value) {
     case 'float':
     case 'double':   return value ? parseFloat(value) : 0;
     case 'uint32':
-    case 'uint64':
     case 'int32':
-    case 'int64':
     case 'sint32':
-    case 'sint64':
     case 'fixed32':
+    case 'sfixed32': return value ? parseInt(value, 10) : 0;
+    case 'uint64':
+    case 'int64':
+    case 'sint64':
     case 'fixed64':
-    case 'sfixed32':
-    case 'sfixed64': return value ? parseInt(value, 10) : 0;
+    case 'sfixed64':
+    if (field.options.jstype === 'JS_STRING') {
+        return value ? value : '0';
+    } else if (field.options.jstype === 'JS_NUMBER') {
+        return value ? BigInt(value) : 0n;
+    } else {
+        return value ? parseInt(value, 10) : 0;
+    }
     case 'string':   return value || '';
     case 'bool':     return value === 'true';
     case 'map':      return {};
