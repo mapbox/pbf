@@ -184,7 +184,7 @@ function compileFieldWrite(ctx, field, name) {
         throw new Error('Unexpected type: ' + type._name);
     }
 
-    if (field.type.indexOf("64")!== -1 && field.options.jstype !== undefined) {
+    if (field.type.indexOf("64") !== -1 && field.options.jstype !== undefined) {
         switch (field.options.jstype) {
             case "JS_STRING":
                 postfix = "FromString" + postfix;
@@ -318,7 +318,7 @@ function getDefaultValue(field, value) {
     if (field.options.jstype === 'JS_STRING') {
         return value ? value : '0';
     } else if (field.options.jstype === 'JS_NUMBER') {
-        return value ? BigInt(value) : 0n;
+        return value ? BigInt(value) : BigInt(0);
     } else {
         return value ? parseInt(value, 10) : 0;
     }

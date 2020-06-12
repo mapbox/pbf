@@ -72,7 +72,7 @@ Pbf.prototype = {
         return val;
     },
     readFixed64ToBigInt: function() {
-        var val = Bigint(readUInt32(this.buf, this.pos)) + Bigint(readUInt32(this.buf, this.pos + 4)) << 32n;
+        var val = Bigint(readUInt32(this.buf, this.pos)) + Bigint(readUInt32(this.buf, this.pos + 4)) << Bigint(32);
         this.pos += 8;
         return val;
     },
@@ -86,7 +86,7 @@ Pbf.prototype = {
         return val;
     },
     readSFixed64ToBigInt: function() {
-        var val = Bigint(readUInt32(this.buf, this.pos)) + Bigint(readInt32(this.buf, this.pos + 4)) << 32n;
+        var val = Bigint(readUInt32(this.buf, this.pos)) + Bigint(readInt32(this.buf, this.pos + 4)) << Bigint(32);
         this.pos += 8;
         return val;
     },
@@ -145,7 +145,7 @@ Pbf.prototype = {
     },
     readSVarintToBigInt: function() {
         var num = this.readVarintToBigInt();
-        return num % 2n === 1n ? (num + 1n) / -2n : num / 2n; // zigzag encoding
+        return num % Bigint(2) === Bigint(1) ? (num + Bigint(1)) / Bigint(-2) : num / Bigint(2); // zigzag encoding
     },
     readSVarintToString: function() {
         return this.readSVarintToBigInt().toString();
@@ -352,8 +352,8 @@ Pbf.prototype = {
     },
     writeFixed64FromBigInt: function(val) {
         this.realloc(8);
-        writeInt32(this.buf, Number(val % 0xffffffffn), this.pos);
-        writeInt32(this.buf, Number((val >> 32n) % 0xffffffffn), this.pos + 4);
+        writeInt32(this.buf, Number(val % Bigint(0xffffffff)), this.pos);
+        writeInt32(this.buf, Number((val >> Bigint(32)) % Bigint(0xffffffff)), this.pos + 4);
         this.pos += 8;
     },
     writeFixed64FromString: function(val) {
@@ -367,8 +367,8 @@ Pbf.prototype = {
     },
     writeSFixed64FromBigInt: function(val) {
         this.realloc(8);
-        writeInt32(this.buf, Number(val % 0xffffffffn), this.pos);
-        writeInt32(this.buf, Number((val >> 32n) % 0xffffffffn), this.pos + 4);
+        writeInt32(this.buf, Number(val % Bigint(0xffffffff)), this.pos);
+        writeInt32(this.buf, Number((val >> Bigint(32)) % Bigint(0xffffffff), this.pos + 4);
         this.pos += 8;
     },
     writeSFixed64: function(val) {
@@ -411,7 +411,7 @@ Pbf.prototype = {
         this.writeVarint(val < 0 ? -val * 2 - 1 : val * 2);
     },
     writeSVarintFromBigInt: function(val) {
-        this.writeVarintFromBigInt(val < 0 ? -val * 2n - 1n : val * 2n);
+        this.writeVarintFromBigInt(val < 0 ? -val * Bigint(2) - Bigint(1) : val * Bigint(2));
     },
     writeSVarintFromString: function(val) {
         this.writeSVarintFromBigInt(BigInt(val));
@@ -609,10 +609,10 @@ function toNum(low, high, isSigned) {
 }
 function ToBigIntNum(low, high, isSigned) {
     if (isSigned) {
-        return BigInt(high) * 0x100000000n + BigInt(low >>> 0);
+        return BigInt(high) * BigInt(0x100000000) + BigInt(low >>> 0);
     }
 
-    return (BigInt(high >>> 0) * 0x100000000n) + BigInt(low >>> 0);
+    return (BigInt(high >>> 0) * BigInt(0x100000000)) + BigInt(low >>> 0);
 }
 
 function writeBigVarint(val, pbf) {
@@ -646,17 +646,17 @@ function writeBigVarintFromBigInt(val, pbf) {
     var low, high;
 
     if (val >= 0) {
-        low  = (val % 0x100000000n);
-        high = (val / 0x100000000n);
+        low  = (val % BigInt(0x100000000));
+        high = (val / BigInt(0x100000000));
     } else {
-        low  = ~(-val % 0x100000000n);
-        high = ~(-val / 0x100000000n);
+        low  = ~(-val % BigInt(0x100000000));
+        high = ~(-val / BigInt(0x100000000));
 
-        if (low ^ 0xffffffffn) {
-            low = low + 1n;
+        if (low ^ Bigint(0xffffffff)) {
+            low = low + Bigint(1);
         } else {
             low = 0;
-            high = high + 1n;
+            high = high + Bigint(1);
         }
     }
 
