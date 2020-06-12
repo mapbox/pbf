@@ -252,6 +252,38 @@ test('sets oneof field name', function(t) {
     t.end();
 });
 
+test('handles jstype=JS_STRING', function(t) {
+    var proto = resolve(path.join(__dirname, './fixtures/type_string.proto'));
+    var TypeString = compile(proto).TypeString;
+    var TypeNotString = compile(proto).TypeNotString;
+    var pbf = new Pbf();
+
+    TypeString.write({
+        int: '-5',
+        long: '10000',
+        boolVal: true,
+        float: '12',
+    }, pbf);
+
+    var buf = pbf.finish();
+    var data = TypeString.read(new Pbf(buf));
+
+    t.equals(data.int, '-5');
+    t.equals(data.long, '10000');
+    t.equals(data.boolVal, true);
+    t.equals(data.float, '12');
+    t.equals(data.default_implicit, '0');
+    t.equals(data.default_explicit, '42');
+
+    data = TypeNotString.read(new Pbf(buf));
+    t.equals(data.int, -5);
+    t.equals(data.long, 10000);
+    t.equals(data.boolVal, true);
+    t.equals(data.float, 12);
+
+    t.end();
+});
+
 test('handles negative varint', function(t) {
     var proto = resolve(path.join(__dirname, './fixtures/varint.proto'));
     var Envelope = compile(proto).Envelope;

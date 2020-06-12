@@ -119,6 +119,27 @@ function getType(ctx, field) {
     return path.reduce(function(ctx, name) { return ctx && ctx[name]; }, ctx);
 }
 
+function fieldShouldUseStringAsNumber(field) {
+    if (field.options.jstype === 'JS_STRING') {
+        switch (field.type) {
+        case 'float':
+        case 'double':
+        case 'uint32':
+        case 'uint64':
+        case 'int32':
+        case 'int64':
+        case 'sint32':
+        case 'sint64':
+        case 'fixed32':
+        case 'fixed64':
+        case 'sfixed32':
+        case 'sfixed64': return true;
+        default:         return false;
+        }
+    }
+    return false;
+}
+
 function compileFieldRead(ctx, field) {
     var type = getType(ctx, field);
     if (type) {
@@ -135,6 +156,10 @@ function compileFieldRead(ctx, field) {
     if (willSupportPacked(ctx, field)) {
         prefix += 'Packed';
         suffix = '(obj.' + field.name + (signed ? ', ' + signed : '') + ')';
+    }
+
+    if (fieldShouldUseStringAsNumber(field)) {
+        suffix += '.toString()';
     }
 
     switch (fieldType) {
@@ -162,6 +187,13 @@ function compileFieldWrite(ctx, field, name) {
     var prefix = 'pbf.write';
     if (isPacked(field)) prefix += 'Packed';
 
+    if (fieldShouldUseStringAsNumber(field)) {
+        if (field.type === 'float' || field.type === 'double') {
+            name = 'parseFloat(' + name + ')';
+        } else {
+            name = 'parseInt(' + name + ', 10)';
+        }
+    }
     var postfix = (isPacked(field) ? '' : 'Field') + '(' + field.tag + ', ' + name + ')';
 
     var type = getType(ctx, field);
@@ -278,10 +310,14 @@ function buildContext(proto, parent) {
 function getDefaultValue(field, value) {
     // Defaults not supported for repeated fields
     if (field.repeated) return [];
+    var convertToStringIfNeeded = function(val) { return val; };
+    if (fieldShouldUseStringAsNumber(field)) {
+        convertToStringIfNeeded = function(val) { return val.toString(); };
+    }
 
     switch (field.type) {
     case 'float':
-    case 'double':   return value ? parseFloat(value) : 0;
+    case 'double':   return convertToStringIfNeeded(value ? parseFloat(value) : 0);
     case 'uint32':
     case 'uint64':
     case 'int32':
@@ -291,7 +327,7 @@ function getDefaultValue(field, value) {
     case 'fixed32':
     case 'fixed64':
     case 'sfixed32':
-    case 'sfixed64': return value ? parseInt(value, 10) : 0;
+    case 'sfixed64': return convertToStringIfNeeded(value ? parseInt(value, 10) : 0);
     case 'string':   return value || '';
     case 'bool':     return value === 'true';
     case 'map':      return {};
