@@ -291,14 +291,14 @@ test('handles negative varint', function(t) {
 
     Envelope.write({
         int: -5,
-        long: -10
+        long: '-10'
     }, pbf);
 
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
     t.equals(data.int, -5);
-    t.equals(data.long, -10);
+    t.equals(data.long, '-10');
 
     t.end();
 });
@@ -310,14 +310,14 @@ test('handles unsigned varint', function(t) {
 
     Envelope.write({
         uint: Math.pow(2, 31),
-        ulong: Math.pow(2, 63)
+        ulong: '18446744073709551615'
     }, pbf);
 
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
     t.equals(data.uint, Math.pow(2, 31));
-    t.equals(data.ulong, Math.pow(2, 63));
+    t.equals(data.ulong, '18446744073709551615');
 
     t.end();
 });

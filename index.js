@@ -1,3 +1,4 @@
+/* eslint-disable new-cap, no-undef */
 'use strict';
 
 module.exports = Pbf;
@@ -90,7 +91,7 @@ Pbf.prototype = {
         return val;
     },
 
-    readVarint: function(isSigned) {
+    readVarint: function(isSigned, is64) {
         var buf = this.buf,
             val, b;
 
@@ -100,11 +101,11 @@ Pbf.prototype = {
         b = buf[this.pos++]; val |= (b & 0x7f) << 21; if (b < 0x80) return val;
         b = buf[this.pos];   val |= (b & 0x0f) << 28;
 
-        return readVarintRemainder(val, isSigned, this);
+        return readVarintRemainder(val, isSigned, is64, this);
     },
 
-    readVarint64: function() { // for compatibility with v2.0.1
-        return this.readVarint(true);
+    readVarint64: function(isSigned) {
+        return this.readVarint(isSigned, true);
     },
 
     readSVarint: function() {
@@ -266,7 +267,7 @@ Pbf.prototype = {
         val = +val || 0;
 
         if (val > 0xfffffff || val < 0) {
-            writeBigVarint(val, this);
+            writeBigVarint(BigInt(val), this);
             return;
         }
 
@@ -280,6 +281,24 @@ Pbf.prototype = {
 
     writeSVarint: function(val) {
         this.writeVarint(val < 0 ? -val * 2 - 1 : val * 2);
+    },
+
+    writeVarint64: function(val) {
+        val = BigInt(val);
+
+        if (val > 0xfffffff || val < 0) {
+            writeBigVarint(val, this);
+            return;
+        }
+
+        val = Number(val);
+
+        this.realloc(4);
+
+        this.buf[this.pos++] =           val & 0x7f  | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
+        this.buf[this.pos++] = ((val >>>= 7) & 0x7f) | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
+        this.buf[this.pos++] = ((val >>>= 7) & 0x7f) | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
+        this.buf[this.pos++] =   (val >>> 7) & 0x7f;
     },
 
     writeBoolean: function(val) {
@@ -379,6 +398,10 @@ Pbf.prototype = {
         this.writeTag(tag, Pbf.Varint);
         this.writeVarint(val);
     },
+    writeVarint64Field: function(tag, val) {
+        this.writeTag(tag, Pbf.Varint);
+        this.writeVarint64(val);
+    },
     writeSVarintField: function(tag, val) {
         this.writeTag(tag, Pbf.Varint);
         this.writeSVarint(val);
@@ -400,16 +423,16 @@ Pbf.prototype = {
     }
 };
 
-function readVarintRemainder(l, s, p) {
+function readVarintRemainder(l, s, is64, p) {
     var buf = p.buf,
         h, b;
 
-    b = buf[p.pos++]; h  = (b & 0x70) >> 4;  if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x7f) << 3;  if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x7f) << 10; if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x7f) << 17; if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x7f) << 24; if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x01) << 31; if (b < 0x80) return toNum(l, h, s);
+    b = buf[p.pos++]; h  = (b & 0x70) >> 4;  if (b < 0x80) return toNum(l, h, s, is64);
+    b = buf[p.pos++]; h |= (b & 0x7f) << 3;  if (b < 0x80) return toNum(l, h, s, is64);
+    b = buf[p.pos++]; h |= (b & 0x7f) << 10; if (b < 0x80) return toNum(l, h, s, is64);
+    b = buf[p.pos++]; h |= (b & 0x7f) << 17; if (b < 0x80) return toNum(l, h, s, is64);
+    b = buf[p.pos++]; h |= (b & 0x7f) << 24; if (b < 0x80) return toNum(l, h, s, is64);
+    b = buf[p.pos++]; h |= (b & 0x01) << 31; if (b < 0x80) return toNum(l, h, s, is64);
 
     throw new Error('Expected varint not more than 10 bytes');
 }
@@ -419,7 +442,18 @@ function readPackedEnd(pbf) {
         pbf.readVarint() + pbf.pos : pbf.pos + 1;
 }
 
-function toNum(low, high, isSigned) {
+function toNum(low, high, isSigned, is64) {
+    if (is64) {
+        var int;
+        if (isSigned) {
+            int = BigInt(high) * BigInt(0x100000000) + BigInt(low >>> 0);
+            return int.toString();
+        }
+
+        int = (BigInt(high >>> 0) * BigInt(0x100000000)) + BigInt(low >>> 0);
+        return int.toString();
+    }
+
     if (isSigned) {
         return high * 0x100000000 + (low >>> 0);
     }
@@ -431,11 +465,11 @@ function writeBigVarint(val, pbf) {
     var low, high;
 
     if (val >= 0) {
-        low  = (val % 0x100000000) | 0;
-        high = (val / 0x100000000) | 0;
+        low  = Number(val % BigInt(0x100000000)) | 0;
+        high = Number(val / BigInt(0x100000000)) | 0;
     } else {
-        low  = ~(-val % 0x100000000);
-        high = ~(-val / 0x100000000);
+        low  = ~Number(-val % BigInt(0x100000000));
+        high = ~Number(-val / BigInt(0x100000000));
 
         if (low ^ 0xffffffff) {
             low = (low + 1) | 0;

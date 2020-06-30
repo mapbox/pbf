@@ -169,9 +169,9 @@ function compileFieldRead(ctx, field) {
     case 'bool':     return prefix + 'Boolean' + suffix;
     case 'enum':
     case 'uint32':
+    case 'int32':    return prefix + 'Varint' + suffix;
     case 'uint64':
-    case 'int32':
-    case 'int64':    return prefix + 'Varint' + suffix;
+    case 'int64':    return prefix + 'Varint64' + suffix;
     case 'sint32':
     case 'sint64':   return prefix + 'SVarint' + suffix;
     case 'fixed32':  return prefix + 'Fixed32' + suffix;
@@ -210,9 +210,9 @@ function compileFieldWrite(ctx, field, name) {
     case 'bool':     return prefix + 'Boolean' + postfix;
     case 'enum':
     case 'uint32':
+    case 'int32':    return prefix + 'Varint' + postfix;
     case 'uint64':
-    case 'int32':
-    case 'int64':    return prefix + 'Varint' + postfix;
+    case 'int64':    return prefix + 'Varint64' + postfix;
     case 'sint32':
     case 'sint64':   return prefix + 'SVarint' + postfix;
     case 'fixed32':  return prefix + 'Fixed32' + postfix;
