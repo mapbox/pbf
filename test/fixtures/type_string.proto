@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+message TypeString {
+	int32 int = 1 [jstype = JS_STRING];
+	int64 long = 2 [jstype = JS_STRING];
+	bool boolVal = 3 [jstype = JS_STRING];
+	float float = 4 [jstype = JS_STRING];
+	int32 default_implicit = 5 [jstype = JS_STRING];
+	int32 default_explicit = 6 [jstype = JS_STRING, default = 42];
+}
+
+message TypeNotString {
+	int32 int = 1;
+	int64 long = 2;
+	bool boolVal = 3;
+	float float = 4;
+}
