@@ -6,12 +6,21 @@ var resolve = require('resolve-protobuf-schema');
 var compile = require('../compile');
 
 if (process.argv.length < 3) {
-    console.error('Usage: pbf [file.proto] [--browser] [--no-read] [--no-write]');
+    console.error('Usage: pbf [file.proto] [--browser|--es6|--typescript] [--no-read] [--no-write]');
     return;
 }
 
+var moduleType = 'common-js';
+if (process.argv.indexOf('--browser') >= 0) {
+    moduleType = 'global';
+} else if (process.argv.indexOf('--es6') >= 0) {
+    moduleType = 'es6';
+} else if (process.argv.indexOf('--typescript') >= 0) {
+    moduleType = 'typescript';
+}
+
 var code = compile.raw(resolve.sync(process.argv[2]), {
-    exports: process.argv.indexOf('--browser') >= 0 ? 'self' : 'exports',
+    moduleType: moduleType,
     noRead: process.argv.indexOf('--no-read') >= 0,
     noWrite: process.argv.indexOf('--no-write') >= 0
 });
