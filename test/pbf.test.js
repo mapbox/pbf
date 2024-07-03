@@ -127,11 +127,11 @@ test('writeVarint throws error on a number that is too big', function() {
     var buf = new Pbf(Buffer.alloc(0));
 
     assert.throws(function() {
-        buf.writeVarint(29234322996241367000012);
+        buf.writeVarint(29234322996241367000012); // eslint-disable-line
     });
 
     assert.throws(function() {
-        buf.writeVarint(-29234322996241367000012);
+        buf.writeVarint(-29234322996241367000012);  // eslint-disable-line
     });
 });
 
