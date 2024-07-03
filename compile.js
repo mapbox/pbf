@@ -86,9 +86,18 @@ function writeMessage(ctx, options) {
     return code;
 }
 
+function getEnumValues(ctx) {
+    var enums = {};
+    var ids = Object.keys(ctx._proto.values);
+    for (var i = 0; i < ids.length; i++) {
+        enums[ids[i]] = ctx._proto.values[ids[i]].value;
+    }
+    return enums;
+}
+
 function writeEnum(ctx, options) {
     return '\n' + compileExport(ctx, options) + ' ' +
-        JSON.stringify(ctx._proto.values, null, 4) + ';\n';
+        JSON.stringify(getEnumValues(ctx), null, 4) + ';\n';
 }
 
 function compileExport(ctx, options) {
@@ -373,7 +382,7 @@ function setPackedOption(ctx, field, syntax) {
 function setDefaultValue(ctx, field, syntax) {
     var options = field.options;
     var type = getType(ctx, field);
-    var enumValues = type && type._proto.values;
+    var enumValues = type && type._proto.values && getEnumValues(type);
 
     // Proto3 does not support overriding defaults
     var explicitDefault = syntax < 3 ? options.default : undefined;

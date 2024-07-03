@@ -115,10 +115,7 @@ test('compiles defaults', function() {
 
     assert.equal(buf.length, 0);
     assert.deepEqual(data, {
-        type: {
-            options: {},
-            value: 1
-        },
+        type: 1,
         name: 'test',
         flag: true,
         weight: 1.5,
