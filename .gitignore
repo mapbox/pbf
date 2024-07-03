@@ -1,7 +1,4 @@
 coverage
 dist
 *.log
-.nyc_output
 node_modules
-yarn.lock
-package-lock.json

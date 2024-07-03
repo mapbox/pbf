@@ -2,36 +2,33 @@
 
 var fs = require('fs');
 var path = require('path');
-var test = require('tap').test;
+var test = require('node:test');
+var assert = require('node:assert/strict');
 var resolve = require('resolve-protobuf-schema').sync;
 
 var Pbf = require('../');
 var compile = require('../compile');
 
-test('compiles vector tile proto', function(t) {
+test('compiles vector tile proto', function() {
     var proto = resolve(path.join(__dirname, '../bench/vector_tile.proto'));
     var tileBuf = fs.readFileSync(path.join(__dirname, 'fixtures/12665.vector.pbf'));
     var Tile = compile(proto).Tile;
 
     var tile = Tile.read(new Pbf(tileBuf));
-    t.equal(tile.layers.length, 11);
+    assert.equal(tile.layers.length, 11);
 
     var pbf = new Pbf();
     Tile.write(tile, pbf);
     var buf = pbf.finish();
-    t.equal(buf.length, 124946);
-
-    t.end();
+    assert.equal(buf.length, 124946);
 });
 
-test('compiles proto with embedded type reference', function(t) {
+test('compiles proto with embedded type reference', function() {
     var proto = resolve(path.join(__dirname, './fixtures/embedded_type.proto'));
     compile(proto);
-
-    t.end();
 });
 
-test('compiles packed proto', function(t) {
+test('compiles packed proto', function() {
     var proto = resolve(path.join(__dirname, './fixtures/packed.proto'));
     var NotPacked = compile(proto).NotPacked;
     var FalsePacked = compile(proto).FalsePacked;
@@ -45,13 +42,11 @@ test('compiles packed proto', function(t) {
     var buf = pbf.finish();
 
     var decompressed = FalsePacked.read(new Pbf(buf));
-    t.equals(buf.length, 17);
-    t.deepEqual(original, decompressed);
-
-    t.end();
+    assert.equal(buf.length, 17);
+    assert.deepEqual(original, decompressed);
 });
 
-test('reads packed with unpacked field', function(t) {
+test('reads packed with unpacked field', function() {
     var proto = resolve(path.join(__dirname, './fixtures/packed.proto'));
     var Packed = compile(proto).Packed;
     var FalsePacked = compile(proto).FalsePacked;
@@ -65,13 +60,11 @@ test('reads packed with unpacked field', function(t) {
     var buf = pbf.finish();
 
     var decompressed = FalsePacked.read(new Pbf(buf));
-    t.equals(buf.length, 14);
-    t.deepEqual(original, decompressed);
-
-    t.end();
+    assert.equal(buf.length, 14);
+    assert.deepEqual(original, decompressed);
 });
 
-test('compiles packed proto3', function(t) {
+test('compiles packed proto3', function() {
     var proto = resolve(path.join(__dirname, './fixtures/packed_proto3.proto'));
     var NotPacked = compile(proto).NotPacked;
     var FalsePacked = compile(proto).FalsePacked;
@@ -89,14 +82,12 @@ test('compiles packed proto3', function(t) {
     var notPackedBuf = pbf.finish();
 
     var decompressed = NotPacked.read(new Pbf(falsePackedBuf));
-    t.deepEqual(original, decompressed);
-    t.equals(notPackedBuf.length, 14);
-    t.ok(falsePackedBuf.length > notPackedBuf.length, 'Did not respect [packed=false]');
-
-    t.end();
+    assert.deepEqual(original, decompressed);
+    assert.equal(notPackedBuf.length, 14);
+    assert.ok(falsePackedBuf.length > notPackedBuf.length, 'Did not respect [packed=false]');
 });
 
-test('compiles packed with multi-byte tags', function(t) {
+test('compiles packed with multi-byte tags', function() {
     var proto = resolve(path.join(__dirname, './fixtures/packed_proto3.proto'));
     var Packed = compile(proto).Packed;
 
@@ -108,13 +99,11 @@ test('compiles packed with multi-byte tags', function(t) {
     var buf = pbf.finish();
 
     var decompressed = Packed.read(new Pbf(buf));
-    t.equals(buf.length, 9);
-    t.deepEqual(original, decompressed);
-
-    t.end();
+    assert.equal(buf.length, 9);
+    assert.deepEqual(original, decompressed);
 });
 
-test('compiles defaults', function(t) {
+test('compiles defaults', function() {
     var proto = resolve(path.join(__dirname, './fixtures/defaults.proto'));
     var Envelope = compile(proto).Envelope;
     var pbf = new Pbf();
@@ -124,8 +113,8 @@ test('compiles defaults', function(t) {
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
-    t.equals(buf.length, 0);
-    t.deepEqual(data, {
+    assert.equal(buf.length, 0);
+    assert.deepEqual(data, {
         type: {
             options: {},
             value: 1
@@ -135,11 +124,9 @@ test('compiles defaults', function(t) {
         weight: 1.5,
         id: 1
     });
-
-    t.end();
 });
 
-test('compiles proto3 ignoring defaults', function(t) {
+test('compiles proto3 ignoring defaults', function() {
     var proto = resolve(path.join(__dirname, './fixtures/defaults_proto3.proto'));
     var Envelope = compile(proto).Envelope;
     var pbf = new Pbf();
@@ -149,18 +136,16 @@ test('compiles proto3 ignoring defaults', function(t) {
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
-    t.equals(buf.length, 0);
+    assert.equal(buf.length, 0);
 
-    t.equals(data.type, 0);
-    t.equals(data.name, '');
-    t.equals(data.flag, false);
-    t.equals(data.weight, 0);
-    t.equals(data.id, 0);
-
-    t.end();
+    assert.equal(data.type, 0);
+    assert.equal(data.name, '');
+    assert.equal(data.flag, false);
+    assert.equal(data.weight, 0);
+    assert.equal(data.id, 0);
 });
 
-test('compiles maps', function(t) {
+test('compiles maps', function() {
     var proto = resolve(path.join(__dirname, './fixtures/map.proto'));
     var Envelope = compile(proto).Envelope;
 
@@ -181,12 +166,10 @@ test('compiles maps', function(t) {
 
     var decompressed = Envelope.read(new Pbf(buf));
 
-    t.deepEqual(original, decompressed);
-
-    t.end();
+    assert.deepEqual(original, decompressed);
 });
 
-test('does not write undefined or null values', function(t) {
+test('does not write undefined or null values', function() {
     var proto = resolve(path.join(__dirname, './fixtures/embedded_type.proto'));
     var EmbeddedType = compile(proto).EmbeddedType;
     var pbf = new Pbf();
@@ -200,11 +183,9 @@ test('does not write undefined or null values', function(t) {
     EmbeddedType.write({
         value: null
     });
-
-    t.end();
 });
 
-test('handles all implicit default values', function(t) {
+test('handles all implicit default values', function() {
     var proto = resolve(path.join(__dirname, './fixtures/defaults_implicit.proto'));
     var Envelope = compile(proto).Envelope;
     var pbf = new Pbf();
@@ -213,23 +194,21 @@ test('handles all implicit default values', function(t) {
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
-    t.equals(buf.length, 0);
+    assert.equal(buf.length, 0);
 
-    t.equals(data.type, 0);
-    t.equals(data.name, '');
-    t.equals(data.flag, false);
-    t.equals(data.weight, 0);
-    t.equals(data.id, 0);
-    t.deepEqual(data.tags, []);
-    t.deepEqual(data.numbers, []);
-    t.equals(data.bytes, undefined);
-    t.equals(data.custom, undefined);
-    t.deepEqual(data.types, []);
-
-    t.end();
+    assert.equal(data.type, 0);
+    assert.equal(data.name, '');
+    assert.equal(data.flag, false);
+    assert.equal(data.weight, 0);
+    assert.equal(data.id, 0);
+    assert.deepEqual(data.tags, []);
+    assert.deepEqual(data.numbers, []);
+    assert.equal(data.bytes, undefined);
+    assert.equal(data.custom, undefined);
+    assert.deepEqual(data.types, []);
 });
 
-test('sets oneof field name', function(t) {
+test('sets oneof field name', function() {
     var proto = resolve(path.join(__dirname, './fixtures/oneof.proto'));
     var Envelope = compile(proto).Envelope;
     var pbf = new Pbf();
@@ -237,8 +216,8 @@ test('sets oneof field name', function(t) {
     Envelope.write({}, pbf);
     var data = Envelope.read(new Pbf(pbf.finish()));
 
-    t.equals(data.value, undefined);
-    t.equals(data.id, 0);
+    assert.equal(data.value, undefined);
+    assert.equal(data.id, 0);
 
     pbf = new Pbf();
     Envelope.write({
@@ -246,13 +225,11 @@ test('sets oneof field name', function(t) {
     }, pbf);
     data = Envelope.read(new Pbf(pbf.finish()));
 
-    t.equals(data.value, 'float');
-    t.equals(data[data.value], 1.5);
-
-    t.end();
+    assert.equal(data.value, 'float');
+    assert.equal(data[data.value], 1.5);
 });
 
-test('handles jstype=JS_STRING', function(t) {
+test('handles jstype=JS_STRING', function() {
     var proto = resolve(path.join(__dirname, './fixtures/type_string.proto'));
     var TypeString = compile(proto).TypeString;
     var TypeNotString = compile(proto).TypeNotString;
@@ -268,23 +245,21 @@ test('handles jstype=JS_STRING', function(t) {
     var buf = pbf.finish();
     var data = TypeString.read(new Pbf(buf));
 
-    t.equals(data.int, '-5');
-    t.equals(data.long, '10000');
-    t.equals(data.boolVal, true);
-    t.equals(data.float, '12');
-    t.equals(data.default_implicit, '0');
-    t.equals(data.default_explicit, '42');
+    assert.equal(data.int, '-5');
+    assert.equal(data.long, '10000');
+    assert.equal(data.boolVal, true);
+    assert.equal(data.float, '12');
+    assert.equal(data.default_implicit, '0');
+    assert.equal(data.default_explicit, '42');
 
     data = TypeNotString.read(new Pbf(buf));
-    t.equals(data.int, -5);
-    t.equals(data.long, 10000);
-    t.equals(data.boolVal, true);
-    t.equals(data.float, 12);
-
-    t.end();
+    assert.equal(data.int, -5);
+    assert.equal(data.long, 10000);
+    assert.equal(data.boolVal, true);
+    assert.equal(data.float, 12);
 });
 
-test('handles negative varint', function(t) {
+test('handles negative varint', function() {
     var proto = resolve(path.join(__dirname, './fixtures/varint.proto'));
     var Envelope = compile(proto).Envelope;
     var pbf = new Pbf();
@@ -297,13 +272,11 @@ test('handles negative varint', function(t) {
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
-    t.equals(data.int, -5);
-    t.equals(data.long, -10);
-
-    t.end();
+    assert.equal(data.int, -5);
+    assert.equal(data.long, -10);
 });
 
-test('handles unsigned varint', function(t) {
+test('handles unsigned varint', function() {
     var proto = resolve(path.join(__dirname, './fixtures/varint.proto'));
     var Envelope = compile(proto).Envelope;
     var pbf = new Pbf();
@@ -316,8 +289,6 @@ test('handles unsigned varint', function(t) {
     var buf = pbf.finish();
     var data = Envelope.read(new Pbf(buf));
 
-    t.equals(data.uint, Math.pow(2, 31));
-    t.equals(data.ulong, Math.pow(2, 63));
-
-    t.end();
+    assert.equal(data.uint, Math.pow(2, 31));
+    assert.equal(data.ulong, Math.pow(2, 63));
 });

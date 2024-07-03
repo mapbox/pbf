@@ -7,8 +7,9 @@
   "jsdelivr": "dist/pbf.js",
   "scripts": {
     "bench": "node bench/bench.js",
-    "test": "eslint index.js compile.js test/*.js bench/bench-tiles.js bin/pbf && tap test/*.test.js && npm run build-min",
-    "cov": "tap test/*.test.js --cov --coverage-report=html",
+    "pretest": "eslint index.js compile.js test/*.js bench/bench-tiles.js bin/pbf",
+    "test": "node --test",
+    "cov": "node --test --experimental-test-covetage",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c -m > dist/pbf.js",
     "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js",
     "prepublishOnly": "npm run build-dev && npm run build-min"
@@ -48,15 +49,14 @@
   },
   "devDependencies": {
     "benchmark": "^2.1.4",
-    "browserify": "^16.2.3",
-    "eslint": "^5.15.1",
+    "browserify": "^17.0.0",
+    "eslint": "^8.57.0",
     "eslint-config-mourner": "^2.0.3",
-    "mkdirp": "^0.5.1",
-    "protobufjs": "^6.8.8",
-    "protocol-buffers": "^4.1.0",
-    "tap": "^12.6.0",
+    "mkdirp": "^3.0.1",
+    "protobufjs": "^7.3.2",
+    "protocol-buffers": "^5.0.0",
     "tile-stats-runner": "^1.0.0",
-    "uglify-js": "^3.6.1"
+    "uglify-js": "^3.18.0"
   },
   "eslintConfig": {
     "extends": "mourner",
