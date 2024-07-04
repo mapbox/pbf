@@ -13,8 +13,7 @@ function toArray(buf) {
 }
 
 test('initialization', () => {
-    const buf = new Pbf(Buffer.alloc(0));
-    buf.destroy();
+    assert.doesNotThrow(() => new Pbf(Buffer.alloc(0)));
 });
 
 test('realloc', () => {

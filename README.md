@@ -269,7 +269,6 @@ Misc methods:
 * `realloc(minBytes)` - pad the underlying buffer size to accommodate the given number of bytes;
    note that the size increases exponentially, so it won't necessarily equal the size of data written
 * `finish()` - make the current buffer ready for reading and return the data as a buffer slice
-* `destroy()` - dispose the buffer
 
 For an example of a real-world usage of the library, see [vector-tile-js](https://github.com/mapbox/vector-tile-js).
 

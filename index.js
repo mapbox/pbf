@@ -21,11 +21,6 @@ export default class Pbf {
         this.length = this.buf.length;
     }
 
-    destroy() {
-        this.buf = null;
-        this.dataView = null;
-    }
-
     // === READING =================================================================
 
     readFields(readField, result, end = this.length) {
