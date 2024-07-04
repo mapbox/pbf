@@ -5,37 +5,40 @@
     <meta charset='utf-8'>
 </head>
 <body>
-    <script>var exports = {};</script>
-    <script src='../dist/pbf-dev.js'></script>
-    <script src='data.js'></script>
-    <script src='vector_tile.js'></script>
-    <script>
+    <script type="module">
+        import Pbf from '../index.js';
+        import {readTile, writeTile} from './vector_tile.js';
+
         function read(data) {
-            return Tile.read(new Pbf(data));
+            return readTile(new Pbf(data));
         }
         function write(tile) {
             var pbf = new Pbf();
-            Tile.write(tile, pbf);
+            writeTile(tile, pbf);
             return pbf.finish();
         }
 
-        var tile = read(data),
-            tileJSON = JSON.stringify(tile);
+        const data = await (await fetch('../test/fixtures/12665.vector.pbf')).arrayBuffer();
+
+        const tile = read(data);
+        const tileJSON = JSON.stringify(tile);
+
+        const N = 100;
 
         console.time('decode');
-        for (var i = 0; i < 10; i++) read(data);
+        for (let i = 0; i < N; i++) read(data);
         console.timeEnd('decode');
 
         console.time('encode');
-        for (var i = 0; i < 10; i++) write(tile);
+        for (let i = 0; i < N; i++) write(tile);
         console.timeEnd('encode');
 
         console.time('JSON.parse');
-        for (var i = 0; i < 10; i++) JSON.parse(tileJSON);
+        for (let i = 0; i < N; i++) JSON.parse(tileJSON);
         console.timeEnd('JSON.parse');
 
         console.time('JSON.stringify');
-        for (var i = 0; i < 10; i++) JSON.stringify(tile);
+        for (let i = 0; i < N; i++) JSON.stringify(tile);
         console.timeEnd('JSON.stringify');
     </script>
 </body>
