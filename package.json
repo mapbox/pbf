@@ -10,7 +10,7 @@
   },
   "scripts": {
     "bench": "node bench/bench.js",
-    "pretest": "eslint *.js compile.js test/*.js bench/vector_tile.js bin/pbf",
+    "pretest": "eslint *.js compile.js test/*.js test/fixtures/*.js bin/pbf",
     "test": "node --test",
     "cov": "node --test --experimental-test-covetage",
     "build": "rollup -c",

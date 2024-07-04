@@ -10,11 +10,12 @@ export default [
         }
     },
     {
-        files: ['bench/*.js'],
+        files: ['test/fixtures/*.js'],
         rules: {
             camelcase: 0,
             '@stylistic/js/quotes': 0,
             '@stylistic/js/semi': 0,
+            '@stylistic/js/brace-style': 0,
             'no-unused-vars': 0
         }
     }

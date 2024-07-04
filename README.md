@@ -48,7 +48,7 @@ const buffer = pbf.finish();
 Alternatively, you can compile a protobuf schema file directly in the code:
 
 ```js
-import compile from 'pbf/compile';
+import {compile} from 'pbf/compile';
 import schema from 'protocol-buffers-schema';
 
 const proto = schema.parse(fs.readFileSync('example.proto'));

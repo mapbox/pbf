@@ -5,12 +5,12 @@ import {fileURLToPath} from 'node:url';
 import protocolBuffers from 'protocol-buffers';
 import protobufjs from 'protobufjs';
 
-import {readTile, writeTile} from './vector_tile.js';
+import {readTile, writeTile} from '../test/fixtures/vector_tile.js';
 import Pbf from '../index.js';
 
 var data = fs.readFileSync(new URL('../test/fixtures/12665.vector.pbf', import.meta.url)),
     suite = new Benchmark.Suite(),
-    vtProtoUrl = new URL('vector_tile.proto', import.meta.url),
+    vtProtoUrl = new URL('../test/fixtures/vector_tile.proto', import.meta.url),
     ProtocolBuffersTile = protocolBuffers(fs.readFileSync(vtProtoUrl)).Tile,
     ProtobufjsTile = protobufjs.loadSync(fileURLToPath(vtProtoUrl)).lookup('vector_tile.Tile');
 

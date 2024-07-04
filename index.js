@@ -43,7 +43,7 @@ export default class Pbf {
     }
 
     readMessage(readField, result) {
-        return this.readFields(readField, result, this.readEnd());
+        return this.readFields(readField, result, this.readVarint() + this.pos);
     }
 
     readFixed32() {
@@ -111,7 +111,7 @@ export default class Pbf {
     }
 
     readString() {
-        const end = this.readEnd();
+        const end = this.readVarint() + this.pos;
         const pos = this.pos;
         this.pos = end;
 
@@ -124,7 +124,7 @@ export default class Pbf {
     }
 
     readBytes() {
-        const end = this.readEnd(),
+        const end = this.readVarint() + this.pos,
             buffer = this.buf.subarray(this.pos, end);
         this.pos = end;
         return buffer;
@@ -177,17 +177,14 @@ export default class Pbf {
         while (this.pos < end) arr.push(this.readSFixed64());
         return arr;
     }
-    readEnd() {
-        return this.readVarint() + this.pos;
-    }
     readPackedEnd() {
-        return this.type === PBF_BYTES ? this.readEnd() : this.pos + 1;
+        return this.type === PBF_BYTES ? this.readVarint() + this.pos : this.pos + 1;
     }
 
     skip(val) {
         const type = val & 0x7;
         if (type === PBF_VARINT) while (this.buf[this.pos++] > 0x7f) {}
-        else if (type === PBF_BYTES) this.pos = this.readEnd();
+        else if (type === PBF_BYTES) this.pos = this.readVarint() + this.pos;
         else if (type === PBF_FIXED32) this.pos += 4;
         else if (type === PBF_FIXED64) this.pos += 8;
         else throw new Error(`Unimplemented type: ${type}`);

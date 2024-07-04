@@ -4,10 +4,26 @@ import assert from 'node:assert/strict';
 import {sync as resolve} from 'resolve-protobuf-schema';
 
 import Pbf from '../index.js';
-import {compile} from '../compile.js';
+import {compile, compileRaw} from '../compile.js';
+
+test('compiles all proto files to proper js', () => {
+    const files = fs.readdirSync(new URL('fixtures', import.meta.url));
+
+    for (const path of files) {
+        if (!path.endsWith('.proto')) continue;
+        const proto = resolve(new URL(`fixtures/${path}`, import.meta.url));
+        const js = compileRaw(proto, {dev: true});
+
+        // uncomment to update the fixtures
+        // fs.writeFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), js);
+
+        const expectedJS = fs.readFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), 'utf8');
+        assert.equal(js, expectedJS);
+    }
+});
 
 test('compiles vector tile proto', () => {
-    const proto = resolve(new URL('../bench/vector_tile.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/vector_tile.proto', import.meta.url));
     const tileBuf = fs.readFileSync(new URL('fixtures/12665.vector.pbf', import.meta.url));
     const {readTile, writeTile} = compile(proto);
 
@@ -21,12 +37,12 @@ test('compiles vector tile proto', () => {
 });
 
 test('compiles proto with embedded type reference', () => {
-    const proto = resolve(new URL('./fixtures/embedded_type.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/embedded_type.proto', import.meta.url));
     compile(proto);
 });
 
 test('compiles packed proto', () => {
-    const proto = resolve(new URL('./fixtures/packed.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/packed.proto', import.meta.url));
     const {writeNotPacked, readFalsePacked} = compile(proto);
 
     const original = {
@@ -43,7 +59,7 @@ test('compiles packed proto', () => {
 });
 
 test('reads packed with unpacked field', () => {
-    const proto = resolve(new URL('./fixtures/packed.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/packed.proto', import.meta.url));
     const {writePacked, readFalsePacked} = compile(proto);
 
     const original = {
@@ -60,7 +76,7 @@ test('reads packed with unpacked field', () => {
 });
 
 test('compiles packed proto3', () => {
-    const proto = resolve(new URL('./fixtures/packed_proto3.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/packed_proto3.proto', import.meta.url));
     const {readNotPacked, writeNotPacked, writeFalsePacked} = compile(proto);
 
     const original = {
@@ -82,7 +98,7 @@ test('compiles packed proto3', () => {
 });
 
 test('compiles packed with multi-byte tags', () => {
-    const proto = resolve(new URL('./fixtures/packed_proto3.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/packed_proto3.proto', import.meta.url));
     const {readPacked, writePacked} = compile(proto);
 
     const original = {
@@ -98,7 +114,7 @@ test('compiles packed with multi-byte tags', () => {
 });
 
 test('compiles defaults', () => {
-    const proto = resolve(new URL('./fixtures/defaults.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/defaults.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
     const pbf = new Pbf();
 
@@ -118,7 +134,7 @@ test('compiles defaults', () => {
 });
 
 test('compiles proto3 ignoring defaults', () => {
-    const proto = resolve(new URL('./fixtures/defaults_proto3.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/defaults_proto3.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
     const pbf = new Pbf();
 
@@ -137,7 +153,7 @@ test('compiles proto3 ignoring defaults', () => {
 });
 
 test('compiles maps', () => {
-    const proto = resolve(new URL('./fixtures/map.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/map.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
 
     const original = {
@@ -161,7 +177,7 @@ test('compiles maps', () => {
 });
 
 test('does not write undefined or null values', () => {
-    const proto = resolve(new URL('./fixtures/embedded_type.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/embedded_type.proto', import.meta.url));
     const {writeEmbeddedType} = compile(proto);
     const pbf = new Pbf();
 
@@ -177,7 +193,7 @@ test('does not write undefined or null values', () => {
 });
 
 test('handles all implicit default values', () => {
-    const proto = resolve(new URL('./fixtures/defaults_implicit.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/defaults_implicit.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
     const pbf = new Pbf();
 
@@ -200,7 +216,7 @@ test('handles all implicit default values', () => {
 });
 
 test('sets oneof field name', () => {
-    const proto = resolve(new URL('./fixtures/oneof.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/oneof.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
     let pbf = new Pbf();
 
@@ -221,7 +237,7 @@ test('sets oneof field name', () => {
 });
 
 test('handles jstype=JS_STRING', () => {
-    const proto = resolve(new URL('./fixtures/type_string.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/type_string.proto', import.meta.url));
     const {readTypeString, writeTypeString, readTypeNotString} = compile(proto);
     const pbf = new Pbf();
 
@@ -250,7 +266,7 @@ test('handles jstype=JS_STRING', () => {
 });
 
 test('handles negative varint', () => {
-    const proto = resolve(new URL('./fixtures/varint.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/varint.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
     const pbf = new Pbf();
 
@@ -267,7 +283,7 @@ test('handles negative varint', () => {
 });
 
 test('handles unsigned varint', () => {
-    const proto = resolve(new URL('./fixtures/varint.proto', import.meta.url));
+    const proto = resolve(new URL('fixtures/varint.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
     const pbf = new Pbf();
 
