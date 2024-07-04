@@ -3,11 +3,12 @@
   "version": "3.3.0",
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
+  "type": "module",
   "unpkg": "dist/pbf.js",
   "jsdelivr": "dist/pbf.js",
   "scripts": {
     "bench": "node bench/bench.js",
-    "pretest": "eslint index.js compile.js test/*.js bench/bench-tiles.js bin/pbf",
+    "pretest": "eslint *.js compile.js test/*.js bench/vector_tile.js bin/pbf",
     "test": "node --test",
     "cov": "node --test --experimental-test-covetage",
     "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c -m > dist/pbf.js",
@@ -44,38 +45,18 @@
   },
   "homepage": "https://github.com/mapbox/pbf",
   "dependencies": {
-    "ieee754": "^1.1.12",
+    "ieee754": "^1.2.1",
     "resolve-protobuf-schema": "^2.1.0"
   },
   "devDependencies": {
     "benchmark": "^2.1.4",
     "browserify": "^17.0.0",
-    "eslint": "^8.57.0",
-    "eslint-config-mourner": "^2.0.3",
+    "eslint": "^9.6.0",
+    "eslint-config-mourner": "^4.0.1",
     "mkdirp": "^3.0.1",
     "protobufjs": "^7.3.2",
     "protocol-buffers": "^5.0.0",
     "tile-stats-runner": "^1.0.0",
     "uglify-js": "^3.18.0"
-  },
-  "eslintConfig": {
-    "extends": "mourner",
-    "rules": {
-      "space-before-function-paren": [
-        2,
-        "never"
-      ],
-      "key-spacing": 0,
-      "no-empty": 0,
-      "global-require": 0,
-      "no-cond-assign": 0,
-      "indent": [
-        2,
-        4,
-        {
-          "flatTernaryExpressions": true
-        }
-      ]
-    }
   }
 }

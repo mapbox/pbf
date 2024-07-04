@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 
-'use strict';
-
-var resolve = require('resolve-protobuf-schema');
-var compile = require('../compile');
+import resolve from 'resolve-protobuf-schema';
+import {compileRaw} from '../compile.js';
 
 if (process.argv.length < 3) {
     console.error('Usage: pbf [file.proto] [--browser] [--no-read] [--no-write]');
-    return;
+    process.exit(0);
 }
 
-var code = compile.raw(resolve.sync(process.argv[2]), {
-    exports: process.argv.indexOf('--browser') >= 0 ? 'self' : 'exports',
+const code = compileRaw(resolve.sync(process.argv[2]), {
     noRead: process.argv.indexOf('--no-read') >= 0,
     noWrite: process.argv.indexOf('--no-write') >= 0
 });

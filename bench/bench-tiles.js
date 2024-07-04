@@ -1,17 +1,16 @@
-'use strict';
 
-var runStats = require('tile-stats-runner');
-var Tile = require('./vector_tile').Tile;
-var Pbf = require('../');
+import runStats from 'tile-stats-runner';
+import {readTile, writeTile} from './vector_tile.js';
+import Pbf from '../index.js';
 
-var ids = 'mapbox.mapbox-streets-v7';
-var token = 'pk.eyJ1IjoicmVkdWNlciIsImEiOiJrS3k2czVJIn0.CjwU0V9fO4FAf3ukyV4eqQ';
-var url = 'https://b.tiles.mapbox.com/v4/' + ids + '/{z}/{x}/{y}.vector.pbf?access_token=' + token;
+const ids = 'mapbox.mapbox-streets-v7';
+const token = 'pk.eyJ1IjoicmVkdWNlciIsImEiOiJrS3k2czVJIn0.CjwU0V9fO4FAf3ukyV4eqQ';
+const url = `https://b.tiles.mapbox.com/v4/${ids}/{z}/{x}/{y}.vector.pbf?access_token=${  token}`;
 
-var readTime = 0;
-var writeTime = 0;
-var size = 0;
-var numTiles = 0;
+let readTime = 0;
+let writeTime = 0;
+let size = 0;
+let numTiles = 0;
 
 runStats(url, processTile, showStats, {
     width: 2880,
@@ -25,14 +24,14 @@ function processTile(body) {
     size += body.length;
     numTiles++;
 
-    var now = clock();
-    var tile = Tile.read(new Pbf(body));
+    let now = clock();
+    const tile = readTile(new Pbf(body));
     readTime += clock(now);
 
     now = clock();
-    var pbf = new Pbf();
-    Tile.write(tile, pbf);
-    var buf = pbf.finish();
+    const pbf = new Pbf();
+    writeTile(tile, pbf);
+    const buf = pbf.finish();
     writeTime += clock(now);
 
     console.assert(buf);
@@ -50,7 +49,7 @@ function speed(time, size) {
 
 function clock(start) {
     if (!start) return process.hrtime();
-    var t = process.hrtime(start);
+    const t = process.hrtime(start);
     return t[0] * 1e3 + t[1] * 1e-6;
 }
 

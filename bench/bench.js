@@ -1,33 +1,31 @@
-'use strict';
 
-var Benchmark = require('benchmark'),
-    fs = require('fs'),
-    path = require('path'),
-    protocolBuffers = require('protocol-buffers'),
-    protobufjs = require('protobufjs'),
-    vt = require('./vector_tile'),
-    Pbf = require('../');
+import Benchmark from 'benchmark';
+import fs from 'fs';
+import {fileURLToPath} from 'node:url';
+import protocolBuffers from 'protocol-buffers';
+import protobufjs from 'protobufjs';
 
-var pbfReadTile = vt.Tile.read,
-    pbfWriteTile = vt.Tile.write,
-    data = fs.readFileSync(path.resolve(__dirname, '../test/fixtures/12665.vector.pbf')),
+import {readTile, writeTile} from './vector_tile.js';
+import Pbf from '../index.js';
+
+var data = fs.readFileSync(new URL('../test/fixtures/12665.vector.pbf', import.meta.url)),
     suite = new Benchmark.Suite(),
-    ProtocolBuffersTile = protocolBuffers(fs.readFileSync(path.resolve(__dirname, 'vector_tile.proto'))).Tile,
-    ProtobufjsTile = protobufjs.loadSync(path.resolve(__dirname, 'vector_tile.proto'))
-        .lookup('vector_tile.Tile');
+    vtProtoUrl = new URL('vector_tile.proto', import.meta.url),
+    ProtocolBuffersTile = protocolBuffers(fs.readFileSync(vtProtoUrl)).Tile,
+    ProtobufjsTile = protobufjs.loadSync(fileURLToPath(vtProtoUrl)).lookup('vector_tile.Tile');
 
-var pbfTile = pbfReadTile(new Pbf(data)),
+var pbfTile = readTile(new Pbf(data)),
     tileJSON = JSON.stringify(pbfTile),
     protocolBuffersTile = ProtocolBuffersTile.decode(data),
     protobufjsTile = ProtobufjsTile.decode(data);
 
 suite
     .add('decode vector tile with pbf', function() {
-        pbfReadTile(new Pbf(data));
+        readTile(new Pbf(data));
     })
     .add('encode vector tile with pbf', function() {
         var pbf = new Pbf();
-        pbfWriteTile(pbfTile, pbf);
+        writeTile(pbfTile, pbf);
         pbf.finish();
     })
     .add('decode vector tile with protocol-buffers', function() {
