@@ -4,8 +4,10 @@
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
   "type": "module",
-  "unpkg": "dist/pbf.js",
-  "jsdelivr": "dist/pbf.js",
+  "exports": {
+    ".": "./index.js",
+    "./compile": "./compile.js"
+  },
   "scripts": {
     "bench": "node bench/bench.js",
     "pretest": "eslint *.js compile.js test/*.js bench/vector_tile.js bin/pbf",

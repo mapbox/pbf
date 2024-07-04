@@ -33,38 +33,26 @@ $ pbf example.proto > example.js
 Then read and write objects using the module like this:
 
 ```js
-var Pbf = require('pbf');
-var Example = require('./example.js').Example;
+import Pbf from 'pbf';
+import {readExample, writeExample} from './example.js';
 
 // read
-var pbf = new Pbf(buffer);
-var obj = Example.read(pbf);
+var obj = readExample(new Pbf(buffer));
 
 // write
-var pbf = new Pbf();
-Example.write(obj, pbf);
-var buffer = pbf.finish();
+const pbf = new Pbf();
+writeExample(obj, pbf);
+const buffer = pbf.finish();
 ```
 
-Alternatively, you can compile a module directly in the code:
+Alternatively, you can compile a protobuf schema file directly in the code:
 
 ```js
-var compile = require('pbf/compile');
-var schema = require('protocol-buffers-schema');
+import compile from 'pbf/compile';
+import schema from 'protocol-buffers-schema';
 
-var proto = schema.parse(fs.readFileSync('example.proto'));
-var Test = compile(proto).Test;
-```
-
-If you use `webpack` as your module bundler, you can use [pbf-loader](https://github.com/trivago/pbf-loader)
-to load .proto files directly. It returns a compiled module ready to be used.
-
-Given you already configured your `webpack.config.js`, the code above would look like:
-```js
-var Pbf = require('pbf');
-var proto = require('./example.proto');
-
-var Test = proto.Test;
+const proto = schema.parse(fs.readFileSync('example.proto'));
+const {readExample, writeExample} = compile(proto);
 ```
 
 #### Custom Reading
@@ -103,21 +91,25 @@ function writeLayer(layer, pbf) {
 
 ## Install
 
-Node and Browserify:
+Install using NPM with `npm install pbf`, then import as a module:
 
-```bash
-npm install pbf
+```js
+import Pbf from 'pbf';
 ```
 
-Making a browser build:
+Or use as a module directly in the browser with [jsDelivr](https://www.jsdelivr.com/esm):
 
-```bash
-npm install
-npm run build-dev # dist/pbf-dev.js (development build)
-npm run build-min # dist/pbf.js (minified production build)
+```html
+<script type="module">
+    import Pbf from 'https://cdn.jsdelivr.net/npm/pbf/+esm';
+</script>
 ```
 
-CDN link: https://unpkg.com/pbf@3.3.0/dist/pbf.js
+Alternatively, there's a browser bundle with a `Pbf` global variable:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/pbf"></script>
+```
 
 ## API
 
@@ -125,10 +117,10 @@ Create a `Pbf` object, optionally given a `Buffer` or `Uint8Array` as input data
 
 ```js
 // parse a pbf file from disk in Node
-var pbf = new Pbf(fs.readFileSync('data.pbf'));
+const pbf = new Pbf(fs.readFileSync('data.pbf'));
 
 // parse a pbf file in a browser after an ajax request with responseType="arraybuffer"
-var pbf = new Pbf(new Uint8Array(xhr.response));
+const pbf = new Pbf(new Uint8Array(xhr.response));
 ```
 
 `Pbf` object properties:
@@ -143,7 +135,7 @@ pbf.pos; // current offset for reading or writing
 Read a sequence of fields:
 
 ```js
-pbf.readFields(function (tag) {
+pbf.readFields((tag) => {
     if (tag === 1) pbf.readVarint();
     else if (tag === 2) pbf.readString();
     else ...
@@ -154,9 +146,9 @@ It optionally accepts an object that will be passed to the reading function for 
 and also passes the `Pbf` object as a third argument:
 
 ```js
-var result = pbf.readFields(callback, {})
+const result = pbf.readFields(readField, {})
 
-function callback(tag, result, pbf) {
+function readField(tag, result, pbf) {
     if (tag === 1) result.id = pbf.readVarint();
 }
 ```
@@ -166,17 +158,17 @@ To read an embedded message, use `pbf.readMessage(fn[, obj])` (in the same way a
 Read values:
 
 ```js
-var value = pbf.readVarint();
-var str = pbf.readString();
-var numbers = pbf.readPackedVarint();
+const value = pbf.readVarint();
+const str = pbf.readString();
+const numbers = pbf.readPackedVarint();
 ```
 
 For lazy or partial decoding, simply save the position instead of reading a value,
 then later set it back to the saved value and read:
 
 ```js
-var fooPos = -1;
-pbf.readFields(function (tag) {
+const fooPos = -1;
+pbf.readFields((tag) => {
     if (tag === 1) fooPos = pbf.pos;
 });
 ...
@@ -287,15 +279,16 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 If installed globally, `pbf` provides a binary that compiles `proto` files into JavaScript modules. Usage:
 
 ```bash
-$ pbf <proto_path> [--no-write] [--no-read] [--browser]
+$ pbf <proto_path> [--no-write] [--no-read] [--legacy]
 ```
 
 The `--no-write` and `--no-read` switches remove corresponding code in the output.
-The `--browser` switch makes the module work in browsers instead of Node.
+The `--legacy` switch makes it generate a CommonJS module instead of ESM.
 
-The resulting module exports each message by name with the following methods:
+`Pbf` will generate `read<Identifier>` and `write<Identifier>` functions for every message in the schema. For nested messages, their names will be concatenated — e.g. `Message` inside `Test` will produce `readTestMessage` and `writeTestMessage` functions.
 
-* `read(pbf)` - decodes an object from the given `Pbf` instance
-* `write(obj, pbf)` - encodes an object into the given `Pbf` instance (usually empty)
 
-The resulting code is clean and simple, so feel free to customize it.
+* `read(pbf)` - decodes an object from the given `Pbf` instance.
+* `write(obj, pbf)` - encodes an object into the given `Pbf` instance (usually empty).
+
+The resulting code is clean and simple, so it's meant to be customized.
