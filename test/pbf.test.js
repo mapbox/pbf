@@ -173,13 +173,13 @@ test('readPacked and writePacked', () => {
 
     function testPacked(type) {
         const buf = new Pbf();
-        buf[`writePacked${  type}`](1, testNumbers2);
+        buf[`writePacked${type}`](1, testNumbers2);
         buf.finish();
         buf.readFields((tag) => {
             const arr = [];
-            buf[`readPacked${  type}`](arr);
-            if (tag === 1) assert.deepEqual(arr, testNumbers2, `packed ${  type}`);
-            else assert.fail(`wrong tag encountered: ${  tag}`);
+            buf[`readPacked${type}`](arr);
+            if (tag === 1) assert.deepEqual(arr, testNumbers2, `packed ${type}`);
+            else assert.fail(`wrong tag encountered: ${tag}`);
         });
     }
 
@@ -188,15 +188,15 @@ test('readPacked and writePacked', () => {
         const arr = [];
 
         testNumbers2.forEach((n) => {
-            buf[`write${  type  }Field`](1, n);
+            buf[`write${type}Field`](1, n);
         });
 
         buf.finish();
         buf.readFields(() => {
-            buf[`readPacked${  type}`](arr);
+            buf[`readPacked${type}`](arr);
         });
 
-        assert.deepEqual(arr, testNumbers2, `packed ${  type}`);
+        assert.deepEqual(arr, testNumbers2, `packed ${type}`);
     }
 
     ['Varint', 'SVarint', 'Float', 'Double', 'Fixed32', 'SFixed32', 'Fixed64', 'SFixed64'].forEach((type) => {
@@ -212,7 +212,7 @@ test('readPacked and writePacked', () => {
         buf.readPackedBoolean(arr);
         if (tag === 1) assert.deepEqual(arr,
             [true, false, false, true, true, true, true, true, true, true], 'packed Boolean');
-        else assert.fail(`wrong tag encountered: ${  tag}`);
+        else assert.fail(`wrong tag encountered: ${tag}`);
     });
 });
 

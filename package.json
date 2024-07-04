@@ -44,12 +44,9 @@
   },
   "homepage": "https://github.com/mapbox/pbf",
   "dependencies": {
-    "ieee754": "^1.2.1",
     "resolve-protobuf-schema": "^2.1.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^26.0.1",
-    "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "benchmark": "^2.1.4",
     "eslint": "^9.6.0",

@@ -1,6 +1,4 @@
 
-import ieee754 from 'ieee754';
-
 const SHIFT_LEFT_32 = (1 << 16) * (1 << 16);
 const SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
 
@@ -17,6 +15,7 @@ const PBF_FIXED32 = 5; // 32-bit: float, fixed32, sfixed32
 export default class Pbf {
     constructor(buf) {
         this.buf = ArrayBuffer.isView && ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf || 0);
+        this.dataView = new DataView(this.buf.buffer);
         this.pos = 0;
         this.type = 0;
         this.length = this.buf.length;
@@ -24,6 +23,7 @@ export default class Pbf {
 
     destroy() {
         this.buf = null;
+        this.dataView = null;
     }
 
     // === READING =================================================================
@@ -73,13 +73,13 @@ export default class Pbf {
     }
 
     readFloat() {
-        const val = ieee754.read(this.buf, this.pos, true, 23, 4);
+        const val = this.dataView.getFloat32(this.pos, true);
         this.pos += 4;
         return val;
     }
 
     readDouble() {
-        const val = ieee754.read(this.buf, this.pos, true, 52, 8);
+        const val = this.dataView.getFloat64(this.pos, true);
         this.pos += 8;
         return val;
     }
@@ -208,6 +208,7 @@ export default class Pbf {
             const buf = new Uint8Array(length);
             buf.set(this.buf);
             this.buf = buf;
+            this.dataView = new DataView(buf.buffer);
             this.length = length;
         }
     }
@@ -289,13 +290,13 @@ export default class Pbf {
 
     writeFloat(val) {
         this.realloc(4);
-        ieee754.write(this.buf, val, this.pos, true, 23, 4);
+        this.dataView.setFloat32(this.pos, val, true);
         this.pos += 4;
     }
 
     writeDouble(val) {
         this.realloc(8);
-        ieee754.write(this.buf, val, this.pos, true, 52, 8);
+        this.dataView.setFloat64(this.pos, val, true);
         this.pos += 8;
     }
 
