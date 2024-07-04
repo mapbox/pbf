@@ -11,7 +11,7 @@
   "scripts": {
     "bench": "node bench/bench.js",
     "pretest": "eslint *.js compile.js test/*.js test/fixtures/*.js bin/pbf",
-    "test": "node --test",
+    "test": "tsc && node --test",
     "cov": "node --test --experimental-test-covetage",
     "build": "rollup -c",
     "prepublishOnly": "npm run test && npm run build"
@@ -19,8 +19,10 @@
   "files": [
     "bin",
     "dist",
-    "compile.js"
+    "compile.js",
+    "index.d.ts"
   ],
+  "types": "index.d.ts",
   "bin": {
     "pbf": "bin/pbf"
   },
@@ -56,6 +58,7 @@
     "protobufjs": "^7.3.2",
     "protocol-buffers": "^5.0.0",
     "rollup": "^4.18.0",
-    "tile-stats-runner": "^1.0.0"
+    "tile-stats-runner": "^1.0.0",
+    "typescript": "^5.5.3"
   }
 }

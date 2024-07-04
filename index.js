@@ -13,6 +13,9 @@ const PBF_BYTES   = 2; // length-delimited: string, bytes, embedded messages, pa
 const PBF_FIXED32 = 5; // 32-bit: float, fixed32, sfixed32
 
 export default class Pbf {
+    /**
+     * @param {Uint8Array | ArrayBuffer} buf
+     */
     constructor(buf) {
         this.buf = ArrayBuffer.isView && ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf || 0);
         this.dataView = new DataView(this.buf.buffer);
@@ -23,6 +26,12 @@ export default class Pbf {
 
     // === READING =================================================================
 
+    /**
+     * @template T
+     * @param {(tag: number, result: T, pbf: Pbf) => void} readField
+     * @param {T} result
+     * @param {number} [end]
+     */
     readFields(readField, result, end = this.length) {
         while (this.pos < end) {
             const val = this.readVarint(),
@@ -37,6 +46,11 @@ export default class Pbf {
         return result;
     }
 
+    /**
+     * @template T
+     * @param {(tag: number, result: T, pbf: Pbf) => void} readField
+     * @param {T} result
+     */
     readMessage(readField, result) {
         return this.readFields(readField, result, this.readVarint() + this.pos);
     }
@@ -79,6 +93,9 @@ export default class Pbf {
         return val;
     }
 
+    /**
+     * @param {boolean} [isSigned]
+     */
     readVarint(isSigned) {
         const buf = this.buf;
         let val, b;
@@ -112,7 +129,7 @@ export default class Pbf {
 
         if (end - pos >= TEXT_DECODER_MIN_LENGTH && utf8TextDecoder) {
             // longer strings are fast with the built-in browser TextDecoder API
-            return readUtf8TextDecoder(this.buf, pos, end);
+            return utf8TextDecoder.decode(this.buf.subarray(pos, end));
         }
         // short strings are fast with our custom implementation
         return readUtf8(this.buf, pos, end);
@@ -127,46 +144,58 @@ export default class Pbf {
 
     // verbose for performance reasons; doesn't affect gzipped size
 
+    /**
+     * @param {number[]} [arr]
+     * @param {boolean} [isSigned]
+     */
     readPackedVarint(arr = [], isSigned) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readVarint(isSigned));
         return arr;
     }
+    /** @param {number[]} [arr] */
     readPackedSVarint(arr = []) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readSVarint());
         return arr;
     }
+    /** @param {boolean[]} [arr] */
     readPackedBoolean(arr = []) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readBoolean());
         return arr;
     }
+    /** @param {number[]} [arr] */
     readPackedFloat(arr = []) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readFloat());
         return arr;
     }
+    /** @param {number[]} [arr] */
     readPackedDouble(arr = []) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readDouble());
         return arr;
     }
+    /** @param {number[]} [arr] */
     readPackedFixed32(arr = []) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readFixed32());
         return arr;
     }
+    /** @param {number[]} [arr] */
     readPackedSFixed32(arr = []) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readSFixed32());
         return arr;
     }
+    /** @param {number[]} [arr] */
     readPackedFixed64(arr = []) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readFixed64());
         return arr;
     }
+    /** @param {number[]} [arr] */
     readPackedSFixed64(arr = []) {
         const end = this.readPackedEnd();
         while (this.pos < end) arr.push(this.readSFixed64());
@@ -176,6 +205,7 @@ export default class Pbf {
         return this.type === PBF_BYTES ? this.readVarint() + this.pos : this.pos + 1;
     }
 
+    /** @param {number} val */
     skip(val) {
         const type = val & 0x7;
         if (type === PBF_VARINT) while (this.buf[this.pos++] > 0x7f) {}
@@ -187,10 +217,15 @@ export default class Pbf {
 
     // === WRITING =================================================================
 
+    /**
+     * @param {number} tag
+     * @param {number} type
+     */
     writeTag(tag, type) {
         this.writeVarint((tag << 3) | type);
     }
 
+    /** @param {number} min */
     realloc(min) {
         let length = this.length || 16;
 
@@ -211,18 +246,21 @@ export default class Pbf {
         return this.buf.subarray(0, this.length);
     }
 
+    /** @param {number} val */
     writeFixed32(val) {
         this.realloc(4);
         writeInt32(this.buf, val, this.pos);
         this.pos += 4;
     }
 
+    /** @param {number} val */
     writeSFixed32(val) {
         this.realloc(4);
         writeInt32(this.buf, val, this.pos);
         this.pos += 4;
     }
 
+    /** @param {number} val */
     writeFixed64(val) {
         this.realloc(8);
         writeInt32(this.buf, val & -1, this.pos);
@@ -230,6 +268,7 @@ export default class Pbf {
         this.pos += 8;
     }
 
+    /** @param {number} val */
     writeSFixed64(val) {
         this.realloc(8);
         writeInt32(this.buf, val & -1, this.pos);
@@ -237,6 +276,7 @@ export default class Pbf {
         this.pos += 8;
     }
 
+    /** @param {number} val */
     writeVarint(val) {
         val = +val || 0;
 
@@ -253,14 +293,17 @@ export default class Pbf {
         this.buf[this.pos++] =   (val >>> 7) & 0x7f;
     }
 
+    /** @param {number} val */
     writeSVarint(val) {
         this.writeVarint(val < 0 ? -val * 2 - 1 : val * 2);
     }
 
+    /** @param {boolean} val */
     writeBoolean(val) {
-        this.writeVarint(Boolean(val));
+        this.writeVarint(+val);
     }
 
+    /** @param {string} str */
     writeString(str) {
         str = String(str);
         this.realloc(str.length * 4);
@@ -280,18 +323,21 @@ export default class Pbf {
         this.pos += len;
     }
 
+    /** @param {number} val */
     writeFloat(val) {
         this.realloc(4);
         this.dataView.setFloat32(this.pos, val, true);
         this.pos += 4;
     }
 
+    /** @param {number} val */
     writeDouble(val) {
         this.realloc(8);
         this.dataView.setFloat64(this.pos, val, true);
         this.pos += 8;
     }
 
+    /** @param {Uint8Array} buffer */
     writeBytes(buffer) {
         const len = buffer.length;
         this.writeVarint(len);
@@ -299,6 +345,11 @@ export default class Pbf {
         for (let i = 0; i < len; i++) this.buf[this.pos++] = buffer[i];
     }
 
+    /**
+     * @template T
+     * @param {(obj: T, pbf: Pbf) => void} fn
+     * @param {T} obj
+     */
     writeRawMessage(fn, obj) {
         this.pos++; // reserve 1 byte for short message length
 
@@ -315,66 +366,175 @@ export default class Pbf {
         this.pos += len;
     }
 
+    /**
+     * @template T
+     * @param {number} tag
+     * @param {(obj: T, pbf: Pbf) => void} fn
+     * @param {T} obj
+     */
     writeMessage(tag, fn, obj) {
         this.writeTag(tag, PBF_BYTES);
         this.writeRawMessage(fn, obj);
     }
 
-    writePackedVarint(tag, arr)   { if (arr.length) this.writeMessage(tag, writePackedVarint, arr);   }
-    writePackedSVarint(tag, arr)  { if (arr.length) this.writeMessage(tag, writePackedSVarint, arr);  }
-    writePackedBoolean(tag, arr)  { if (arr.length) this.writeMessage(tag, writePackedBoolean, arr);  }
-    writePackedFloat(tag, arr)    { if (arr.length) this.writeMessage(tag, writePackedFloat, arr);    }
-    writePackedDouble(tag, arr)   { if (arr.length) this.writeMessage(tag, writePackedDouble, arr);   }
-    writePackedFixed32(tag, arr)  { if (arr.length) this.writeMessage(tag, writePackedFixed32, arr);  }
-    writePackedSFixed32(tag, arr) { if (arr.length) this.writeMessage(tag, writePackedSFixed32, arr); }
-    writePackedFixed64(tag, arr)  { if (arr.length) this.writeMessage(tag, writePackedFixed64, arr);  }
-    writePackedSFixed64(tag, arr) { if (arr.length) this.writeMessage(tag, writePackedSFixed64, arr); }
+    /**
+     * @param {number} tag
+     * @param {number[]} arr
+     */
+    writePackedVarint(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedVarint, arr);
+    }
+    /**
+     * @param {number} tag
+     * @param {number[]} arr
+     */
+    writePackedSVarint(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedSVarint, arr);
+    }
+    /**
+     * @param {number} tag
+     * @param {boolean[]} arr
+     */
+    writePackedBoolean(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedBoolean, arr);
+    }
+    /**
+     * @param {number} tag
+     * @param {number[]} arr
+     */
+    writePackedFloat(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedFloat, arr);
+    }
+    /**
+     * @param {number} tag
+     * @param {number[]} arr
+     */
+    writePackedDouble(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedDouble, arr);
+    }
+    /**
+     * @param {number} tag
+     * @param {number[]} arr
+     */
+    writePackedFixed32(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedFixed32, arr);
+    }
+    /**
+     * @param {number} tag
+     * @param {number[]} arr
+     */
+    writePackedSFixed32(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedSFixed32, arr);
+    }
+    /**
+     * @param {number} tag
+     * @param {number[]} arr
+     */
+    writePackedFixed64(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedFixed64, arr);
+    }
+    /**
+     * @param {number} tag
+     * @param {number[]} arr
+     */
+    writePackedSFixed64(tag, arr) {
+        if (arr.length) this.writeMessage(tag, writePackedSFixed64, arr);
+    }
 
+    /**
+     * @param {number} tag
+     * @param {Uint8Array} buffer
+     */
     writeBytesField(tag, buffer) {
         this.writeTag(tag, PBF_BYTES);
         this.writeBytes(buffer);
     }
+    /**
+     * @param {number} tag
+     * @param {number} val
+     */
     writeFixed32Field(tag, val) {
         this.writeTag(tag, PBF_FIXED32);
         this.writeFixed32(val);
     }
+    /**
+     * @param {number} tag
+     * @param {number} val
+     */
     writeSFixed32Field(tag, val) {
         this.writeTag(tag, PBF_FIXED32);
         this.writeSFixed32(val);
     }
+    /**
+     * @param {number} tag
+     * @param {number} val
+     */
     writeFixed64Field(tag, val) {
         this.writeTag(tag, PBF_FIXED64);
         this.writeFixed64(val);
     }
+    /**
+     * @param {number} tag
+     * @param {number} val
+     */
     writeSFixed64Field(tag, val) {
         this.writeTag(tag, PBF_FIXED64);
         this.writeSFixed64(val);
     }
+    /**
+     * @param {number} tag
+     * @param {number} val
+     */
     writeVarintField(tag, val) {
         this.writeTag(tag, PBF_VARINT);
         this.writeVarint(val);
     }
+    /**
+     * @param {number} tag
+     * @param {number} val
+     */
     writeSVarintField(tag, val) {
         this.writeTag(tag, PBF_VARINT);
         this.writeSVarint(val);
     }
+    /**
+     * @param {number} tag
+     * @param {string} str
+     */
     writeStringField(tag, str) {
         this.writeTag(tag, PBF_BYTES);
         this.writeString(str);
     }
+    /**
+     * @param {number} tag
+     * @param {number} val
+     */
     writeFloatField(tag, val) {
         this.writeTag(tag, PBF_FIXED32);
         this.writeFloat(val);
     }
+    /**
+     * @param {number} tag
+     * @param {number} val
+     */
     writeDoubleField(tag, val) {
         this.writeTag(tag, PBF_FIXED64);
         this.writeDouble(val);
     }
+    /**
+     * @param {number} tag
+     * @param {boolean} val
+     */
     writeBooleanField(tag, val) {
-        this.writeVarintField(tag, Boolean(val));
+        this.writeVarintField(tag, +val);
     }
 };
 
+/**
+ * @param {number} l
+ * @param {boolean | undefined} s
+ * @param {Pbf} p
+ */
 function readVarintRemainder(l, s, p) {
     const buf = p.buf;
     let h, b;
@@ -389,14 +549,19 @@ function readVarintRemainder(l, s, p) {
     throw new Error('Expected varint not more than 10 bytes');
 }
 
+/**
+ * @param {number} low
+ * @param {number} high
+ * @param {boolean} [isSigned]
+ */
 function toNum(low, high, isSigned) {
-    if (isSigned) {
-        return high * 0x100000000 + (low >>> 0);
-    }
-
-    return ((high >>> 0) * 0x100000000) + (low >>> 0);
+    return isSigned ? high * 0x100000000 + (low >>> 0) : ((high >>> 0) * 0x100000000) + (low >>> 0);
 }
 
+/**
+ * @param {number} val
+ * @param {Pbf} pbf
+ */
 function writeBigVarint(val, pbf) {
     let low, high;
 
@@ -425,6 +590,11 @@ function writeBigVarint(val, pbf) {
     writeBigVarintHigh(high, pbf);
 }
 
+/**
+ * @param {number} high
+ * @param {number} low
+ * @param {Pbf} pbf
+ */
 function writeBigVarintLow(low, high, pbf) {
     pbf.buf[pbf.pos++] = low & 0x7f | 0x80; low >>>= 7;
     pbf.buf[pbf.pos++] = low & 0x7f | 0x80; low >>>= 7;
@@ -433,6 +603,10 @@ function writeBigVarintLow(low, high, pbf) {
     pbf.buf[pbf.pos]   = low & 0x7f;
 }
 
+/**
+ * @param {number} high
+ * @param {Pbf} pbf
+ */
 function writeBigVarintHigh(high, pbf) {
     const lsb = (high & 0x07) << 4;
 
@@ -444,6 +618,11 @@ function writeBigVarintHigh(high, pbf) {
     pbf.buf[pbf.pos++]  = high & 0x7f;
 }
 
+/**
+ * @param {number} startPos
+ * @param {number} len
+ * @param {Pbf} pbf
+ */
 function makeRoomForExtraLength(startPos, len, pbf) {
     const extraLen =
         len <= 0x3fff ? 1 :
@@ -455,18 +634,76 @@ function makeRoomForExtraLength(startPos, len, pbf) {
     for (let i = pbf.pos - 1; i >= startPos; i--) pbf.buf[i + extraLen] = pbf.buf[i];
 }
 
-function writePackedVarint(arr, pbf)   { for (let i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);   }
-function writePackedSVarint(arr, pbf)  { for (let i = 0; i < arr.length; i++) pbf.writeSVarint(arr[i]);  }
-function writePackedFloat(arr, pbf)    { for (let i = 0; i < arr.length; i++) pbf.writeFloat(arr[i]);    }
-function writePackedDouble(arr, pbf)   { for (let i = 0; i < arr.length; i++) pbf.writeDouble(arr[i]);   }
-function writePackedBoolean(arr, pbf)  { for (let i = 0; i < arr.length; i++) pbf.writeBoolean(arr[i]);  }
-function writePackedFixed32(arr, pbf)  { for (let i = 0; i < arr.length; i++) pbf.writeFixed32(arr[i]);  }
-function writePackedSFixed32(arr, pbf) { for (let i = 0; i < arr.length; i++) pbf.writeSFixed32(arr[i]); }
-function writePackedFixed64(arr, pbf)  { for (let i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);  }
-function writePackedSFixed64(arr, pbf) { for (let i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]); }
+/**
+ * @param {number[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedVarint(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);
+}
+/**
+ * @param {number[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedSVarint(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeSVarint(arr[i]);
+}
+/**
+ * @param {number[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedFloat(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeFloat(arr[i]);
+}
+/**
+ * @param {number[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedDouble(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeDouble(arr[i]);
+}
+/**
+ * @param {boolean[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedBoolean(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeBoolean(arr[i]);
+}
+/**
+ * @param {number[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedFixed32(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeFixed32(arr[i]);
+}
+/**
+ * @param {number[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedSFixed32(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeSFixed32(arr[i]);
+}
+/**
+ * @param {number[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedFixed64(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);
+}
+/**
+ * @param {number[]} arr
+ * @param {Pbf} pbf
+ */
+function writePackedSFixed64(arr, pbf) {
+    for (let i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]);
+}
 
 // Buffer code below from https://github.com/feross/buffer, MIT-licensed
 
+/**
+ * @param {Uint8Array} buf
+ * @param {number} pos
+ */
 function readUInt32(buf, pos) {
     return ((buf[pos]) |
         (buf[pos + 1] << 8) |
@@ -474,6 +711,11 @@ function readUInt32(buf, pos) {
         (buf[pos + 3] * 0x1000000);
 }
 
+/**
+ * @param {Uint8Array} buf
+ * @param {number} val
+ * @param {number} pos
+ */
 function writeInt32(buf, val, pos) {
     buf[pos] = val;
     buf[pos + 1] = (val >>> 8);
@@ -481,6 +723,10 @@ function writeInt32(buf, val, pos) {
     buf[pos + 3] = (val >>> 24);
 }
 
+/**
+ * @param {Uint8Array} buf
+ * @param {number} pos
+ */
 function readInt32(buf, pos) {
     return ((buf[pos]) |
         (buf[pos + 1] << 8) |
@@ -488,6 +734,11 @@ function readInt32(buf, pos) {
         (buf[pos + 3] << 24);
 }
 
+/**
+ * @param {Uint8Array} buf
+ * @param {number} pos
+ * @param {number} end
+ */
 function readUtf8(buf, pos, end) {
     let str = '';
     let i = pos;
@@ -554,10 +805,11 @@ function readUtf8(buf, pos, end) {
     return str;
 }
 
-function readUtf8TextDecoder(buf, pos, end) {
-    return utf8TextDecoder.decode(buf.subarray(pos, end));
-}
-
+/**
+ * @param {Uint8Array} buf
+ * @param {string} str
+ * @param {number} pos
+ */
 function writeUtf8(buf, str, pos) {
     for (let i = 0, c, lead; i < str.length; i++) {
         c = str.charCodeAt(i); // code point
