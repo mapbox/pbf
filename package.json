@@ -11,9 +11,8 @@
     "pretest": "eslint *.js compile.js test/*.js bench/vector_tile.js bin/pbf",
     "test": "node --test",
     "cov": "node --test --experimental-test-covetage",
-    "build-min": "mkdirp dist && browserify index.js -s Pbf | uglifyjs -c -m > dist/pbf.js",
-    "build-dev": "mkdirp dist && browserify index.js -d -s Pbf > dist/pbf-dev.js",
-    "prepublishOnly": "npm run build-dev && npm run build-min"
+    "build": "rollup -c",
+    "prepublishOnly": "npm run test && npm run build"
   },
   "files": [
     "bin",
@@ -49,14 +48,15 @@
     "resolve-protobuf-schema": "^2.1.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "benchmark": "^2.1.4",
-    "browserify": "^17.0.0",
     "eslint": "^9.6.0",
     "eslint-config-mourner": "^4.0.1",
-    "mkdirp": "^3.0.1",
     "protobufjs": "^7.3.2",
     "protocol-buffers": "^5.0.0",
-    "tile-stats-runner": "^1.0.0",
-    "uglify-js": "^3.18.0"
+    "rollup": "^4.18.0",
+    "tile-stats-runner": "^1.0.0"
   }
 }
