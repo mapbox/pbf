@@ -56,13 +56,13 @@ export default class Pbf {
     }
 
     readFixed32() {
-        const val = readUInt32(this.buf, this.pos);
+        const val = this.dataView.getUint32(this.pos, true);
         this.pos += 4;
         return val;
     }
 
     readSFixed32() {
-        const val = readInt32(this.buf, this.pos);
+        const val = this.dataView.getInt32(this.pos, true);
         this.pos += 4;
         return val;
     }
@@ -70,13 +70,13 @@ export default class Pbf {
     // 64-bit int handling is based on github.com/dpw/node-buffer-more-ints (MIT-licensed)
 
     readFixed64() {
-        const val = readUInt32(this.buf, this.pos) + readUInt32(this.buf, this.pos + 4) * SHIFT_LEFT_32;
+        const val = this.dataView.getUint32(this.pos, true) + this.dataView.getUint32(this.pos + 4, true) * SHIFT_LEFT_32;
         this.pos += 8;
         return val;
     }
 
     readSFixed64() {
-        const val = readUInt32(this.buf, this.pos) + readInt32(this.buf, this.pos + 4) * SHIFT_LEFT_32;
+        const val = this.dataView.getUint32(this.pos, true) + this.dataView.getInt32(this.pos + 4, true) * SHIFT_LEFT_32;
         this.pos += 8;
         return val;
     }
@@ -249,30 +249,30 @@ export default class Pbf {
     /** @param {number} val */
     writeFixed32(val) {
         this.realloc(4);
-        writeInt32(this.buf, val, this.pos);
+        this.dataView.setInt32(this.pos, val, true);
         this.pos += 4;
     }
 
     /** @param {number} val */
     writeSFixed32(val) {
         this.realloc(4);
-        writeInt32(this.buf, val, this.pos);
+        this.dataView.setInt32(this.pos, val, true);
         this.pos += 4;
     }
 
     /** @param {number} val */
     writeFixed64(val) {
         this.realloc(8);
-        writeInt32(this.buf, val & -1, this.pos);
-        writeInt32(this.buf, Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
+        this.dataView.setInt32(this.pos, val & -1, true);
+        this.dataView.setInt32(this.pos + 4, Math.floor(val * SHIFT_RIGHT_32), true);
         this.pos += 8;
     }
 
     /** @param {number} val */
     writeSFixed64(val) {
         this.realloc(8);
-        writeInt32(this.buf, val & -1, this.pos);
-        writeInt32(this.buf, Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
+        this.dataView.setInt32(this.pos, val & -1, true);
+        this.dataView.setInt32(this.pos + 4, Math.floor(val * SHIFT_RIGHT_32), true);
         this.pos += 8;
     }
 
@@ -699,40 +699,6 @@ function writePackedSFixed64(arr, pbf) {
 }
 
 // Buffer code below from https://github.com/feross/buffer, MIT-licensed
-
-/**
- * @param {Uint8Array} buf
- * @param {number} pos
- */
-function readUInt32(buf, pos) {
-    return ((buf[pos]) |
-        (buf[pos + 1] << 8) |
-        (buf[pos + 2] << 16)) +
-        (buf[pos + 3] * 0x1000000);
-}
-
-/**
- * @param {Uint8Array} buf
- * @param {number} val
- * @param {number} pos
- */
-function writeInt32(buf, val, pos) {
-    buf[pos] = val;
-    buf[pos + 1] = (val >>> 8);
-    buf[pos + 2] = (val >>> 16);
-    buf[pos + 3] = (val >>> 24);
-}
-
-/**
- * @param {Uint8Array} buf
- * @param {number} pos
- */
-function readInt32(buf, pos) {
-    return ((buf[pos]) |
-        (buf[pos + 1] << 8) |
-        (buf[pos + 2] << 16)) +
-        (buf[pos + 3] << 24);
-}
 
 /**
  * @param {Uint8Array} buf
