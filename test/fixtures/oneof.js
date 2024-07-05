@@ -10,7 +10,7 @@ function readEnvelopeField(tag, obj, pbf) {
 }
 export function writeEnvelope(obj, pbf) {
     if (obj.id) pbf.writeVarintField(1, obj.id);
-    if (obj.int) pbf.writeVarintField(2, obj.int);
-    if (obj.float) pbf.writeFloatField(3, obj.float);
-    if (obj.string) pbf.writeStringField(4, obj.string);
+    if (obj.int != null) pbf.writeVarintField(2, obj.int);
+    if (obj.float != null) pbf.writeFloatField(3, obj.float);
+    if (obj.string != null) pbf.writeStringField(4, obj.string);
 }
