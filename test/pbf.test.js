@@ -216,8 +216,9 @@ test('readPacked and writePacked', () => {
 });
 
 test('writePacked skips empty arrays', () => {
-    const buf = new Pbf();
-    buf.writePackedBoolean(1, []);
+    const pbf = new Pbf();
+    pbf.writePackedBoolean(1, []);
+    const buf = pbf.finish();
     assert.equal(buf.length, 0);
 });
 

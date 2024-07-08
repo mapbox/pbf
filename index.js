@@ -14,10 +14,10 @@ const PBF_FIXED32 = 5; // 32-bit: float, fixed32, sfixed32
 
 export default class Pbf {
     /**
-     * @param {Uint8Array | ArrayBuffer} buf
+     * @param {Uint8Array | ArrayBuffer} [buf]
      */
-    constructor(buf) {
-        this.buf = ArrayBuffer.isView && ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf || 0);
+    constructor(buf = new Uint8Array(16)) {
+        this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
         this.dataView = new DataView(this.buf.buffer);
         this.pos = 0;
         this.type = 0;
