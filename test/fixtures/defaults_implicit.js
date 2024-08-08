@@ -1,17 +1,54 @@
+/**
+ * @typedef {import("../../index.js").default} Pbf
+ */
 
+/** @enum {number} */
 export const MessageType = {
     "UNKNOWN": 0,
     "GREETING": 1
 };
 
+/**
+ * @typedef {object} CustomType
+ */
+
+/**
+ * @param {Pbf} pbf
+ * @param {number} [end]
+ * @returns {CustomType}
+ */
 export function readCustomType(pbf, end) {
     return pbf.readFields(readCustomTypeField, {}, end);
 }
 function readCustomTypeField(tag, obj, pbf) {
 }
+
+/**
+ * @param {CustomType} obj
+ * @param {Pbf} pbf
+ */
 export function writeCustomType(obj, pbf) {
 }
 
+/**
+ * @typedef {object} Envelope
+ * @property {MessageType} [type]
+ * @property {string} [name]
+ * @property {boolean} [flag]
+ * @property {number} [weight]
+ * @property {number} [id]
+ * @property {string} [tags]
+ * @property {number} [numbers]
+ * @property {bytes} [bytes]
+ * @property {CustomType} [custom]
+ * @property {MessageType} [types]
+ */
+
+/**
+ * @param {Pbf} pbf
+ * @param {number} [end]
+ * @returns {Envelope}
+ */
 export function readEnvelope(pbf, end) {
     return pbf.readFields(readEnvelopeField, {type: 0, name: "", flag: false, weight: 0, id: 0, tags: [], numbers: [], bytes: undefined, custom: undefined, types: []}, end);
 }
@@ -27,6 +64,11 @@ function readEnvelopeField(tag, obj, pbf) {
     else if (tag === 9) obj.custom = readCustomType(pbf, pbf.readVarint() + pbf.pos);
     else if (tag === 10) pbf.readPackedVarint(obj.types);
 }
+
+/**
+ * @param {Envelope} obj
+ * @param {Pbf} pbf
+ */
 export function writeEnvelope(obj, pbf) {
     if (obj.type) pbf.writeVarintField(1, obj.type);
     if (obj.name) pbf.writeStringField(2, obj.name);

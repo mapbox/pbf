@@ -4,13 +4,14 @@ import resolve from 'resolve-protobuf-schema';
 import {compileRaw} from '../compile.js';
 
 if (process.argv.length < 3) {
-    console.error('Usage: pbf [file.proto] [--no-read] [--no-write] [--legacy]');
+    console.error('Usage: pbf [file.proto] [--no-read] [--no-write] [--jsdoc] [--legacy]');
     process.exit(0);
 }
 
 const code = compileRaw(resolve.sync(process.argv[2]), {
     noRead: process.argv.indexOf('--no-read') >= 0,
     noWrite: process.argv.indexOf('--no-write') >= 0,
+    jsDoc: process.argv.indexOf('--jsdoc') >= 0,
     legacy: process.argv.indexOf('--legacy') >= 0
 });
 

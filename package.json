@@ -11,7 +11,7 @@
   "scripts": {
     "bench": "node bench/bench.js",
     "pretest": "eslint *.js compile.js test/*.js test/fixtures/*.js bin/pbf",
-    "test": "tsc && node --test",
+    "test": "tsc && node --test && tsc --allowJs --checkJs --noEmit --isolatedModules test/fixtures/*.js",
     "cov": "node --test --experimental-test-covetage",
     "build": "rollup -c",
     "prepublishOnly": "npm run test && npm run build"

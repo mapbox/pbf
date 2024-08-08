@@ -1,9 +1,27 @@
+/**
+ * @typedef {import("../../index.js").default} Pbf
+ */
 
+/** @enum {number} */
 export const MessageType = {
     "UNKNOWN": 0,
     "GREETING": 1
 };
 
+/**
+ * @typedef {object} Envelope
+ * @property {MessageType} [type]
+ * @property {string} [name]
+ * @property {boolean} [flag]
+ * @property {number} [weight]
+ * @property {number} [id]
+ */
+
+/**
+ * @param {Pbf} pbf
+ * @param {number} [end]
+ * @returns {Envelope}
+ */
 export function readEnvelope(pbf, end) {
     return pbf.readFields(readEnvelopeField, {type: 1, name: "test", flag: true, weight: 1.5, id: 1}, end);
 }
@@ -14,6 +32,11 @@ function readEnvelopeField(tag, obj, pbf) {
     else if (tag === 4) obj.weight = pbf.readFloat();
     else if (tag === 5) obj.id = pbf.readVarint(true);
 }
+
+/**
+ * @param {Envelope} obj
+ * @param {Pbf} pbf
+ */
 export function writeEnvelope(obj, pbf) {
     if (obj.type != null && obj.type !== 1) pbf.writeVarintField(1, obj.type);
     if (obj.name != null && obj.name !== "test") pbf.writeStringField(2, obj.name);

@@ -1,14 +1,33 @@
+/**
+ * @typedef {import("../../index.js").default} Pbf
+ */
 
+/**
+ * @typedef {object} Tile
+ * @property {Layer} [layers]
+ */
+
+/**
+ * @param {Pbf} pbf
+ * @param {number} [end]
+ * @returns {Tile}
+ */
 export function readTile(pbf, end) {
     return pbf.readFields(readTileField, {layers: []}, end);
 }
 function readTileField(tag, obj, pbf) {
     if (tag === 3) obj.layers.push(readTileLayer(pbf, pbf.readVarint() + pbf.pos));
 }
+
+/**
+ * @param {Tile} obj
+ * @param {Pbf} pbf
+ */
 export function writeTile(obj, pbf) {
     if (obj.layers) for (const item of obj.layers) pbf.writeMessage(3, writeTileLayer, item);
 }
 
+/** @enum {number} */
 export const TileGeomType = {
     "UNKNOWN": 0,
     "POINT": 1,
@@ -16,6 +35,22 @@ export const TileGeomType = {
     "POLYGON": 3
 };
 
+/**
+ * @typedef {object} TileValue
+ * @property {string} [string_value]
+ * @property {number} [float_value]
+ * @property {number} [double_value]
+ * @property {number} [int_value]
+ * @property {number} [uint_value]
+ * @property {number} [sint_value]
+ * @property {boolean} [bool_value]
+ */
+
+/**
+ * @param {Pbf} pbf
+ * @param {number} [end]
+ * @returns {TileValue}
+ */
 export function readTileValue(pbf, end) {
     return pbf.readFields(readTileValueField, {string_value: "", float_value: 0, double_value: 0, int_value: 0, uint_value: 0, sint_value: 0, bool_value: false}, end);
 }
@@ -28,6 +63,11 @@ function readTileValueField(tag, obj, pbf) {
     else if (tag === 6) obj.sint_value = pbf.readSVarint();
     else if (tag === 7) obj.bool_value = pbf.readBoolean();
 }
+
+/**
+ * @param {TileValue} obj
+ * @param {Pbf} pbf
+ */
 export function writeTileValue(obj, pbf) {
     if (obj.string_value) pbf.writeStringField(1, obj.string_value);
     if (obj.float_value) pbf.writeFloatField(2, obj.float_value);
@@ -38,6 +78,19 @@ export function writeTileValue(obj, pbf) {
     if (obj.bool_value) pbf.writeBooleanField(7, obj.bool_value);
 }
 
+/**
+ * @typedef {object} TileFeature
+ * @property {number} [id]
+ * @property {number} [tags]
+ * @property {GeomType} [type]
+ * @property {number} [geometry]
+ */
+
+/**
+ * @param {Pbf} pbf
+ * @param {number} [end]
+ * @returns {TileFeature}
+ */
 export function readTileFeature(pbf, end) {
     return pbf.readFields(readTileFeatureField, {id: 0, tags: [], type: 0, geometry: []}, end);
 }
@@ -47,6 +100,11 @@ function readTileFeatureField(tag, obj, pbf) {
     else if (tag === 3) obj.type = pbf.readVarint();
     else if (tag === 4) pbf.readPackedVarint(obj.geometry);
 }
+
+/**
+ * @param {TileFeature} obj
+ * @param {Pbf} pbf
+ */
 export function writeTileFeature(obj, pbf) {
     if (obj.id) pbf.writeVarintField(1, obj.id);
     if (obj.tags) pbf.writePackedVarint(2, obj.tags);
@@ -54,6 +112,21 @@ export function writeTileFeature(obj, pbf) {
     if (obj.geometry) pbf.writePackedVarint(4, obj.geometry);
 }
 
+/**
+ * @typedef {object} TileLayer
+ * @property {number} version
+ * @property {string} name
+ * @property {Feature} [features]
+ * @property {string} [keys]
+ * @property {Value} [values]
+ * @property {number} [extent]
+ */
+
+/**
+ * @param {Pbf} pbf
+ * @param {number} [end]
+ * @returns {TileLayer}
+ */
 export function readTileLayer(pbf, end) {
     return pbf.readFields(readTileLayerField, {version: 1, name: "", features: [], keys: [], values: [], extent: 4096}, end);
 }
@@ -65,6 +138,11 @@ function readTileLayerField(tag, obj, pbf) {
     else if (tag === 4) obj.values.push(readTileValue(pbf, pbf.readVarint() + pbf.pos));
     else if (tag === 5) obj.extent = pbf.readVarint();
 }
+
+/**
+ * @param {TileLayer} obj
+ * @param {Pbf} pbf
+ */
 export function writeTileLayer(obj, pbf) {
     if (obj.version != null && obj.version !== 1) pbf.writeVarintField(15, obj.version);
     if (obj.name) pbf.writeStringField(1, obj.name);
