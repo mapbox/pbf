@@ -11,15 +11,15 @@ export function readCustomType(pbf: any, end?: number): CustomType;
 export function writeCustomType(obj: CustomType, pbf: any): void;
 
 export interface Envelope {
-    type?: number;
-    name?: string;
-    flag?: boolean;
-    weight?: number;
-    id?: number;
+    type?: number | null;
+    name?: string | null;
+    flag?: boolean | null;
+    weight?: number | null;
+    id?: number | null;
     tags: string[];
     numbers: number[];
-    bytes?: Uint8Array;
-    custom?: CustomType;
+    bytes?: Uint8Array | null;
+    custom?: CustomType | null;
     types: number[];
 }
 

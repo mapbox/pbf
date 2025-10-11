@@ -1,21 +1,21 @@
 
 export interface TypeString {
-    int?: string;
-    long?: string;
-    boolVal?: boolean;
-    float?: string;
-    default_implicit?: string;
-    default_explicit?: string;
+    int?: string | null;
+    long?: string | null;
+    boolVal?: boolean | null;
+    float?: string | null;
+    default_implicit?: string | null;
+    default_explicit?: string | null;
 }
 
 export function readTypeString(pbf: any, end?: number): TypeString;
 export function writeTypeString(obj: TypeString, pbf: any): void;
 
 export interface TypeNotString {
-    int?: number;
-    long?: number;
-    boolVal?: boolean;
-    float?: number;
+    int?: number | null;
+    long?: number | null;
+    boolVal?: boolean | null;
+    float?: number | null;
 }
 
 export function readTypeNotString(pbf: any, end?: number): TypeNotString;

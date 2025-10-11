@@ -455,11 +455,13 @@ function writeTSMessage(ctx, options) {
 
         if (field.oneof) {
             // For oneof fields, make them optional and add the oneof indicator
-            code += `    ${field.name}?: ${tsType};\n`;
+            code += `    ${field.name}?: ${tsType} | null;\n`;
+        } else if (field.repeated) {
+            // Repeated fields are required arrays
+            code += `    ${field.name}: ${tsType};\n`;
         } else {
-            // Regular fields
-            const optional = field.repeated ? '' : '?';
-            code += `    ${field.name}${optional}: ${tsType};\n`;
+            // Regular optional fields
+            code += `    ${field.name}?: ${tsType} | null;\n`;
         }
     }
 

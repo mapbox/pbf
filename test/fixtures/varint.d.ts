@@ -1,9 +1,9 @@
 
 export interface Envelope {
-    int?: number;
-    uint?: number;
-    long?: number;
-    ulong?: number;
+    int?: number | null;
+    uint?: number | null;
+    long?: number | null;
+    ulong?: number | null;
 }
 
 export function readEnvelope(pbf: any, end?: number): Envelope;

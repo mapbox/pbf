@@ -1,9 +1,9 @@
 
 export interface Envelope {
-    id?: number;
-    int?: number;
-    float?: number;
-    string?: string;
+    id?: number | null;
+    int?: number | null;
+    float?: number | null;
+    string?: string | null;
     value?: "int" | "float" | "string";
 }
 

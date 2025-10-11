@@ -14,22 +14,22 @@ export const TileGeomType: {
 
 
 export interface TileValue {
-    string_value?: string;
-    float_value?: number;
-    double_value?: number;
-    int_value?: number;
-    uint_value?: number;
-    sint_value?: number;
-    bool_value?: boolean;
+    string_value?: string | null;
+    float_value?: number | null;
+    double_value?: number | null;
+    int_value?: number | null;
+    uint_value?: number | null;
+    sint_value?: number | null;
+    bool_value?: boolean | null;
 }
 
 export function readTileValue(pbf: any, end?: number): TileValue;
 export function writeTileValue(obj: TileValue, pbf: any): void;
 
 export interface TileFeature {
-    id?: number;
+    id?: number | null;
     tags: number[];
-    type?: number;
+    type?: number | null;
     geometry: number[];
 }
 
@@ -37,12 +37,12 @@ export function readTileFeature(pbf: any, end?: number): TileFeature;
 export function writeTileFeature(obj: TileFeature, pbf: any): void;
 
 export interface TileLayer {
-    version?: number;
-    name?: string;
+    version?: number | null;
+    name?: string | null;
     features: TileFeature[];
     keys: string[];
     values: TileValue[];
-    extent?: number;
+    extent?: number | null;
 }
 
 export function readTileLayer(pbf: any, end?: number): TileLayer;

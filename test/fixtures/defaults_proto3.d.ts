@@ -5,11 +5,11 @@ export const MessageType: {
 
 
 export interface Envelope {
-    type?: number;
-    name?: string;
-    flag?: boolean;
-    weight?: number;
-    id?: number;
+    type?: number | null;
+    name?: string | null;
+    flag?: boolean | null;
+    weight?: number | null;
+    id?: number | null;
 }
 
 export function readEnvelope(pbf: any, end?: number): Envelope;
