@@ -16,7 +16,7 @@ Here's a result from running a real-world benchmark on Node v6.5
 - **pbf** encode: 396ms, or 56 MB/s
 - **protocol-buffers** decode: 837ms, or 26 MB/s
 - **protocol-buffers** encode: 4197ms, or 5 MB/s
-- **JSON.parse**: 1540ms, or 50 MB/s (parsing an equivalent 77.5 MB JSON file)
+- **JSON.parse**: 1540ms, or 15 MB/s (parsing an equivalent 77.5 MB JSON file)
 - **JSON.stringify**: 607ms, or 49 MB/s
 
 ## Examples
