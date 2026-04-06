@@ -12,7 +12,7 @@
     "bench": "node bench/bench.js",
     "pretest": "eslint *.js compile.js test/*.js test/fixtures/*.js bin/pbf",
     "test": "tsc && node --test",
-    "cov": "node --test --experimental-test-covetage",
+    "cov": "node --test --experimental-test-coverage",
     "build": "rollup -c",
     "prepublishOnly": "npm run test && npm run build"
   },

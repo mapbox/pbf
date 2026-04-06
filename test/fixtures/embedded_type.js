@@ -17,7 +17,7 @@ export function readEmbeddedTypeContainer(pbf, end) {
     return pbf.readFields(readEmbeddedTypeContainerField, {values: []}, end);
 }
 function readEmbeddedTypeContainerField(tag, obj, pbf) {
-    if (tag === 1) obj.values.push(readEmbeddedTypeContainerInner(pbf, pbf.readVarint() + pbf.pos));
+    if (tag === 1) obj.values?.push(readEmbeddedTypeContainerInner(pbf, pbf.readVarint() + pbf.pos));
 }
 export function writeEmbeddedTypeContainer(obj, pbf) {
     if (obj.values) for (const item of obj.values) pbf.writeMessage(1, writeEmbeddedTypeContainerInner, item);

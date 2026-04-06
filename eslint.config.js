@@ -6,7 +6,8 @@ export default [
         files: ['**/*.js', 'bin/pbf'],
         rules: {
             'no-empty': 0,
-            'no-cond-assign': 0
+            'no-cond-assign': 0,
+            'quotes': ['error', 'single']
         }
     },
     {
@@ -16,7 +17,8 @@ export default [
             '@stylistic/js/quotes': 0,
             '@stylistic/js/semi': 0,
             '@stylistic/js/brace-style': 0,
-            'no-unused-vars': 0
+            'no-unused-vars': 0,
+            'quotes': 'off'
         }
-    }
+    },
 ];

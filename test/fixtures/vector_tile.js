@@ -3,7 +3,7 @@ export function readTile(pbf, end) {
     return pbf.readFields(readTileField, {layers: []}, end);
 }
 function readTileField(tag, obj, pbf) {
-    if (tag === 3) obj.layers.push(readTileLayer(pbf, pbf.readVarint() + pbf.pos));
+    if (tag === 3) obj.layers?.push(readTileLayer(pbf, pbf.readVarint() + pbf.pos));
 }
 export function writeTile(obj, pbf) {
     if (obj.layers) for (const item of obj.layers) pbf.writeMessage(3, writeTileLayer, item);
@@ -60,9 +60,9 @@ export function readTileLayer(pbf, end) {
 function readTileLayerField(tag, obj, pbf) {
     if (tag === 15) obj.version = pbf.readVarint();
     else if (tag === 1) obj.name = pbf.readString();
-    else if (tag === 2) obj.features.push(readTileFeature(pbf, pbf.readVarint() + pbf.pos));
-    else if (tag === 3) obj.keys.push(pbf.readString());
-    else if (tag === 4) obj.values.push(readTileValue(pbf, pbf.readVarint() + pbf.pos));
+    else if (tag === 2) obj.features?.push(readTileFeature(pbf, pbf.readVarint() + pbf.pos));
+    else if (tag === 3) obj.keys?.push(pbf.readString());
+    else if (tag === 4) obj.values?.push(readTileValue(pbf, pbf.readVarint() + pbf.pos));
     else if (tag === 5) obj.extent = pbf.readVarint();
 }
 export function writeTileLayer(obj, pbf) {

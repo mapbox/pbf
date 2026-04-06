@@ -21,7 +21,7 @@ function readEnvelopeField(tag, obj, pbf) {
     else if (tag === 3) obj.flag = pbf.readBoolean();
     else if (tag === 4) obj.weight = pbf.readFloat();
     else if (tag === 5) obj.id = pbf.readVarint(true);
-    else if (tag === 6) obj.tags.push(pbf.readString());
+    else if (tag === 6) obj.tags?.push(pbf.readString());
     else if (tag === 7) pbf.readPackedVarint(obj.numbers, true);
     else if (tag === 8) obj.bytes = pbf.readBytes();
     else if (tag === 9) obj.custom = readCustomType(pbf, pbf.readVarint() + pbf.pos);

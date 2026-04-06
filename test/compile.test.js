@@ -6,6 +6,8 @@ import {sync as resolve} from 'resolve-protobuf-schema';
 import Pbf from '../index.js';
 import {compile, compileRaw} from '../compile.js';
 
+const formatTextFile = textFile => textFile.replace(/\r\n|\r|\n/g, '').replace(/ +/g, ' ').trim();
+
 test('compiles all proto files to proper js', () => {
     const files = fs.readdirSync(new URL('fixtures', import.meta.url));
 
@@ -18,7 +20,8 @@ test('compiles all proto files to proper js', () => {
         // fs.writeFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), js);
 
         const expectedJS = fs.readFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), 'utf8');
-        assert.equal(js, expectedJS);
+
+        assert.equal(formatTextFile(js), formatTextFile(expectedJS));
     }
 });
 

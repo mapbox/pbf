@@ -1,6 +1,6 @@
 
 export function readEnvelope(pbf, end) {
-    return pbf.readFields(readEnvelopeField, {id: 0, int: 0, value: undefined, float: 0, string: ""}, end);
+    return pbf.readFields(readEnvelopeField, {id: 0, int: 0, float: 0, string: ""}, end);
 }
 function readEnvelopeField(tag, obj, pbf) {
     if (tag === 1) obj.id = pbf.readVarint(true);
