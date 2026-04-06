@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "isolatedModules": true,
+    "noEmit": true,
+  },
+  "include": [
+    "test/types/",
+    "test/fixtures/"
+  ],
+}

@@ -12,7 +12,7 @@ test('compiles all proto files to proper js', () => {
     for (const path of files) {
         if (!path.endsWith('.proto')) continue;
         const proto = resolve(new URL(`fixtures/${path}`, import.meta.url));
-        const js = compileRaw(proto, {dev: true});
+        const js = compileRaw(proto, {dev: true, jsDoc: true});
 
         // uncomment to update the fixtures
         // fs.writeFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), js);
