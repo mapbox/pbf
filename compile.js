@@ -1,3 +1,4 @@
+/* eslint @stylistic/indent: 0 */
 
 import {readFileSync} from 'fs';
 
