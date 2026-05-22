@@ -307,3 +307,85 @@ test('handles unsigned varint', () => {
     assert.equal(data.uint, Math.pow(2, 31));
     assert.equal(data.ulong, Math.pow(2, 63));
 });
+
+test('rejects proto schemas with invalid identifiers', () => {
+    const malicious = 'x"]; globalThis.__pbfPwned = true; ({["y';
+
+    const protoWithBadMessage = {
+        syntax: 3,
+        package: null,
+        imports: [],
+        enums: [],
+        messages: [{
+            name: malicious,
+            enums: [],
+            messages: [],
+            extensions: null,
+            fields: []
+        }]
+    };
+    assert.throws(() => compile(protoWithBadMessage), /Invalid protobuf identifier/);
+
+    const protoWithBadField = {
+        syntax: 3,
+        package: null,
+        imports: [],
+        enums: [],
+        messages: [{
+            name: 'Foo',
+            enums: [],
+            messages: [],
+            extensions: null,
+            fields: [{
+                name: malicious,
+                type: 'string',
+                tag: 1,
+                map: null,
+                oneof: null,
+                required: false,
+                repeated: false,
+                options: {}
+            }]
+        }]
+    };
+    assert.throws(() => compile(protoWithBadField), /Invalid protobuf identifier/);
+
+    const protoWithBadOneof = {
+        syntax: 3,
+        package: null,
+        imports: [],
+        enums: [],
+        messages: [{
+            name: 'Foo',
+            enums: [],
+            messages: [],
+            extensions: null,
+            fields: [{
+                name: 'a',
+                type: 'string',
+                tag: 1,
+                map: null,
+                oneof: malicious,
+                required: false,
+                repeated: false,
+                options: {}
+            }]
+        }]
+    };
+    assert.throws(() => compile(protoWithBadOneof), /Invalid protobuf identifier/);
+
+    const protoWithBadEnumValue = {
+        syntax: 3,
+        package: null,
+        imports: [],
+        enums: [{
+            name: 'E',
+            values: {[malicious]: {value: 0, options: {}}}
+        }],
+        messages: [],
+        extensions: null
+    };
+    assert.throws(() => compileRaw(protoWithBadEnumValue), /Invalid protobuf identifier/);
+
+    assert.equal(globalThis.__pbfPwned, undefined);
+});

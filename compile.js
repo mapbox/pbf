@@ -266,6 +266,16 @@ function getMapMessage(field) {
     };
 }
 
+// Protobuf identifier per spec: starts with a letter or underscore, followed by letters, digits, or underscores.
+// Validated to prevent code injection via untrusted .proto schemas, since names are interpolated into generated JS.
+const identifierRegex = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+function validateIdentifier(name) {
+    if (typeof name !== 'string' || !identifierRegex.test(name)) {
+        throw new Error(`Invalid protobuf identifier: ${JSON.stringify(name)}`);
+    }
+}
+
 function buildContext(proto, parent) {
     const obj = Object.create(parent);
     obj._proto = proto;
@@ -273,12 +283,25 @@ function buildContext(proto, parent) {
     obj._defaults = {};
 
     if (parent) {
+        validateIdentifier(proto.name);
         parent[proto.name] = obj;
 
         if (parent._name) {
             obj._name = parent._name + proto.name;
         } else {
             obj._name = proto.name;
+        }
+    }
+
+    if (proto.fields) {
+        for (const field of proto.fields) {
+            validateIdentifier(field.name);
+            if (field.oneof) validateIdentifier(field.oneof);
+        }
+    }
+    if (proto.values) {
+        for (const valueName of Object.keys(proto.values)) {
+            validateIdentifier(valueName);
         }
     }
 
