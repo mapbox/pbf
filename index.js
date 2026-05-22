@@ -346,7 +346,8 @@ export class PbfWriter {
         const len = buffer.length;
         this.writeVarint(len);
         this.realloc(len);
-        for (let i = 0; i < len; i++) this.buf[this.pos++] = buffer[i];
+        this.buf.set(buffer, this.pos);
+        this.pos += len;
     }
 
     /**

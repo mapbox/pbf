@@ -4,7 +4,7 @@ import {mkdirSync, existsSync, readFileSync, writeFileSync} from 'fs';
 import {join, dirname} from 'path';
 import {fileURLToPath} from 'url';
 import {readTile, writeTile} from '../test/fixtures/vector_tile.js';
-import Pbf from '../index.js';
+import {PbfReader, PbfWriter} from '../index.js';
 
 const token = process.env.ACCESS_TOKEN;
 if (!token) throw new Error('Missing ACCESS_TOKEN environment variable (Mapbox access token).');
@@ -31,11 +31,11 @@ function processTile(body) {
     numTiles++;
 
     let now = clock();
-    const tile = readTile(new Pbf(body));
+    const tile = readTile(new PbfReader(body));
     readTime += clock(now);
 
     now = clock();
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
     writeTile(tile, pbf);
     const buf = pbf.finish();
     writeTime += clock(now);
