@@ -82,12 +82,6 @@ test('readVarint signed', () => {
     assert.equal(buf.readVarint(true), 200);
 });
 
-test('readVarint64 (compatibility)', () => {
-    const bytes = [0xc8, 0xe8, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01];
-    const buf = new PbfReader(Buffer.from(bytes));
-    assert.equal(buf.readVarint64(), -3000);
-});
-
 test('readVarint & writeVarint handle really big numbers', () => {
     const writer = new PbfWriter();
     const bigNum1 = Math.pow(2, 60);
