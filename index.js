@@ -636,7 +636,7 @@ function makeRoomForExtraLength(startPos, len, pbf) {
 
     // if 1 byte isn't enough for encoding message length, shift the data to the right
     pbf.realloc(extraLen);
-    for (let i = pbf.pos - 1; i >= startPos; i--) pbf.buf[i + extraLen] = pbf.buf[i];
+    pbf.buf.copyWithin(startPos + extraLen, startPos, pbf.pos);
 }
 
 /**
