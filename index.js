@@ -96,9 +96,10 @@ export class PbfReader {
      */
     readVarint(isSigned) {
         const buf = this.buf;
-        let val, b;
+        const b0 = buf[this.pos++];
+        if (b0 < 0x80) return b0;
 
-        b = buf[this.pos++]; val  =  b & 0x7f;        if (b < 0x80) return val;
+        let val = b0 & 0x7f, b;
         b = buf[this.pos++]; val |= (b & 0x7f) << 7;  if (b < 0x80) return val;
         b = buf[this.pos++]; val |= (b & 0x7f) << 14; if (b < 0x80) return val;
         b = buf[this.pos++]; val |= (b & 0x7f) << 21; if (b < 0x80) return val;
@@ -283,6 +284,12 @@ export class PbfWriter {
     /** @param {number} val */
     writeVarint(val) {
         val = +val || 0;
+
+        if (val >= 0 && val < 0x80) {
+            if (this.pos >= this.length) this.realloc(1);
+            this.buf[this.pos++] = val;
+            return;
+        }
 
         if (val > 0xfffffff || val < 0) {
             writeBigVarint(val, this);
