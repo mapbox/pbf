@@ -12,11 +12,11 @@ const PBF_FIXED64 = 1; // 64-bit: double, fixed64, sfixed64
 const PBF_BYTES   = 2; // length-delimited: string, bytes, embedded messages, packed repeated fields
 const PBF_FIXED32 = 5; // 32-bit: float, fixed32, sfixed32
 
-export default class Pbf {
+export class PbfReader {
     /**
-     * @param {Uint8Array | ArrayBuffer} [buf]
+     * @param {Uint8Array | ArrayBuffer} buf
      */
-    constructor(buf = new Uint8Array(16)) {
+    constructor(buf) {
         this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
         this.dataView = new DataView(this.buf.buffer);
         this.pos = 0;
@@ -24,11 +24,9 @@ export default class Pbf {
         this.length = this.buf.length;
     }
 
-    // === READING =================================================================
-
     /**
      * @template T
-     * @param {(tag: number, result: T, pbf: Pbf) => void} readField
+     * @param {(tag: number, result: T, pbf: PbfReader) => void} readField
      * @param {T} result
      * @param {number} [end]
      */
@@ -48,7 +46,7 @@ export default class Pbf {
 
     /**
      * @template T
-     * @param {(tag: number, result: T, pbf: Pbf) => void} readField
+     * @param {(tag: number, result: T, pbf: PbfReader) => void} readField
      * @param {T} result
      */
     readMessage(readField, result) {
@@ -214,8 +212,18 @@ export default class Pbf {
         else if (type === PBF_FIXED64) this.pos += 8;
         else throw new Error(`Unimplemented type: ${type}`);
     }
+}
 
-    // === WRITING =================================================================
+export class PbfWriter {
+    /**
+     * @param {Uint8Array | ArrayBuffer} [buf]
+     */
+    constructor(buf = new Uint8Array(16)) {
+        this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
+        this.dataView = new DataView(this.buf.buffer);
+        this.pos = 0;
+        this.length = this.buf.length;
+    }
 
     /**
      * @param {number} tag
@@ -347,7 +355,7 @@ export default class Pbf {
 
     /**
      * @template T
-     * @param {(obj: T, pbf: Pbf) => void} fn
+     * @param {(obj: T, pbf: PbfWriter) => void} fn
      * @param {T} obj
      */
     writeRawMessage(fn, obj) {
@@ -369,7 +377,7 @@ export default class Pbf {
     /**
      * @template T
      * @param {number} tag
-     * @param {(obj: T, pbf: Pbf) => void} fn
+     * @param {(obj: T, pbf: PbfWriter) => void} fn
      * @param {T} obj
      */
     writeMessage(tag, fn, obj) {
@@ -528,12 +536,12 @@ export default class Pbf {
     writeBooleanField(tag, val) {
         this.writeVarintField(tag, +val);
     }
-};
+}
 
 /**
  * @param {number} l
  * @param {boolean | undefined} s
- * @param {Pbf} p
+ * @param {PbfReader} p
  */
 function readVarintRemainder(l, s, p) {
     const buf = p.buf;
@@ -560,7 +568,7 @@ function toNum(low, high, isSigned) {
 
 /**
  * @param {number} val
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writeBigVarint(val, pbf) {
     let low, high;
@@ -593,7 +601,7 @@ function writeBigVarint(val, pbf) {
 /**
  * @param {number} high
  * @param {number} low
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writeBigVarintLow(low, high, pbf) {
     pbf.buf[pbf.pos++] = low & 0x7f | 0x80; low >>>= 7;
@@ -605,7 +613,7 @@ function writeBigVarintLow(low, high, pbf) {
 
 /**
  * @param {number} high
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writeBigVarintHigh(high, pbf) {
     const lsb = (high & 0x07) << 4;
@@ -621,7 +629,7 @@ function writeBigVarintHigh(high, pbf) {
 /**
  * @param {number} startPos
  * @param {number} len
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function makeRoomForExtraLength(startPos, len, pbf) {
     const extraLen =
@@ -636,63 +644,63 @@ function makeRoomForExtraLength(startPos, len, pbf) {
 
 /**
  * @param {number[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedVarint(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);
 }
 /**
  * @param {number[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedSVarint(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeSVarint(arr[i]);
 }
 /**
  * @param {number[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedFloat(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeFloat(arr[i]);
 }
 /**
  * @param {number[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedDouble(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeDouble(arr[i]);
 }
 /**
  * @param {boolean[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedBoolean(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeBoolean(arr[i]);
 }
 /**
  * @param {number[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedFixed32(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeFixed32(arr[i]);
 }
 /**
  * @param {number[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedSFixed32(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeSFixed32(arr[i]);
 }
 /**
  * @param {number[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedFixed64(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);
 }
 /**
  * @param {number[]} arr
- * @param {Pbf} pbf
+ * @param {PbfWriter} pbf
  */
 function writePackedSFixed64(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]);

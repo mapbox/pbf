@@ -33,14 +33,14 @@ $ pbf example.proto > example.js
 Then read and write objects using the module like this:
 
 ```js
-import Pbf from 'pbf';
+import {PbfReader, PbfWriter} from 'pbf';
 import {readExample, writeExample} from './example.js';
 
 // read
-var obj = readExample(new Pbf(buffer));
+const obj = readExample(new PbfReader(buffer));
 
 // write
-const pbf = new Pbf();
+const pbf = new PbfWriter();
 writeExample(obj, pbf);
 const buffer = pbf.finish();
 ```
@@ -58,7 +58,7 @@ const {readExample, writeExample} = compile(proto);
 #### Custom Reading
 
 ```js
-var data = new Pbf(buffer).readFields(readData, {});
+const data = new PbfReader(buffer).readFields(readData, {});
 
 function readData(tag, data, pbf) {
     if (tag === 1) data.name = pbf.readString();
@@ -74,9 +74,9 @@ function readLayer(tag, layer, pbf) {
 #### Custom Writing
 
 ```js
-var pbf = new Pbf();
+const pbf = new PbfWriter();
 writeData(data, pbf);
-var buffer = pbf.finish();
+const buffer = pbf.finish();
 
 function writeData(data, pbf) {
     pbf.writeStringField(1, data.name);
@@ -94,18 +94,18 @@ function writeLayer(layer, pbf) {
 Install using NPM with `npm install pbf`, then import as a module:
 
 ```js
-import Pbf from 'pbf';
+import {PbfReader, PbfWriter} from 'pbf';
 ```
 
 Or use as a module directly in the browser with [jsDelivr](https://www.jsdelivr.com/esm):
 
 ```html
 <script type="module">
-    import Pbf from 'https://cdn.jsdelivr.net/npm/pbf/+esm';
+    import {PbfReader, PbfWriter} from 'https://cdn.jsdelivr.net/npm/pbf/+esm';
 </script>
 ```
 
-Alternatively, there's a browser bundle with a `Pbf` global variable:
+Alternatively, there's a browser bundle exposing a `Pbf` global with `PbfReader` and `PbfWriter` properties:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/pbf"></script>
@@ -113,17 +113,19 @@ Alternatively, there's a browser bundle with a `Pbf` global variable:
 
 ## API
 
-Create a `Pbf` object, optionally given a `Buffer` or `Uint8Array` as input data:
+The library exposes two classes: `PbfReader` for decoding and `PbfWriter` for encoding. Splitting them lets bundlers tree-shake the half you don't use.
+
+Create a `PbfReader` from a `Buffer` or `Uint8Array`:
 
 ```js
 // parse a pbf file from disk in Node
-const pbf = new Pbf(fs.readFileSync('data.pbf'));
+const pbf = new PbfReader(fs.readFileSync('data.pbf'));
 
 // parse a pbf file in a browser after an ajax request with responseType="arraybuffer"
-const pbf = new Pbf(new Uint8Array(xhr.response));
+const pbf = new PbfReader(new Uint8Array(xhr.response));
 ```
 
-`Pbf` object properties:
+Both classes expose the following properties:
 
 ```js
 pbf.length; // length of the underlying buffer
@@ -143,7 +145,7 @@ pbf.readFields((tag) => {
 ```
 
 It optionally accepts an object that will be passed to the reading function for easier construction of decoded data,
-and also passes the `Pbf` object as a third argument:
+and also passes the `PbfReader` object as a third argument:
 
 ```js
 const result = pbf.readFields(readField, {})
@@ -204,6 +206,12 @@ Packed reading methods:
 * `readPackedDouble(arr)`
 
 #### Writing
+
+Create a `PbfWriter` (optionally with a pre-allocated `Buffer` or `Uint8Array`):
+
+```js
+const pbf = new PbfWriter();
+```
 
 Write values:
 
@@ -287,7 +295,7 @@ The `--legacy` switch makes it generate a CommonJS module instead of ESM.
 `Pbf` will generate `read<Identifier>` and `write<Identifier>` functions for every message in the schema. For nested messages, their names will be concatenated — e.g. `Message` inside `Test` will produce `readTestMessage` and `writeTestMessage` functions.
 
 
-* `read(pbf)` - decodes an object from the given `Pbf` instance.
-* `write(obj, pbf)` - encodes an object into the given `Pbf` instance (usually empty).
+* `read(pbf)` - decodes an object from the given `PbfReader` instance.
+* `write(obj, pbf)` - encodes an object into the given `PbfWriter` instance (usually empty).
 
 The resulting code is clean and simple, so it's meant to be customized.

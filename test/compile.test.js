@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {sync as resolve} from 'resolve-protobuf-schema';
 
-import Pbf from '../index.js';
+import {PbfReader, PbfWriter} from '../index.js';
 import {compile, compileRaw} from '../compile.js';
 
 test('compiles all proto files to proper js', () => {
@@ -27,10 +27,10 @@ test('compiles vector tile proto', () => {
     const tileBuf = fs.readFileSync(new URL('fixtures/12665.vector.pbf', import.meta.url));
     const {readTile, writeTile} = compile(proto);
 
-    const tile = readTile(new Pbf(tileBuf));
+    const tile = readTile(new PbfReader(tileBuf));
     assert.equal(tile.layers.length, 11);
 
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
     writeTile(tile, pbf);
     const buf = pbf.finish();
     assert.equal(buf.length, 124946);
@@ -49,11 +49,11 @@ test('compiles packed proto', () => {
         types: [0, 1, 0, 1],
         value: [300, 400, 500]
     };
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
     writeNotPacked(original, pbf);
     const buf = pbf.finish();
 
-    const decompressed = readFalsePacked(new Pbf(buf));
+    const decompressed = readFalsePacked(new PbfReader(buf));
     assert.equal(buf.length, 17);
     assert.deepEqual(original, decompressed);
 });
@@ -66,11 +66,11 @@ test('reads packed with unpacked field', () => {
         types: [0, 1, 0, 1],
         value: [300, 400, 500]
     };
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
     writePacked(original, pbf);
     const buf = pbf.finish();
 
-    const decompressed = readFalsePacked(new Pbf(buf));
+    const decompressed = readFalsePacked(new PbfReader(buf));
     assert.equal(buf.length, 14);
     assert.deepEqual(original, decompressed);
 });
@@ -83,15 +83,15 @@ test('compiles packed proto3', () => {
         types: [0, 1, 0, 1],
         value: [300, 400, 500]
     };
-    let pbf = new Pbf();
+    let pbf = new PbfWriter();
     writeFalsePacked(original, pbf);
     const falsePackedBuf = pbf.finish();
 
-    pbf = new Pbf();
+    pbf = new PbfWriter();
     writeNotPacked(original, pbf);
     const notPackedBuf = pbf.finish();
 
-    const decompressed = readNotPacked(new Pbf(falsePackedBuf));
+    const decompressed = readNotPacked(new PbfReader(falsePackedBuf));
     assert.deepEqual(original, decompressed);
     assert.equal(notPackedBuf.length, 14);
     assert.ok(falsePackedBuf.length > notPackedBuf.length, 'Did not respect [packed=false]');
@@ -104,11 +104,11 @@ test('compiles packed with multi-byte tags', () => {
     const original = {
         value: [300, 400, 500]
     };
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
     writePacked(original, pbf);
     const buf = pbf.finish();
 
-    const decompressed = readPacked(new Pbf(buf));
+    const decompressed = readPacked(new PbfReader(buf));
     assert.equal(buf.length, 9);
     assert.deepEqual(original, decompressed);
 });
@@ -116,12 +116,12 @@ test('compiles packed with multi-byte tags', () => {
 test('compiles defaults', () => {
     const proto = resolve(new URL('fixtures/defaults.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
 
     writeEnvelope({}, pbf);
 
     const buf = pbf.finish();
-    const data = readEnvelope(new Pbf(buf));
+    const data = readEnvelope(new PbfReader(buf));
 
     assert.equal(buf.length, 0);
     assert.deepEqual(data, {
@@ -136,12 +136,12 @@ test('compiles defaults', () => {
 test('compiles proto3 ignoring defaults', () => {
     const proto = resolve(new URL('fixtures/defaults_proto3.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
 
     writeEnvelope({}, pbf);
 
     const buf = pbf.finish();
-    const data = readEnvelope(new Pbf(buf));
+    const data = readEnvelope(new PbfReader(buf));
 
     assert.equal(buf.length, 0);
 
@@ -167,11 +167,11 @@ test('compiles maps', () => {
         }
     };
 
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
     writeEnvelope(original, pbf);
     const buf = pbf.finish();
 
-    const decompressed = readEnvelope(new Pbf(buf));
+    const decompressed = readEnvelope(new PbfReader(buf));
 
     assert.deepEqual(original, decompressed);
 });
@@ -179,7 +179,7 @@ test('compiles maps', () => {
 test('does not write undefined or null values', () => {
     const proto = resolve(new URL('fixtures/embedded_type.proto', import.meta.url));
     const {writeEmbeddedType} = compile(proto);
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
 
     writeEmbeddedType({}, pbf);
 
@@ -195,11 +195,11 @@ test('does not write undefined or null values', () => {
 test('handles all implicit default values', () => {
     const proto = resolve(new URL('fixtures/defaults_implicit.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
 
     writeEnvelope({}, pbf);
     const buf = pbf.finish();
-    const data = readEnvelope(new Pbf(buf));
+    const data = readEnvelope(new PbfReader(buf));
 
     assert.equal(buf.length, 0);
 
@@ -218,28 +218,28 @@ test('handles all implicit default values', () => {
 test('sets oneof field name', () => {
     const proto = resolve(new URL('fixtures/oneof.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
-    let pbf = new Pbf();
+    let pbf = new PbfWriter();
 
     writeEnvelope({}, pbf);
-    let data = readEnvelope(new Pbf(pbf.finish()));
+    let data = readEnvelope(new PbfReader(pbf.finish()));
 
     assert.equal(data.value, undefined);
     assert.equal(data.id, 0);
 
-    pbf = new Pbf();
+    pbf = new PbfWriter();
     writeEnvelope({
         float: 1.5
     }, pbf);
-    data = readEnvelope(new Pbf(pbf.finish()));
+    data = readEnvelope(new PbfReader(pbf.finish()));
 
     assert.equal(data.value, 'float');
     assert.equal(data[data.value], 1.5);
 
-    pbf = new Pbf();
+    pbf = new PbfWriter();
     writeEnvelope({
         float: 0
     }, pbf);
-    data = readEnvelope(new Pbf(pbf.finish()));
+    data = readEnvelope(new PbfReader(pbf.finish()));
 
     assert.equal(data.value, 'float');
     assert.equal(data[data.value], 0);
@@ -248,7 +248,7 @@ test('sets oneof field name', () => {
 test('handles jstype=JS_STRING', () => {
     const proto = resolve(new URL('fixtures/type_string.proto', import.meta.url));
     const {readTypeString, writeTypeString, readTypeNotString} = compile(proto);
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
 
     writeTypeString({
         int: '-5',
@@ -258,7 +258,7 @@ test('handles jstype=JS_STRING', () => {
     }, pbf);
 
     const buf = pbf.finish();
-    let data = readTypeString(new Pbf(buf));
+    let data = readTypeString(new PbfReader(buf));
 
     assert.equal(data.int, '-5');
     assert.equal(data.long, '10000');
@@ -267,7 +267,7 @@ test('handles jstype=JS_STRING', () => {
     assert.equal(data.default_implicit, '0');
     assert.equal(data.default_explicit, '42');
 
-    data = readTypeNotString(new Pbf(buf));
+    data = readTypeNotString(new PbfReader(buf));
     assert.equal(data.int, -5);
     assert.equal(data.long, 10000);
     assert.equal(data.boolVal, true);
@@ -277,7 +277,7 @@ test('handles jstype=JS_STRING', () => {
 test('handles negative varint', () => {
     const proto = resolve(new URL('fixtures/varint.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
 
     writeEnvelope({
         int: -5,
@@ -285,7 +285,7 @@ test('handles negative varint', () => {
     }, pbf);
 
     const buf = pbf.finish();
-    const data = readEnvelope(new Pbf(buf));
+    const data = readEnvelope(new PbfReader(buf));
 
     assert.equal(data.int, -5);
     assert.equal(data.long, -10);
@@ -294,7 +294,7 @@ test('handles negative varint', () => {
 test('handles unsigned varint', () => {
     const proto = resolve(new URL('fixtures/varint.proto', import.meta.url));
     const {readEnvelope, writeEnvelope} = compile(proto);
-    const pbf = new Pbf();
+    const pbf = new PbfWriter();
 
     writeEnvelope({
         uint: Math.pow(2, 31),
@@ -302,7 +302,7 @@ test('handles unsigned varint', () => {
     }, pbf);
 
     const buf = pbf.finish();
-    const data = readEnvelope(new Pbf(buf));
+    const data = readEnvelope(new PbfReader(buf));
 
     assert.equal(data.uint, Math.pow(2, 31));
     assert.equal(data.ulong, Math.pow(2, 63));
