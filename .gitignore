@@ -3,3 +3,4 @@ dist
 *.log
 node_modules
 index.d.ts
+tile-cache

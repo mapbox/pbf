@@ -58,7 +58,6 @@
     "protobufjs": "^8.4.2",
     "protocol-buffers": "^5.0.0",
     "rollup": "^4.60.4",
-    "tile-stats-runner": "^1.0.0",
     "typescript": "^6.0.3"
   }
 }
