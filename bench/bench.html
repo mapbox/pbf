@@ -6,14 +6,14 @@
 </head>
 <body>
     <script type="module">
-        import Pbf from '../index.js';
-        import {readTile, writeTile} from './vector_tile.js';
+        import {PbfReader, PbfWriter} from '../index.js';
+        import {readTile, writeTile} from '../test/fixtures/vector_tile.js';
 
         function read(data) {
-            return readTile(new Pbf(data));
+            return readTile(new PbfReader(data));
         }
         function write(tile) {
-            var pbf = new Pbf();
+            const pbf = new PbfWriter();
             writeTile(tile, pbf);
             return pbf.finish();
         }

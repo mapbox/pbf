@@ -3,21 +3,44 @@ import {createHash} from 'crypto';
 import {mkdirSync, existsSync, readFileSync, writeFileSync} from 'fs';
 import {join, dirname} from 'path';
 import {fileURLToPath} from 'url';
+import protocolBuffers from 'protocol-buffers';
+import protobufjs from 'protobufjs';
 import {readTile, writeTile} from '../test/fixtures/vector_tile.js';
 import {PbfReader, PbfWriter} from '../index.js';
 
-const token = process.env.ACCESS_TOKEN;
-if (!token) throw new Error('Missing ACCESS_TOKEN environment variable (Mapbox access token).');
+const vtProtoUrl = new URL('../test/fixtures/vector_tile.proto', import.meta.url);
+const ProtocolBuffersTile = protocolBuffers(readFileSync(vtProtoUrl)).Tile;
+const ProtobufjsTile = protobufjs.loadSync(fileURLToPath(vtProtoUrl)).lookup('vector_tile.Tile');
 
 const tilesetId = 'mapbox.mapbox-streets-v8';
-const url = `https://api.mapbox.com/v4/${tilesetId}/{z}/{x}/{y}.mvt?access_token=${token}`;
+const urlTemplate = `https://api.mapbox.com/v4/${tilesetId}/{z}/{x}/{y}.mvt?access_token={token}`;
 
-let readTime = 0;
-let writeTime = 0;
+const libs = {
+    pbf: {
+        decode: body => readTile(new PbfReader(body)),
+        encode: (tile) => { const pbf = new PbfWriter(); writeTile(tile, pbf); return pbf.finish(); }
+    },
+    'protocol-buffers': {
+        decode: body => ProtocolBuffersTile.decode(body),
+        encode: tile => ProtocolBuffersTile.encode(tile)
+    },
+    'protobuf.js': {
+        decode: body => ProtobufjsTile.decode(body),
+        encode: tile => ProtobufjsTile.encode(tile).finish()
+    },
+    JSON: {
+        decode: body => JSON.parse(body),
+        encode: tile => JSON.stringify(tile)
+    }
+};
+
+const stats = {};
+for (const name of Object.keys(libs)) stats[name] = {read: 0, write: 0};
 let size = 0;
+let jsonSize = 0;
 let numTiles = 0;
 
-await runStats(url, processTile, showStats, {
+await runStats(urlTemplate, processTile, showStats, {
     width: 2880,
     height: 1800,
     minZoom: 0,
@@ -30,23 +53,47 @@ function processTile(body) {
     size += body.length;
     numTiles++;
 
-    let now = clock();
+    // pre-decode once with pbf to get a tile object usable as input for encoders
     const tile = readTile(new PbfReader(body));
-    readTime += clock(now);
+    const tileJSON = JSON.stringify(tile);
+    jsonSize += tileJSON.length;
+    const pbInput = ProtocolBuffersTile.decode(body);
+    const pbjsInput = ProtobufjsTile.decode(body);
 
-    now = clock();
-    const pbf = new PbfWriter();
-    writeTile(tile, pbf);
-    const buf = pbf.finish();
-    writeTime += clock(now);
+    const inputs = {
+        pbf: body,
+        'protocol-buffers': body,
+        'protobuf.js': body,
+        JSON: tileJSON
+    };
+    const encodeInputs = {
+        pbf: tile,
+        'protocol-buffers': pbInput,
+        'protobuf.js': pbjsInput,
+        JSON: tile
+    };
 
-    console.assert(buf);
+    for (const name of Object.keys(libs)) {
+        let now = clock();
+        libs[name].decode(inputs[name]);
+        stats[name].read += clock(now);
+
+        now = clock();
+        libs[name].encode(encodeInputs[name]);
+        stats[name].write += clock(now);
+    }
 }
 
 function showStats() {
-    console.log('%d tiles, %d KB total', numTiles, Math.round(size / 1024));
-    console.log('read time: %dms, or %d MB/s', Math.round(readTime), speed(readTime, size));
-    console.log('write time: %dms, or %d MB/s', Math.round(writeTime), speed(writeTime, size));
+    console.log('%d tiles, %d KB pbf / %d KB JSON', numTiles, Math.round(size / 1024), Math.round(jsonSize / 1024));
+    for (const name of Object.keys(libs)) {
+        const inSize = name === 'JSON' ? jsonSize : size;
+        const s = stats[name];
+        console.log('%s decode: %dms, %d MB/s   encode: %dms, %d MB/s',
+            name.padEnd(18),
+            Math.round(s.read), speed(s.read, inSize),
+            Math.round(s.write), speed(s.write, inSize));
+    }
 }
 
 function speed(time, size) {
@@ -61,7 +108,8 @@ function clock(start) {
 
 async function runStats(urlTemplate, onTile, onDone, options) {
     const cacheRoot = join(dirname(fileURLToPath(import.meta.url)), 'tile-cache');
-    const cachePath = join(cacheRoot, createHash('sha1').update(urlTemplate).digest('hex').slice(0, 8));
+    const cacheKey = urlTemplate.replace(/access_token=[^&]*/, '');
+    const cachePath = join(cacheRoot, createHash('sha1').update(cacheKey).digest('hex').slice(0, 8));
     mkdirSync(cachePath, {recursive: true});
 
     const tilePromises = [];
@@ -97,10 +145,14 @@ async function loadTile(z, x, y, urlTemplate, cachePath) {
         return readFileSync(tilePath);
     }
 
+    const token = process.env.MAPBOX_ACCESS_TOKEN;
+    if (!token) throw new Error('Missing MAPBOX_ACCESS_TOKEN environment variable.');
+
     const tileUrl = urlTemplate
         .replace('{x}', x)
         .replace('{y}', y)
-        .replace('{z}', z);
+        .replace('{z}', z)
+        .replace('{token}', token);
 
     const response = await fetch(tileUrl);
 

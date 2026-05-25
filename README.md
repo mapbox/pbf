@@ -7,17 +7,20 @@ A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decodi
 
 ## Performance
 
-This library is extremely fast — much faster than native `JSON.parse`/`JSON.stringify`
-and the [protocol-buffers](https://github.com/mafintosh/protocol-buffers) module.
-Here's a result from running a real-world benchmark on Node v6.5
-(decoding and encoding a sample of 439 vector tiles, 22.6 MB total):
+This library is fast — competitive with or faster than other JS protobuf implementations,
+and orders of magnitude smaller. Here's a result from a real-world benchmark on Node v26
+(decoding and encoding 439 Mapbox vector tiles, 37.5 MB total; the equivalent JSON is 136 MB):
 
-- **pbf** decode: 387ms, or 57 MB/s
-- **pbf** encode: 396ms, or 56 MB/s
-- **protocol-buffers** decode: 837ms, or 26 MB/s
-- **protocol-buffers** encode: 4197ms, or 5 MB/s
-- **JSON.parse**: 1540ms, or 15 MB/s (parsing an equivalent 77.5 MB JSON file)
-- **JSON.stringify**: 607ms, or 49 MB/s
+|                  | decode            | encode            |
+|------------------|-------------------|-------------------|
+| **pbf**          | 236ms, 159 MB/s   | 184ms, 204 MB/s   |
+| protocol-buffers | 293ms, 128 MB/s   | 618ms,  61 MB/s   |
+| protobuf.js      | 220ms, 170 MB/s   | 504ms,  74 MB/s   |
+| JSON             | 484ms, 281 MB/s   | 263ms, 516 MB/s   |
+
+`JSON` throughput is measured against the 136 MB JSON payload, not the 37.5 MB pbf payload —
+on the same data, pbf is ~2× faster to decode and ~2.5× faster to encode, and produces output
+roughly a quarter the size. See `bench/bench-tiles.js`.
 
 ## Examples
 
