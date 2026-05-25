@@ -6,21 +6,26 @@ import {sync as resolve} from 'resolve-protobuf-schema';
 import Pbf from '../index.js';
 import {compile, compileRaw} from '../compile.js';
 
-test('compiles all proto files to proper js', () => {
-    const files = fs.readdirSync(new URL('fixtures', import.meta.url));
+function testProtoCompilation(options, extension, description) {
+    test(description, () => {
+        const files = fs.readdirSync(new URL('fixtures', import.meta.url));
 
-    for (const path of files) {
-        if (!path.endsWith('.proto')) continue;
-        const proto = resolve(new URL(`fixtures/${path}`, import.meta.url));
-        const js = compileRaw(proto, {dev: true});
+        for (const path of files) {
+            if (!path.endsWith('.proto')) continue;
+            const proto = resolve(new URL(`fixtures/${path}`, import.meta.url));
+            const code = compileRaw(proto, options);
 
-        // uncomment to update the fixtures
-        // fs.writeFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), js);
+            // uncomment to update the fixtures
+            // fs.writeFileSync(new URL(`fixtures/${path}`.replace('.proto', extension), import.meta.url), code);
 
-        const expectedJS = fs.readFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), 'utf8');
-        assert.equal(js, expectedJS);
-    }
-});
+            const expectedCode = fs.readFileSync(new URL(`fixtures/${path}`.replace('.proto', extension), import.meta.url), 'utf8');
+            assert.equal(code, expectedCode);
+        }
+    });
+}
+
+testProtoCompilation({dev: true}, '.js', 'compiles all proto files to proper js');
+testProtoCompilation({dev: true, tsDeclarations: true}, '.d.ts', 'compiles all proto files to TypeScript declarations');
 
 test('compiles vector tile proto', () => {
     const proto = resolve(new URL('fixtures/vector_tile.proto', import.meta.url));

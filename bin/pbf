@@ -4,14 +4,21 @@ import resolve from 'resolve-protobuf-schema';
 import {compileRaw} from '../compile.js';
 
 if (process.argv.length < 3) {
-    console.error('Usage: pbf [file.proto] [--no-read] [--no-write] [--legacy]');
+    console.error('Usage: pbf [file.proto] [--no-read] [--no-write] [--legacy] [--ts-declarations]');
     process.exit(0);
 }
 
-const code = compileRaw(resolve.sync(process.argv[2]), {
+const options = {
     noRead: process.argv.indexOf('--no-read') >= 0,
     noWrite: process.argv.indexOf('--no-write') >= 0,
-    legacy: process.argv.indexOf('--legacy') >= 0
-});
+    legacy: process.argv.indexOf('--legacy') >= 0,
+    tsDeclarations: process.argv.indexOf('--ts-declarations') >= 0
+};
 
+if (options.legacy && options.tsDeclarations) {
+    console.error('--legacy cannot be used with --ts-declarations');
+    process.exit(1);
+}
+
+const code = compileRaw(resolve.sync(process.argv[2]), options);
 process.stdout.write(code);

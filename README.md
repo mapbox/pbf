@@ -278,11 +278,12 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 If installed globally, `pbf` provides a binary that compiles `proto` files into JavaScript modules. Usage:
 
 ```bash
-$ pbf <proto_path> [--no-write] [--no-read] [--legacy]
+$ pbf <proto_path> [--no-write] [--no-read] [--legacy] [--ts-declarations]
 ```
 
 The `--no-write` and `--no-read` switches remove corresponding code in the output.
 The `--legacy` switch makes it generate a CommonJS module instead of ESM.
+The `--ts-declarations` switch makes it generate TypeScript declarations (corresponding to the ESM output).
 
 `Pbf` will generate `read<Identifier>` and `write<Identifier>` functions for every message in the schema. For nested messages, their names will be concatenated — e.g. `Message` inside `Test` will produce `readTestMessage` and `writeTestMessage` functions.
 
