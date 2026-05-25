@@ -46,3 +46,16 @@ export function readPacked(pbf, end = pbf.length) {
 export function writePacked(obj, pbf) {
     if (obj.value) pbf.writePackedVarint(16, obj.value);
 }
+
+export function readPackedFixed(pbf, end = pbf.length) {
+    const obj = {value: []};
+    while (pbf.pos < end) {
+        const tag = pbf.readVarint(), field = tag >>> 3; pbf.type = tag & 7;
+        if (field === 1) pbf.readPackedSFixed64(obj.value);
+        else pbf.skip(tag);
+    }
+    return obj;
+}
+export function writePackedFixed(obj, pbf) {
+    if (obj.value) pbf.writePackedSFixed64(1, obj.value);
+}

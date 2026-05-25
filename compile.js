@@ -18,9 +18,7 @@ function writeContext(ctx, options) {
     if (ctx._proto.fields) code += writeMessage(ctx, options);
     if (ctx._proto.values) code += writeEnum(ctx, options);
 
-    for (let i = 0; i < ctx._children.length; i++) {
-        code += writeContext(ctx._children[i], options);
-    }
+    for (const child of ctx._children) code += writeContext(child, options);
     return code;
 }
 
@@ -39,42 +37,32 @@ function writeMessage(ctx, options) {
         code += `        const tag = pbf.readVarint(), field = tag >>> 3${hasPackable ? '; pbf.type = tag & 7' : ''};\n`;
 
         for (let i = 0; i < fields.length; i++) {
-            const field = fields[i];
-            const {type, name, repeated, oneof} = field;
-            const packable = willSupportPacked(ctx, field);
-
-            const wrap = body => (type === 'map' || oneof ? `{ ${body}; }` : `${body};`);
-            const oneofTail = oneof ? `; obj.${oneof} = ${JSON.stringify(name)}` : '';
-
-            const scalarRead = compileScalarFieldRead(ctx, field);
-            const body =
-                repeated && packable ? compilePackedRead(ctx, field) :
-                type === 'map' ? compileMapRead(scalarRead, name) :
-                repeated ? `obj.${name}.push(${scalarRead})` :
-                `obj.${name} = ${scalarRead}`;
-
-            code += `        ${i ? 'else ' : ''}if (field === ${field.tag}) ${wrap(body + oneofTail)}\n`;
+            code += `        ${i ? 'else ' : ''}if (field === ${fields[i].tag}) ${compileFieldRead(ctx, fields[i])}\n`;
         }
         code += `        ${fields.length ? 'else ' : ''}pbf.skip(tag);\n`;
-        code += `    }
-    return obj;
-}
-`;
+        code += '    }\n    return obj;\n}\n';
     }
 
     if (!options.noWrite) {
         const writeName = `write${ctx._name}`;
         code += `${writeFunctionExport(options, writeName)}function ${writeName}(obj, pbf) {\n`;
-        for (const field of fields) {
-            const writeCode =
-                field.repeated && !isPacked(field) ? compileRepeatedWrite(ctx, field) :
-                field.type === 'map' ? compileMapWrite(ctx, field) : compileFieldWrite(ctx, field, `obj.${field.name}`);
-            code += getDefaultWriteTest(ctx, field);
-            code += `${writeCode};\n`;
-        }
+        for (const field of fields) code += compileFieldWriteLine(ctx, field);
         code += '}\n';
     }
     return code;
+}
+
+function compileFieldWriteLine(ctx, field) {
+    const v = `obj.${field.name}`;
+    let body;
+    if (field.repeated && !isPacked(field)) {
+        body = `for (const item of ${v}) ${compileFieldWrite(ctx, field, 'item')}`;
+    } else if (field.type === 'map') {
+        body = `for (const key of Object.keys(${v})) ${compileFieldWrite(ctx, field, `{key, value: ${v}[key]}`)}`;
+    } else {
+        body = compileFieldWrite(ctx, field, v);
+    }
+    return `${getDefaultWriteTest(ctx, field)}${body};\n`;
 }
 
 function writeFunctionExport({legacy}, name) {
@@ -83,10 +71,7 @@ function writeFunctionExport({legacy}, name) {
 
 function getEnumValues(ctx) {
     const enums = {};
-    const ids = Object.keys(ctx._proto.values);
-    for (let i = 0; i < ids.length; i++) {
-        enums[ids[i]] = ctx._proto.values[ids[i]].value;
-    }
+    for (const [name, {value}] of Object.entries(ctx._proto.values)) enums[name] = value;
     return enums;
 }
 
@@ -100,7 +85,7 @@ function compileDest(ctx) {
     const props = new Set();
     for (const {name, oneof} of ctx._proto.fields) {
         props.add(`${name}: ${JSON.stringify(ctx._defaults[name])}`);
-        if (oneof) props.add(`${oneof  }: undefined`);
+        if (oneof) props.add(`${oneof}: undefined`);
     }
     return `{${[...props].join(', ')}}`;
 }
@@ -110,178 +95,103 @@ function isEnum(type) {
 }
 
 function getType(ctx, field) {
-    if (field.type === 'map') {
-        return ctx[getMapMessageName(field.tag)];
-    }
-    const path = field.type.split('.');
-    return path.reduce((ctx, name) => ctx && ctx[name], ctx);
+    if (field.type === 'map') return ctx[`${capitalize(field.name)}Entry`];
+    return field.type.split('.').reduce((ctx, name) => ctx && ctx[name], ctx);
 }
 
+function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function getSubMessage(ctx, field) {
+    const type = getType(ctx, field);
+    return type && type._proto.fields ? type : null;
+}
+
+// Map of scalar protobuf type → suffix used in read/write/readPacked method names,
+// plus per-type flags. `packable` matches the protobuf spec list of packable types.
+// `signed` is for varint types that take a signedness flag.
+const TYPES = {
+    string: {m: 'String'},
+    float: {m: 'Float', packable: true},
+    double: {m: 'Double', packable: true},
+    bool: {m: 'Boolean', packable: true},
+    uint32: {m: 'Varint', packable: true},
+    uint64: {m: 'Varint', packable: true},
+    int32: {m: 'Varint', packable: true, signed: true},
+    int64: {m: 'Varint', packable: true, signed: true},
+    sint32: {m: 'SVarint', packable: true},
+    sint64: {m: 'SVarint', packable: true},
+    fixed32: {m: 'Fixed32', packable: true},
+    fixed64: {m: 'Fixed64', packable: true},
+    sfixed32: {m: 'SFixed32', packable: true},
+    sfixed64: {m: 'SFixed64', packable: true},
+    bytes: {m: 'Bytes'},
+    enum: {m: 'Varint', packable: true},
+};
+
+function getMethod(ctx, field) {
+    if (isEnum(getType(ctx, field))) return TYPES.enum;
+    const t = TYPES[field.type];
+    if (!t) throw new Error(`Unexpected type: ${field.type}`);
+    return t;
+}
+
+// JS_STRING serializes numeric scalars as strings — applies to every TYPES entry except the non-numeric ones.
 function fieldShouldUseStringAsNumber(field) {
-    if (field.options.jstype === 'JS_STRING') {
-        switch (field.type) {
-        case 'float':
-        case 'double':
-        case 'uint32':
-        case 'uint64':
-        case 'int32':
-        case 'int64':
-        case 'sint32':
-        case 'sint64':
-        case 'fixed32':
-        case 'fixed64':
-        case 'sfixed32':
-        case 'sfixed64': return true;
-        default:         return false;
-        }
-    }
-    return false;
+    if (field.options.jstype !== 'JS_STRING') return false;
+    const t = TYPES[field.type];
+    return !!t && t.m !== 'String' && t.m !== 'Boolean' && t.m !== 'Bytes';
 }
 
 function compileScalarFieldRead(ctx, field) {
-    const type = getType(ctx, field);
-    if (type) {
-        if (type._proto.fields) return `read${type._name}(pbf, pbf.readVarint() + pbf.pos)`;
-        if (!isEnum(type)) throw new Error(`Unexpected type: ${type._name}`);
-    }
+    const sub = getSubMessage(ctx, field);
+    if (sub) return `read${sub._name}(pbf, pbf.readVarint() + pbf.pos)`;
 
-    const fieldType = isEnum(type) ? 'enum' : field.type;
-    const signed = fieldType === 'int32' || fieldType === 'int64' ? 'true' : '';
-    let suffix = `(${signed})`;
-
-    if (fieldShouldUseStringAsNumber(field)) {
-        suffix += '.toString()';
-    }
-
-    switch (fieldType) {
-    case 'string':   return `pbf.readString${suffix}`;
-    case 'float':    return `pbf.readFloat${suffix}`;
-    case 'double':   return `pbf.readDouble${suffix}`;
-    case 'bool':     return `pbf.readBoolean${suffix}`;
-    case 'enum':
-    case 'uint32':
-    case 'uint64':
-    case 'int32':
-    case 'int64':    return `pbf.readVarint${suffix}`;
-    case 'sint32':
-    case 'sint64':   return `pbf.readSVarint${suffix}`;
-    case 'fixed32':  return `pbf.readFixed32${suffix}`;
-    case 'fixed64':  return `pbf.readFixed64${suffix}`;
-    case 'sfixed32': return `pbf.readSFixed32${suffix}`;
-    case 'sfixed64': return `pbf.readSFixed64${suffix}`;
-    case 'bytes':    return `pbf.readBytes${suffix}`;
-    default:         throw new Error(`Unexpected type: ${field.type}`);
-    }
+    const {m, signed} = getMethod(ctx, field);
+    let suffix = `(${signed ? 'true' : ''})`;
+    if (fieldShouldUseStringAsNumber(field)) suffix += '.toString()';
+    return `pbf.read${m}${suffix}`;
 }
 
 function compilePackedRead(ctx, field) {
-    const type = getType(ctx, field);
-    const fieldType = isEnum(type) ? 'enum' : field.type;
-    const arr = `obj.${field.name}`;
+    const {m, signed} = getMethod(ctx, field);
+    return `pbf.readPacked${m}(obj.${field.name}${signed ? ', true' : ''})`;
+}
 
-    switch (fieldType) {
-    case 'float':    return `pbf.readPackedFloat(${arr})`;
-    case 'double':   return `pbf.readPackedDouble(${arr})`;
-    case 'bool':     return `pbf.readPackedBoolean(${arr})`;
-    case 'enum':
-    case 'uint32':
-    case 'uint64':   return `pbf.readPackedVarint(${arr})`;
-    case 'int32':
-    case 'int64':    return `pbf.readPackedVarint(${arr}, true)`;
-    case 'sint32':
-    case 'sint64':   return `pbf.readPackedSVarint(${arr})`;
-    case 'fixed32':  return `pbf.readPackedFixed32(${arr})`;
-    case 'fixed64':  return `pbf.readPackedFixed64(${arr})`;
-    case 'sfixed32': return `pbf.readPackedSFixed32(${arr})`;
-    case 'sfixed64': return `pbf.readPackedSFixed64(${arr})`;
-    default:         throw new Error(`Unexpected packed type: ${field.type}`);
+function compileFieldRead(ctx, field) {
+    const {type, name, repeated, oneof} = field;
+    let body;
+    if (repeated && willSupportPacked(ctx, field)) {
+        body = compilePackedRead(ctx, field);
+    } else {
+        const scalar = compileScalarFieldRead(ctx, field);
+        if (type === 'map') body = `const {key, value} = ${scalar}; obj.${name}[key] = value`;
+        else if (repeated) body = `obj.${name}.push(${scalar})`;
+        else body = `obj.${name} = ${scalar}`;
     }
+    if (oneof) body += `; obj.${oneof} = ${JSON.stringify(name)}`;
+    return type === 'map' || oneof ? `{ ${body}; }` : `${body};`;
 }
 
 function compileFieldWrite(ctx, field, name) {
-    let prefix = 'pbf.write';
-    if (isPacked(field)) prefix += 'Packed';
+    const sub = getSubMessage(ctx, field);
+    if (sub) return `pbf.writeMessage(${field.tag}, write${sub._name}, ${name})`;
 
     if (fieldShouldUseStringAsNumber(field)) {
-        if (field.type === 'float' || field.type === 'double') {
-            name = `parseFloat(${name})`;
-        } else {
-            name = `parseInt(${name}, 10)`;
-        }
+        name = field.type === 'float' || field.type === 'double' ?
+            `parseFloat(${name})` : `parseInt(${name}, 10)`;
     }
-    const postfix = `${isPacked(field) ? '' : 'Field'}(${field.tag}, ${name})`;
-
-    const type = getType(ctx, field);
-    if (type) {
-        if (type._proto.fields) return `${prefix}Message(${field.tag}, write${type._name}, ${name})`;
-        if (type._proto.values) return `${prefix}Varint${postfix}`;
-        throw new Error(`Unexpected type: ${type._name}`);
-    }
-
-    switch (field.type) {
-    case 'string':   return `${prefix}String${postfix}`;
-    case 'float':    return `${prefix}Float${postfix}`;
-    case 'double':   return `${prefix}Double${postfix}`;
-    case 'bool':     return `${prefix}Boolean${postfix}`;
-    case 'enum':
-    case 'uint32':
-    case 'uint64':
-    case 'int32':
-    case 'int64':    return `${prefix}Varint${postfix}`;
-    case 'sint32':
-    case 'sint64':   return `${prefix}SVarint${postfix}`;
-    case 'fixed32':  return `${prefix}Fixed32${postfix}`;
-    case 'fixed64':  return `${prefix}Fixed64${postfix}`;
-    case 'sfixed32': return `${prefix}SFixed32${postfix}`;
-    case 'sfixed64': return `${prefix}SFixed64${postfix}`;
-    case 'bytes':    return `${prefix}Bytes${postfix}`;
-    default:         throw new Error(`Unexpected type: ${field.type}`);
-    }
-}
-
-function compileMapRead(readCode, name) {
-    return `const {key, value} = ${readCode}; obj.${name}[key] = value`;
-}
-
-function compileRepeatedWrite(ctx, field) {
-    return `for (const item of obj.${field.name}) ${
-        compileFieldWrite(ctx, field, 'item')}`;
-}
-
-function compileMapWrite(ctx, field) {
-    const name = `obj.${field.name}`;
-
-    return `for (const key of Object.keys(${name})) ${
-        compileFieldWrite(ctx, field, `{key, value: ${name}[key]}`)}`;
-}
-
-function getMapMessageName(tag) {
-    return `_FieldEntry${tag}`;
-}
-
-function getMapField(name, type, tag) {
-    return {
-        name,
-        type,
-        tag,
-        map: null,
-        oneof: null,
-        required: false,
-        repeated: false,
-        options: {}
-    };
+    const {m} = getMethod(ctx, field);
+    const fn = isPacked(field) ? `writePacked${m}` : `write${m}Field`;
+    return `pbf.${fn}(${field.tag}, ${name})`;
 }
 
 function getMapMessage(field) {
+    const f = (name, type, tag) => ({name, type, tag, oneof: null, repeated: false, options: {}});
     return {
-        name: getMapMessageName(field.tag),
-        enums: [],
-        messages: [],
-        extensions: null,
-        fields: [
-            getMapField('key', field.map.from, 1),
-            getMapField('value', field.map.to, 2)
-        ]
+        name: `${capitalize(field.name)}Entry`,
+        fields: [f('key', field.map.from, 1), f('value', field.map.to, 2)],
     };
 }
 
@@ -304,154 +214,77 @@ function buildContext(proto, parent) {
     if (parent) {
         validateIdentifier(proto.name);
         parent[proto.name] = obj;
-
-        if (parent._name) {
-            obj._name = parent._name + proto.name;
-        } else {
-            obj._name = proto.name;
-        }
+        obj._name = (parent._name ?? '') + proto.name;
     }
 
-    if (proto.fields) {
-        for (const field of proto.fields) {
-            validateIdentifier(field.name);
-            if (field.oneof) validateIdentifier(field.oneof);
-        }
+    for (const field of proto.fields ?? []) {
+        validateIdentifier(field.name);
+        if (field.oneof) validateIdentifier(field.oneof);
     }
-    if (proto.values) {
-        for (const valueName of Object.keys(proto.values)) {
-            validateIdentifier(valueName);
-        }
-    }
+    for (const valueName of Object.keys(proto.values ?? {})) validateIdentifier(valueName);
 
-    for (let i = 0; proto.enums && i < proto.enums.length; i++) {
-        obj._children.push(buildContext(proto.enums[i], obj));
-    }
-
-    for (let i = 0; proto.messages && i < proto.messages.length; i++) {
-        obj._children.push(buildContext(proto.messages[i], obj));
-    }
-
-    for (let i = 0; proto.fields && i < proto.fields.length; i++) {
-        if (proto.fields[i].type === 'map') {
-            obj._children.push(buildContext(getMapMessage(proto.fields[i]), obj));
-        }
+    for (const e of proto.enums ?? []) obj._children.push(buildContext(e, obj));
+    for (const m of proto.messages ?? []) obj._children.push(buildContext(m, obj));
+    for (const f of proto.fields ?? []) {
+        if (f.type === 'map') obj._children.push(buildContext(getMapMessage(f), obj));
     }
 
     return obj;
 }
 
 function getDefaultValue(field, value) {
-    // Defaults not supported for repeated fields
-    if (field.repeated) return [];
-    let convertToStringIfNeeded = function (val) { return val; };
-    if (fieldShouldUseStringAsNumber(field)) {
-        convertToStringIfNeeded = function (val) { return val.toString(); };
-    }
+    if (field.repeated) return []; // defaults not supported for repeated fields
+    if (field.type === 'map') return {};
 
-    switch (field.type) {
-    case 'float':
-    case 'double':   return convertToStringIfNeeded(value ? parseFloat(value) : 0);
-    case 'uint32':
-    case 'uint64':
-    case 'int32':
-    case 'int64':
-    case 'sint32':
-    case 'sint64':
-    case 'fixed32':
-    case 'fixed64':
-    case 'sfixed32':
-    case 'sfixed64': return convertToStringIfNeeded(value ? parseInt(value, 10) : 0);
-    case 'string':   return value || '';
-    case 'bool':     return value === 'true';
-    case 'map':      return {};
-    default:         return undefined;
-    }
+    const t = TYPES[field.type];
+    if (!t || t.m === 'Bytes') return undefined; // unknown / message / bytes
+    if (t.m === 'String') return value || '';
+    if (t.m === 'Boolean') return value === 'true';
+
+    const isFloat = t.m === 'Float' || t.m === 'Double';
+    const num = value ? (isFloat ? parseFloat(value) : parseInt(value, 10)) : 0;
+    return fieldShouldUseStringAsNumber(field) ? num.toString() : num;
 }
 
 function willSupportPacked(ctx, field) {
-    const fieldType = isEnum(getType(ctx, field)) ? 'enum' : field.type;
-
-    switch (field.repeated && fieldType) {
-    case 'float':
-    case 'double':
-    case 'uint32':
-    case 'uint64':
-    case 'int32':
-    case 'int64':
-    case 'sint32':
-    case 'sint64':
-    case 'fixed32':
-    case 'fixed64':
-    case 'sfixed32':
-    case 'enum':
-    case 'bool': return true;
-    }
-
-    return false;
+    if (!field.repeated || getSubMessage(ctx, field)) return false;
+    return !!getMethod(ctx, field).packable;
 }
 
 function setPackedOption(ctx, field, syntax) {
-    // No default packed in older protobuf versions
-    if (syntax < 3) return;
-
-    // Packed option already set
-    if (field.options.packed !== undefined) return;
-
-    // Not a packed field type
-    if (!willSupportPacked(ctx, field)) return;
-
-    field.options.packed = 'true';
+    // proto3 packs eligible repeated fields by default; older syntax requires explicit [packed=true].
+    if (syntax >= 3 && field.options.packed === undefined && willSupportPacked(ctx, field)) {
+        field.options.packed = 'true';
+    }
 }
 
 function setDefaultValue(ctx, field, syntax) {
-    const options = field.options;
     const type = getType(ctx, field);
-    const enumValues = type && type._proto.values && getEnumValues(type);
-
     // Proto3 does not support overriding defaults
-    const explicitDefault = syntax < 3 ? options.default : undefined;
+    const explicitDefault = syntax < 3 ? field.options.default : undefined;
 
-    // Set default for enum values
-    if (enumValues && !field.repeated) {
-        ctx._defaults[field.name] = enumValues[explicitDefault] || 0;
-
-    } else {
-        ctx._defaults[field.name] = getDefaultValue(field, explicitDefault);
-    }
+    ctx._defaults[field.name] = isEnum(type) && !field.repeated ?
+        (getEnumValues(type)[explicitDefault] || 0) :
+        getDefaultValue(field, explicitDefault);
 }
 
 function buildDefaults(ctx, syntax) {
-    const proto = ctx._proto;
-
-    for (let i = 0; i < ctx._children.length; i++) {
-        buildDefaults(ctx._children[i], syntax);
+    for (const child of ctx._children) buildDefaults(child, syntax);
+    for (const field of ctx._proto.fields ?? []) {
+        setPackedOption(ctx, field, syntax);
+        setDefaultValue(ctx, field, syntax);
     }
-
-    if (proto.fields) {
-        for (let i = 0; i < proto.fields.length; i++) {
-            setPackedOption(ctx, proto.fields[i], syntax);
-            setDefaultValue(ctx, proto.fields[i], syntax);
-        }
-    }
-
     return ctx;
 }
 
 function getDefaultWriteTest(ctx, field) {
     const def = ctx._defaults[field.name];
-    const type = getType(ctx, field);
     let code = `    if (obj.${field.name}`;
 
-    if (!field.repeated && (!type || !type._proto.fields)) {
-        if (def === undefined || def || field.oneof) {
-            code += ' != null';
-        }
-        if (def) {
-            code += ` && obj.${field.name} !== ${JSON.stringify(def)}`;
-        }
+    if (!field.repeated && !getSubMessage(ctx, field)) {
+        if (def === undefined || def || field.oneof) code += ' != null';
+        if (def) code += ` && obj.${field.name} !== ${JSON.stringify(def)}`;
     }
-
     return `${code}) `;
 }
 

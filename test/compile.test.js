@@ -14,10 +14,10 @@ test('compiles all proto files to proper js', () => {
         const proto = resolve(new URL(`fixtures/${path}`, import.meta.url));
         const js = compileRaw(proto, {dev: true});
 
-        // uncomment to update the fixtures
-        // fs.writeFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), js);
+        const jsPath = new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url);
+        if (process.env.UPDATE) fs.writeFileSync(jsPath, js);
 
-        const expectedJS = fs.readFileSync(new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url), 'utf8');
+        const expectedJS = fs.readFileSync(jsPath, 'utf8');
         assert.equal(js, expectedJS);
     }
 });
@@ -111,6 +111,20 @@ test('compiles packed with multi-byte tags', () => {
     const decompressed = readPacked(new PbfReader(buf));
     assert.equal(buf.length, 9);
     assert.deepEqual(original, decompressed);
+});
+
+test('compiles packed sfixed64', () => {
+    const proto = resolve(new URL('fixtures/packed_proto3.proto', import.meta.url));
+    const {readPackedFixed, writePackedFixed} = compile(proto);
+
+    const original = {value: [1, -2, 3000000000, -3000000000]};
+    const pbf = new PbfWriter();
+    writePackedFixed(original, pbf);
+    const buf = pbf.finish();
+
+    // length-delimited (wire-type 2) packed form: 1 byte tag + 1 byte length + 4*8 bytes payload
+    assert.equal(buf.length, 34);
+    assert.deepEqual(readPackedFixed(new PbfReader(buf)), original);
 });
 
 test('compiles defaults', () => {

@@ -20,3 +20,6 @@ message FalsePacked {
 message Packed {
   repeated int32 value = 16;
 }
+message PackedFixed {
+  repeated sfixed64 value = 1;
+}
