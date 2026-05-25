@@ -1,12 +1,15 @@
 
-export function readEnvelope(pbf, end) {
-    return pbf.readFields(readEnvelopeField, {int: 0, uint: 0, long: 0, ulong: 0}, end);
-}
-function readEnvelopeField(tag, obj, pbf) {
-    if (tag === 1) obj.int = pbf.readVarint(true);
-    else if (tag === 2) obj.uint = pbf.readVarint();
-    else if (tag === 3) obj.long = pbf.readVarint(true);
-    else if (tag === 4) obj.ulong = pbf.readVarint();
+export function readEnvelope(pbf, end = pbf.length) {
+    const obj = {int: 0, uint: 0, long: 0, ulong: 0};
+    while (pbf.pos < end) {
+        const tag = pbf.readVarint(), field = tag >>> 3;
+        if (field === 1) obj.int = pbf.readVarint(true);
+        else if (field === 2) obj.uint = pbf.readVarint();
+        else if (field === 3) obj.long = pbf.readVarint(true);
+        else if (field === 4) obj.ulong = pbf.readVarint();
+        else pbf.skip(tag);
+    }
+    return obj;
 }
 export function writeEnvelope(obj, pbf) {
     if (obj.int) pbf.writeVarintField(1, obj.int);

@@ -4,28 +4,34 @@ export const MessageType = {
     "GREETING": 1
 };
 
-export function readCustomType(pbf, end) {
-    return pbf.readFields(readCustomTypeField, {}, end);
-}
-function readCustomTypeField(tag, obj, pbf) {
+export function readCustomType(pbf, end = pbf.length) {
+    const obj = {};
+    while (pbf.pos < end) {
+        const tag = pbf.readVarint(), field = tag >>> 3;
+        pbf.skip(tag);
+    }
+    return obj;
 }
 export function writeCustomType(obj, pbf) {
 }
 
-export function readEnvelope(pbf, end) {
-    return pbf.readFields(readEnvelopeField, {type: 0, name: "", flag: false, weight: 0, id: 0, tags: [], numbers: [], bytes: undefined, custom: undefined, types: []}, end);
-}
-function readEnvelopeField(tag, obj, pbf) {
-    if (tag === 1) obj.type = pbf.readVarint();
-    else if (tag === 2) obj.name = pbf.readString();
-    else if (tag === 3) obj.flag = pbf.readBoolean();
-    else if (tag === 4) obj.weight = pbf.readFloat();
-    else if (tag === 5) obj.id = pbf.readVarint(true);
-    else if (tag === 6) obj.tags.push(pbf.readString());
-    else if (tag === 7) pbf.readPackedVarint(obj.numbers, true);
-    else if (tag === 8) obj.bytes = pbf.readBytes();
-    else if (tag === 9) obj.custom = readCustomType(pbf, pbf.readVarint() + pbf.pos);
-    else if (tag === 10) pbf.readPackedVarint(obj.types);
+export function readEnvelope(pbf, end = pbf.length) {
+    const obj = {type: 0, name: "", flag: false, weight: 0, id: 0, tags: [], numbers: [], bytes: undefined, custom: undefined, types: []};
+    while (pbf.pos < end) {
+        const tag = pbf.readVarint(), field = tag >>> 3; pbf.type = tag & 7;
+        if (field === 1) obj.type = pbf.readVarint();
+        else if (field === 2) obj.name = pbf.readString();
+        else if (field === 3) obj.flag = pbf.readBoolean();
+        else if (field === 4) obj.weight = pbf.readFloat();
+        else if (field === 5) obj.id = pbf.readVarint(true);
+        else if (field === 6) obj.tags.push(pbf.readString());
+        else if (field === 7) pbf.readPackedVarint(obj.numbers, true);
+        else if (field === 8) obj.bytes = pbf.readBytes();
+        else if (field === 9) obj.custom = readCustomType(pbf, pbf.readVarint() + pbf.pos);
+        else if (field === 10) pbf.readPackedVarint(obj.types);
+        else pbf.skip(tag);
+    }
+    return obj;
 }
 export function writeEnvelope(obj, pbf) {
     if (obj.type) pbf.writeVarintField(1, obj.type);

@@ -4,15 +4,18 @@ export const MessageType = {
     "GREETING": 1
 };
 
-export function readEnvelope(pbf, end) {
-    return pbf.readFields(readEnvelopeField, {type: 0, name: "", flag: false, weight: 0, id: 0}, end);
-}
-function readEnvelopeField(tag, obj, pbf) {
-    if (tag === 1) obj.type = pbf.readVarint();
-    else if (tag === 2) obj.name = pbf.readString();
-    else if (tag === 3) obj.flag = pbf.readBoolean();
-    else if (tag === 4) obj.weight = pbf.readFloat();
-    else if (tag === 5) obj.id = pbf.readVarint(true);
+export function readEnvelope(pbf, end = pbf.length) {
+    const obj = {type: 0, name: "", flag: false, weight: 0, id: 0};
+    while (pbf.pos < end) {
+        const tag = pbf.readVarint(), field = tag >>> 3;
+        if (field === 1) obj.type = pbf.readVarint();
+        else if (field === 2) obj.name = pbf.readString();
+        else if (field === 3) obj.flag = pbf.readBoolean();
+        else if (field === 4) obj.weight = pbf.readFloat();
+        else if (field === 5) obj.id = pbf.readVarint(true);
+        else pbf.skip(tag);
+    }
+    return obj;
 }
 export function writeEnvelope(obj, pbf) {
     if (obj.type) pbf.writeVarintField(1, obj.type);

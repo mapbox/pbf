@@ -31,33 +31,35 @@ function writeMessage(ctx, options) {
 
     if (!options.noRead) {
         const readName = `read${ctx._name}`;
-        code +=
-`${writeFunctionExport(options, readName)}function ${readName}(pbf, end) {
-    return pbf.readFields(${readName}Field, ${compileDest(ctx)}, end);
-}
-function ${readName}Field(tag, obj, pbf) {
-`;
+        const hasPackable = fields.some(f => f.repeated && willSupportPacked(ctx, f));
+
+        code += `${writeFunctionExport(options, readName)}function ${readName}(pbf, end = pbf.length) {\n`;
+        code += `    const obj = ${compileDest(ctx)};\n`;
+        code += '    while (pbf.pos < end) {\n';
+        code += `        const tag = pbf.readVarint(), field = tag >>> 3${hasPackable ? '; pbf.type = tag & 7' : ''};\n`;
+
         for (let i = 0; i < fields.length; i++) {
             const field = fields[i];
-            const {type, name, repeated, oneof, tag} = field;
-            const readCode = compileFieldRead(ctx, field);
-            const packed = willSupportPacked(ctx, field);
+            const {type, name, repeated, oneof} = field;
+            const packable = willSupportPacked(ctx, field);
 
-            let fieldRead =
-                type === 'map' ? compileMapRead(readCode, name) :
-                repeated ? (packed ? readCode : `obj.${name}.push(${readCode})`) :
-                `obj.${name} = ${readCode}`;
+            const wrap = body => (type === 'map' || oneof ? `{ ${body}; }` : `${body};`);
+            const oneofTail = oneof ? `; obj.${oneof} = ${JSON.stringify(name)}` : '';
 
-            if (oneof) {
-                fieldRead += `; obj.${oneof} = ${JSON.stringify(name)}`;
-            }
+            const scalarRead = compileScalarFieldRead(ctx, field);
+            const body =
+                repeated && packable ? compilePackedRead(ctx, field) :
+                type === 'map' ? compileMapRead(scalarRead, name) :
+                repeated ? `obj.${name}.push(${scalarRead})` :
+                `obj.${name} = ${scalarRead}`;
 
-            fieldRead = type === 'map' || oneof ? `{ ${fieldRead}; }` : `${fieldRead};`;
-
-            code +=
-`    ${i ? 'else ' : ''}if (tag === ${tag}) ${fieldRead}\n`;
+            code += `        ${i ? 'else ' : ''}if (field === ${field.tag}) ${wrap(body + oneofTail)}\n`;
         }
-        code += '}\n';
+        code += `        ${fields.length ? 'else ' : ''}pbf.skip(tag);\n`;
+        code += `    }
+    return obj;
+}
+`;
     }
 
     if (!options.noWrite) {
@@ -136,7 +138,7 @@ function fieldShouldUseStringAsNumber(field) {
     return false;
 }
 
-function compileFieldRead(ctx, field) {
+function compileScalarFieldRead(ctx, field) {
     const type = getType(ctx, field);
     if (type) {
         if (type._proto.fields) return `read${type._name}(pbf, pbf.readVarint() + pbf.pos)`;
@@ -144,38 +146,55 @@ function compileFieldRead(ctx, field) {
     }
 
     const fieldType = isEnum(type) ? 'enum' : field.type;
-
-    let prefix = 'pbf.read';
     const signed = fieldType === 'int32' || fieldType === 'int64' ? 'true' : '';
     let suffix = `(${signed})`;
-
-    if (willSupportPacked(ctx, field)) {
-        prefix += 'Packed';
-        suffix = `(obj.${field.name}${signed ? `, ${signed}` : ''})`;
-    }
 
     if (fieldShouldUseStringAsNumber(field)) {
         suffix += '.toString()';
     }
 
     switch (fieldType) {
-    case 'string':   return `${prefix}String${suffix}`;
-    case 'float':    return `${prefix}Float${suffix}`;
-    case 'double':   return `${prefix}Double${suffix}`;
-    case 'bool':     return `${prefix}Boolean${suffix}`;
+    case 'string':   return `pbf.readString${suffix}`;
+    case 'float':    return `pbf.readFloat${suffix}`;
+    case 'double':   return `pbf.readDouble${suffix}`;
+    case 'bool':     return `pbf.readBoolean${suffix}`;
     case 'enum':
     case 'uint32':
     case 'uint64':
     case 'int32':
-    case 'int64':    return `${prefix}Varint${suffix}`;
+    case 'int64':    return `pbf.readVarint${suffix}`;
     case 'sint32':
-    case 'sint64':   return `${prefix}SVarint${suffix}`;
-    case 'fixed32':  return `${prefix}Fixed32${suffix}`;
-    case 'fixed64':  return `${prefix}Fixed64${suffix}`;
-    case 'sfixed32': return `${prefix}SFixed32${suffix}`;
-    case 'sfixed64': return `${prefix}SFixed64${suffix}`;
-    case 'bytes':    return `${prefix}Bytes${suffix}`;
+    case 'sint64':   return `pbf.readSVarint${suffix}`;
+    case 'fixed32':  return `pbf.readFixed32${suffix}`;
+    case 'fixed64':  return `pbf.readFixed64${suffix}`;
+    case 'sfixed32': return `pbf.readSFixed32${suffix}`;
+    case 'sfixed64': return `pbf.readSFixed64${suffix}`;
+    case 'bytes':    return `pbf.readBytes${suffix}`;
     default:         throw new Error(`Unexpected type: ${field.type}`);
+    }
+}
+
+function compilePackedRead(ctx, field) {
+    const type = getType(ctx, field);
+    const fieldType = isEnum(type) ? 'enum' : field.type;
+    const arr = `obj.${field.name}`;
+
+    switch (fieldType) {
+    case 'float':    return `pbf.readPackedFloat(${arr})`;
+    case 'double':   return `pbf.readPackedDouble(${arr})`;
+    case 'bool':     return `pbf.readPackedBoolean(${arr})`;
+    case 'enum':
+    case 'uint32':
+    case 'uint64':   return `pbf.readPackedVarint(${arr})`;
+    case 'int32':
+    case 'int64':    return `pbf.readPackedVarint(${arr}, true)`;
+    case 'sint32':
+    case 'sint64':   return `pbf.readPackedSVarint(${arr})`;
+    case 'fixed32':  return `pbf.readPackedFixed32(${arr})`;
+    case 'fixed64':  return `pbf.readPackedFixed64(${arr})`;
+    case 'sfixed32': return `pbf.readPackedSFixed32(${arr})`;
+    case 'sfixed64': return `pbf.readPackedSFixed64(${arr})`;
+    default:         throw new Error(`Unexpected packed type: ${field.type}`);
     }
 }
 
