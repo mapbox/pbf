@@ -27,10 +27,29 @@ export default class Pbf {
     // === READING =================================================================
 
     /**
+     * @template {string | number} K, V
+     * @overload
+     * @param {(tag: number, result: {key: K, value: V}, pbf: Pbf) => void} readField
+     * @param {{key: K, value: V}} result
+     * @param {number} [end]
+     * @returns {Record<K, V>}
+     */
+
+    /**
+     * @template T
+     * @overload
+     * @param {(tag: number, result: T, pbf: Pbf) => void} readField
+     * @param {T} result
+     * @param {number} [end]
+     * @returns {T}
+     */
+
+    /**
      * @template T
      * @param {(tag: number, result: T, pbf: Pbf) => void} readField
      * @param {T} result
      * @param {number} [end]
+     * @returns {T}
      */
     readFields(readField, result, end = this.length) {
         while (this.pos < end) {
