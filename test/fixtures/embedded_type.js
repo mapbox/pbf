@@ -1,5 +1,5 @@
 
-export function readEmbeddedType(pbf, end = pbf.length) {
+export function readEmbeddedType(pbf, end) {
     const obj = {value: "test", sub_field: undefined, sub_sub_field: undefined};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -16,7 +16,7 @@ export function writeEmbeddedType(obj, pbf) {
     if (obj.sub_sub_field) pbf.writeMessage(5, writeEmbeddedTypeContainerInner, obj.sub_sub_field);
 }
 
-export function readEmbeddedTypeContainer(pbf, end = pbf.length) {
+export function readEmbeddedTypeContainer(pbf, end) {
     const obj = {values: []};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -29,7 +29,7 @@ export function writeEmbeddedTypeContainer(obj, pbf) {
     if (obj.values) for (const item of obj.values) pbf.writeMessage(1, writeEmbeddedTypeContainerInner, item);
 }
 
-export function readEmbeddedTypeContainerInner(pbf, end = pbf.length) {
+export function readEmbeddedTypeContainerInner(pbf, end) {
     const obj = {value: ""};
     let field;
     while ((field = pbf.nextField(end))) {

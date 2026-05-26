@@ -30,7 +30,7 @@ function writeMessage(ctx, options) {
     if (!options.noRead) {
         const readName = `read${ctx._name}`;
 
-        code += `${writeFunctionExport(options, readName)}function ${readName}(pbf, end = pbf.length) {\n`;
+        code += `${writeFunctionExport(options, readName)}function ${readName}(pbf, end) {\n`;
         if (fields.length === 0) {
             code += '    pbf.pos = end;\n    return {};\n';
         } else {

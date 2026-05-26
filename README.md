@@ -64,7 +64,7 @@ const {readExample, writeExample} = compile(proto);
 const pbf = new PbfReader(buffer);
 const data = readData(pbf);
 
-function readData(pbf, end = pbf.length) {
+function readData(pbf, end) {
     const data = {};
     let field;
     while ((field = pbf.nextField(end))) {

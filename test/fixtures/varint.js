@@ -1,5 +1,5 @@
 
-export function readEnvelope(pbf, end = pbf.length) {
+export function readEnvelope(pbf, end) {
     const obj = {int: 0, uint: 0, long: 0, ulong: 0};
     let field;
     while ((field = pbf.nextField(end))) {

@@ -4,7 +4,7 @@ export const MessageType = {
     "GREETING": 1
 };
 
-export function readNotPacked(pbf, end = pbf.length) {
+export function readNotPacked(pbf, end) {
     const obj = {value: [], types: []};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -19,7 +19,7 @@ export function writeNotPacked(obj, pbf) {
     if (obj.types) pbf.writePackedVarint(2, obj.types);
 }
 
-export function readFalsePacked(pbf, end = pbf.length) {
+export function readFalsePacked(pbf, end) {
     const obj = {value: [], types: []};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -34,7 +34,7 @@ export function writeFalsePacked(obj, pbf) {
     if (obj.types) for (const item of obj.types) pbf.writeVarintField(2, item);
 }
 
-export function readPacked(pbf, end = pbf.length) {
+export function readPacked(pbf, end) {
     const obj = {value: []};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -47,7 +47,7 @@ export function writePacked(obj, pbf) {
     if (obj.value) pbf.writePackedVarint(16, obj.value);
 }
 
-export function readPackedFixed(pbf, end = pbf.length) {
+export function readPackedFixed(pbf, end) {
     const obj = {value: []};
     let field;
     while ((field = pbf.nextField(end))) {

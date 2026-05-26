@@ -1,5 +1,5 @@
 
-export function readEnvelope(pbf, end = pbf.length) {
+export function readEnvelope(pbf, end) {
     const obj = {kv: {}, kn: {}, sibling: undefined, flag: 0};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -23,7 +23,7 @@ export const EnvelopeKnEntry = {
     "ONE": 1
 };
 
-export function readEnvelopeKvEntry(pbf, end = pbf.length) {
+export function readEnvelopeKvEntry(pbf, end) {
     const obj = {marker: 0};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -36,7 +36,7 @@ export function writeEnvelopeKvEntry(obj, pbf) {
     if (obj.marker) pbf.writeVarintField(1, obj.marker);
 }
 
-export function readEnvelopeKvEntry$(pbf, end = pbf.length) {
+export function readEnvelopeKvEntry$(pbf, end) {
     const obj = {key: "", value: ""};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -51,7 +51,7 @@ export function writeEnvelopeKvEntry$(obj, pbf) {
     if (obj.value) pbf.writeStringField(2, obj.value);
 }
 
-export function readEnvelopeKnEntry$(pbf, end = pbf.length) {
+export function readEnvelopeKnEntry$(pbf, end) {
     const obj = {key: "", value: 0};
     let field;
     while ((field = pbf.nextField(end))) {

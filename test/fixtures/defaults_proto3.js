@@ -4,7 +4,7 @@ export const MessageType = {
     "GREETING": 1
 };
 
-export function readEnvelope(pbf, end = pbf.length) {
+export function readEnvelope(pbf, end) {
     const obj = {type: 0, name: "", flag: false, weight: 0, id: 0};
     let field;
     while ((field = pbf.nextField(end))) {

@@ -1,5 +1,5 @@
 
-export function readTypeString(pbf, end = pbf.length) {
+export function readTypeString(pbf, end) {
     const obj = {int: "0", long: "0", boolVal: false, float: "0", default_implicit: "0", default_explicit: "42"};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -22,7 +22,7 @@ export function writeTypeString(obj, pbf) {
     if (obj.default_explicit != null && obj.default_explicit !== "42") pbf.writeVarintField(6, parseInt(obj.default_explicit, 10));
 }
 
-export function readTypeNotString(pbf, end = pbf.length) {
+export function readTypeNotString(pbf, end) {
     const obj = {int: 0, long: 0, boolVal: false, float: 0};
     let field;
     while ((field = pbf.nextField(end))) {

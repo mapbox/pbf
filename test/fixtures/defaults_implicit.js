@@ -4,13 +4,13 @@ export const MessageType = {
     "GREETING": 1
 };
 
-export function readCustomType(pbf, end = pbf.length) {
+export function readCustomType(pbf, end) {
     pbf.pos = end;
     return {};
 }
 export function writeCustomType(obj, pbf) {}
 
-export function readEnvelope(pbf, end = pbf.length) {
+export function readEnvelope(pbf, end) {
     const obj = {type: 0, name: "", flag: false, weight: 0, id: 0, tags: [], numbers: [], bytes: undefined, custom: undefined, types: []};
     let field;
     while ((field = pbf.nextField(end))) {

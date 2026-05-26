@@ -1,5 +1,5 @@
 
-export function readNotPacked(pbf, end = pbf.length) {
+export function readNotPacked(pbf, end) {
     const obj = {value: [], types: []};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -14,7 +14,7 @@ export function writeNotPacked(obj, pbf) {
     if (obj.types) for (const item of obj.types) pbf.writeVarintField(2, item);
 }
 
-export function readFalsePacked(pbf, end = pbf.length) {
+export function readFalsePacked(pbf, end) {
     const obj = {value: [], types: []};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -29,7 +29,7 @@ export function writeFalsePacked(obj, pbf) {
     if (obj.types) for (const item of obj.types) pbf.writeVarintField(2, item);
 }
 
-export function readPacked(pbf, end = pbf.length) {
+export function readPacked(pbf, end) {
     const obj = {value: [], types: []};
     let field;
     while ((field = pbf.nextField(end))) {

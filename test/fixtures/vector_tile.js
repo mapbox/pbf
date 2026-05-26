@@ -1,5 +1,5 @@
 
-export function readTile(pbf, end = pbf.length) {
+export function readTile(pbf, end) {
     const obj = {layers: []};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -19,7 +19,7 @@ export const TileGeomType = {
     "POLYGON": 3
 };
 
-export function readTileValue(pbf, end = pbf.length) {
+export function readTileValue(pbf, end) {
     const obj = {string_value: "", float_value: 0, double_value: 0, int_value: 0, uint_value: 0, sint_value: 0, bool_value: false};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -44,7 +44,7 @@ export function writeTileValue(obj, pbf) {
     if (obj.bool_value) pbf.writeBooleanField(7, obj.bool_value);
 }
 
-export function readTileFeature(pbf, end = pbf.length) {
+export function readTileFeature(pbf, end) {
     const obj = {id: 0, tags: [], type: 0, geometry: []};
     let field;
     while ((field = pbf.nextField(end))) {
@@ -63,7 +63,7 @@ export function writeTileFeature(obj, pbf) {
     if (obj.geometry) pbf.writePackedVarint(4, obj.geometry);
 }
 
-export function readTileLayer(pbf, end = pbf.length) {
+export function readTileLayer(pbf, end) {
     const obj = {version: 1, name: "", features: [], keys: [], values: [], extent: 4096};
     let field;
     while ((field = pbf.nextField(end))) {
