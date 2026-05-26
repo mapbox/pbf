@@ -13,7 +13,6 @@ export function readEnvelope(pbf, end) {
         else if (field === 3) obj.flag = pbf.readBoolean();
         else if (field === 4) obj.weight = pbf.readFloat();
         else if (field === 5) obj.id = pbf.readVarint(true);
-        else pbf.skipField();
     }
     return obj;
 }

@@ -10,7 +10,6 @@ export function readNotPacked(pbf, end) {
     while ((field = pbf.nextField(end))) {
         if (field === 1) pbf.readPackedVarint(obj.value, true);
         else if (field === 2) pbf.readPackedVarint(obj.types);
-        else pbf.skipField();
     }
     return obj;
 }
@@ -25,7 +24,6 @@ export function readFalsePacked(pbf, end) {
     while ((field = pbf.nextField(end))) {
         if (field === 1) pbf.readPackedVarint(obj.value, true);
         else if (field === 2) pbf.readPackedVarint(obj.types);
-        else pbf.skipField();
     }
     return obj;
 }
@@ -39,7 +37,6 @@ export function readPacked(pbf, end) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 16) pbf.readPackedVarint(obj.value, true);
-        else pbf.skipField();
     }
     return obj;
 }
@@ -52,7 +49,6 @@ export function readPackedFixed(pbf, end) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 1) pbf.readPackedSFixed64(obj.value);
-        else pbf.skipField();
     }
     return obj;
 }

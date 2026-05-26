@@ -445,7 +445,7 @@ test('write a raw message > 0x10000000', () => {
     assert.deepEqual(bytes.subarray(encodedSize.length, encodedSize.length + markerSize), encodedMarker);
 });
 
-test('nextField & skipField', () => {
+test('nextField implicitly skips unread fields', () => {
     // Encode three fields: varint #1 = 42, string #2 = "hi", varint #3 = 7.
     const w = new PbfWriter();
     w.writeVarintField(1, 42);
@@ -453,14 +453,13 @@ test('nextField & skipField', () => {
     w.writeVarintField(3, 7);
     const buf = w.finish();
 
-    // Reader that only knows field 1 and field 3 — field 2 must be skipped via skipField.
+    // Reader that only knows field 1 and field 3 — field 2 is skipped implicitly.
     const pbf = new PbfReader(buf);
     const seen = {};
     let field;
     while ((field = pbf.nextField())) {
         if (field === 1) seen.a = pbf.readVarint();
         else if (field === 3) seen.b = pbf.readVarint();
-        else pbf.skipField();
     }
     assert.deepEqual(seen, {a: 42, b: 7});
     assert.equal(pbf.pos, buf.length);

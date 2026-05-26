@@ -21,6 +21,7 @@ export class PbfReader {
         this.dataView = new DataView(this.buf.buffer);
         this.pos = 0;
         this.type = 0;
+        this._valueStart = -1;
         this.length = this.buf.length;
     }
 
@@ -33,9 +34,7 @@ export class PbfReader {
     readFields(readField, result, end = this.length) {
         let field;
         while ((field = this.nextField(end))) {
-            const startPos = this.pos;
             readField(field, result, this);
-            if (this.pos === startPos) this.skipField();
         }
         return result;
     }
@@ -201,15 +200,12 @@ export class PbfReader {
      * @param {number} [end]
      */
     nextField(end = this.length) {
+        if (this.pos === this._valueStart) this.skip(this.type);
         if (this.pos >= end) return 0;
         const tag = this.readVarint();
         this.type = tag & 0x7;
+        this._valueStart = this.pos;
         return tag >>> 3;
-    }
-
-    /** Skip the field most recently returned by `nextField`. */
-    skipField() {
-        this.skip(this.type);
     }
 
     /** @param {number} val */

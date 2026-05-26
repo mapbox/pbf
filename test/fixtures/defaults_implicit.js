@@ -24,7 +24,6 @@ export function readEnvelope(pbf, end) {
         else if (field === 8) obj.bytes = pbf.readBytes();
         else if (field === 9) obj.custom = readCustomType(pbf, pbf.readVarint() + pbf.pos);
         else if (field === 10) pbf.readPackedVarint(obj.types);
-        else pbf.skipField();
     }
     return obj;
 }

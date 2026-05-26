@@ -5,7 +5,6 @@ export function readEnvelope(pbf, end) {
     while ((field = pbf.nextField(end))) {
         if (field === 1) { const {key, value} = readEnvelopeKvEntry(pbf, pbf.readVarint() + pbf.pos); obj.kv[key] = value; }
         else if (field === 2) { const {key, value} = readEnvelopeKnEntry(pbf, pbf.readVarint() + pbf.pos); obj.kn[key] = value; }
-        else pbf.skipField();
     }
     return obj;
 }
@@ -20,7 +19,6 @@ export function readEnvelopeKvEntry(pbf, end) {
     while ((field = pbf.nextField(end))) {
         if (field === 1) obj.key = pbf.readString();
         else if (field === 2) obj.value = pbf.readString();
-        else pbf.skipField();
     }
     return obj;
 }
@@ -35,7 +33,6 @@ export function readEnvelopeKnEntry(pbf, end) {
     while ((field = pbf.nextField(end))) {
         if (field === 1) obj.key = pbf.readString();
         else if (field === 2) obj.value = pbf.readVarint(true);
-        else pbf.skipField();
     }
     return obj;
 }

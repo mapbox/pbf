@@ -7,7 +7,6 @@ export function readEnvelope(pbf, end) {
         else if (field === 2) obj.uint = pbf.readVarint();
         else if (field === 3) obj.long = pbf.readVarint(true);
         else if (field === 4) obj.ulong = pbf.readVarint();
-        else pbf.skipField();
     }
     return obj;
 }

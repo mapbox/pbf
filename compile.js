@@ -41,7 +41,6 @@ function writeMessage(ctx, options) {
             for (let i = 0; i < fields.length; i++) {
                 code += `        ${i ? 'else ' : ''}if (field === ${fields[i].tag}) ${compileFieldRead(ctx, fields[i])}\n`;
             }
-            code += '        else pbf.skipField();\n';
             code += '    }\n    return obj;\n';
         }
         code += '}\n';

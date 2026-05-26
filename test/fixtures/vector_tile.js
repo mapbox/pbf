@@ -4,7 +4,6 @@ export function readTile(pbf, end) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 3) obj.layers.push(readTileLayer(pbf, pbf.readVarint() + pbf.pos));
-        else pbf.skipField();
     }
     return obj;
 }
@@ -30,7 +29,6 @@ export function readTileValue(pbf, end) {
         else if (field === 5) obj.uint_value = pbf.readVarint();
         else if (field === 6) obj.sint_value = pbf.readSVarint();
         else if (field === 7) obj.bool_value = pbf.readBoolean();
-        else pbf.skipField();
     }
     return obj;
 }
@@ -52,7 +50,6 @@ export function readTileFeature(pbf, end) {
         else if (field === 2) pbf.readPackedVarint(obj.tags);
         else if (field === 3) obj.type = pbf.readVarint();
         else if (field === 4) pbf.readPackedVarint(obj.geometry);
-        else pbf.skipField();
     }
     return obj;
 }
@@ -73,7 +70,6 @@ export function readTileLayer(pbf, end) {
         else if (field === 3) obj.keys.push(pbf.readString());
         else if (field === 4) obj.values.push(readTileValue(pbf, pbf.readVarint() + pbf.pos));
         else if (field === 5) obj.extent = pbf.readVarint();
-        else pbf.skipField();
     }
     return obj;
 }

@@ -9,7 +9,6 @@ export function readTypeString(pbf, end) {
         else if (field === 4) obj.float = pbf.readFloat().toString();
         else if (field === 5) obj.default_implicit = pbf.readVarint(true).toString();
         else if (field === 6) obj.default_explicit = pbf.readVarint(true).toString();
-        else pbf.skipField();
     }
     return obj;
 }
@@ -30,7 +29,6 @@ export function readTypeNotString(pbf, end) {
         else if (field === 2) obj.long = pbf.readVarint(true);
         else if (field === 3) obj.boolVal = pbf.readBoolean();
         else if (field === 4) obj.float = pbf.readFloat();
-        else pbf.skipField();
     }
     return obj;
 }

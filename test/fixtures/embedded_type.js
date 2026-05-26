@@ -6,7 +6,6 @@ export function readEmbeddedType(pbf, end) {
         if (field === 1) obj.value = pbf.readString();
         else if (field === 4) obj.sub_field = readEmbeddedTypeContainer(pbf, pbf.readVarint() + pbf.pos);
         else if (field === 5) obj.sub_sub_field = readEmbeddedTypeContainerInner(pbf, pbf.readVarint() + pbf.pos);
-        else pbf.skipField();
     }
     return obj;
 }
@@ -21,7 +20,6 @@ export function readEmbeddedTypeContainer(pbf, end) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 1) obj.values.push(readEmbeddedTypeContainerInner(pbf, pbf.readVarint() + pbf.pos));
-        else pbf.skipField();
     }
     return obj;
 }
@@ -34,7 +32,6 @@ export function readEmbeddedTypeContainerInner(pbf, end) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 1) obj.value = pbf.readString();
-        else pbf.skipField();
     }
     return obj;
 }

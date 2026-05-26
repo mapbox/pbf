@@ -71,7 +71,6 @@ function readData(pbf, end) {
         if (field === 1) data.name = pbf.readString();
         else if (field === 2) data.version = pbf.readVarint();
         else if (field === 3) data.layer = readLayer(pbf, pbf.readVarint() + pbf.pos);
-        else pbf.skipField();
     }
     return data;
 }
@@ -81,7 +80,6 @@ function readLayer(pbf, end) {
     while ((field = pbf.nextField(end))) {
         if (field === 1) layer.name = pbf.readString();
         else if (field === 3) layer.size = pbf.readVarint();
-        else pbf.skipField();
     }
     return layer;
 }
@@ -150,14 +148,13 @@ pbf.pos; // current offset for reading or writing
 
 #### Reading
 
-Loop over a message's fields with `nextField`, dispatch on the field number, and call `skipField()` for anything you don't recognize:
+Loop over a message's fields with `nextField` and dispatch on the field number. Unrecognized or unread fields are skipped automatically on the next iteration:
 
 ```js
 let field;
 while ((field = pbf.nextField(end))) {
     if (field === 1) obj.id = pbf.readVarint();
     else if (field === 2) obj.name = pbf.readString();
-    else pbf.skipField();
 }
 ```
 
@@ -182,7 +179,6 @@ let fooPos = -1;
 let field;
 while ((field = pbf.nextField())) {
     if (field === 1) fooPos = pbf.pos;
-    pbf.skipField();
 }
 ...
 pbf.pos = fooPos;
@@ -204,8 +200,10 @@ Scalar reading methods:
 * `readDouble()`
 * `readString()`
 * `readBytes()`
-* `nextField(end)` — returns the next field number, or `0` at end-of-message
-* `skipField()` — skips the current field
+
+Field iteration methods:
+
+* `nextField(end)` — returns the next field number, or `0` at end-of-message; skips the previous field's value if it wasn't consumed
 * `skip(value)` — skips a field given its raw tag varint
 
 Packed reading methods:
