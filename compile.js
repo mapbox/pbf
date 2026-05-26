@@ -31,22 +31,32 @@ function writeMessage(ctx, options) {
         const readName = `read${ctx._name}`;
 
         code += `${writeFunctionExport(options, readName)}function ${readName}(pbf, end = pbf.length) {\n`;
-        code += `    const obj = ${compileDest(ctx)};\n`;
-        code += '    let field;\n';
-        code += '    while ((field = pbf.nextField(end))) {\n';
+        if (fields.length === 0) {
+            code += '    pbf.pos = end;\n    return {};\n';
+        } else {
+            code += `    const obj = ${compileDest(ctx)};\n`;
+            code += '    let field;\n';
+            code += '    while ((field = pbf.nextField(end))) {\n';
 
-        for (let i = 0; i < fields.length; i++) {
-            code += `        ${i ? 'else ' : ''}if (field === ${fields[i].tag}) ${compileFieldRead(ctx, fields[i])}\n`;
+            for (let i = 0; i < fields.length; i++) {
+                code += `        ${i ? 'else ' : ''}if (field === ${fields[i].tag}) ${compileFieldRead(ctx, fields[i])}\n`;
+            }
+            code += '        else pbf.skipField();\n';
+            code += '    }\n    return obj;\n';
         }
-        code += `        ${fields.length ? 'else ' : ''}pbf.skipField();\n`;
-        code += '    }\n    return obj;\n}\n';
+        code += '}\n';
     }
 
     if (!options.noWrite) {
         const writeName = `write${ctx._name}`;
-        code += `${writeFunctionExport(options, writeName)}function ${writeName}(obj, pbf) {\n`;
-        for (const field of fields) code += compileFieldWriteLine(ctx, field);
-        code += '}\n';
+        code += `${writeFunctionExport(options, writeName)}function ${writeName}(obj, pbf) {`;
+        if (fields.length === 0) {
+            code += '}\n';
+        } else {
+            code += '\n';
+            for (const field of fields) code += compileFieldWriteLine(ctx, field);
+            code += '}\n';
+        }
     }
     return code;
 }

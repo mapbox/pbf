@@ -5,15 +5,10 @@ export const MessageType = {
 };
 
 export function readCustomType(pbf, end = pbf.length) {
-    const obj = {};
-    let field;
-    while ((field = pbf.nextField(end))) {
-        pbf.skipField();
-    }
-    return obj;
+    pbf.pos = end;
+    return {};
 }
-export function writeCustomType(obj, pbf) {
-}
+export function writeCustomType(obj, pbf) {}
 
 export function readEnvelope(pbf, end = pbf.length) {
     const obj = {type: 0, name: "", flag: false, weight: 0, id: 0, tags: [], numbers: [], bytes: undefined, custom: undefined, types: []};
