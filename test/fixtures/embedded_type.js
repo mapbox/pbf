@@ -1,12 +1,12 @@
 
 export function readEmbeddedType(pbf, end = pbf.length) {
     const obj = {value: "test", sub_field: undefined, sub_sub_field: undefined};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.value = pbf.readString();
         else if (field === 4) obj.sub_field = readEmbeddedTypeContainer(pbf, pbf.readVarint() + pbf.pos);
         else if (field === 5) obj.sub_sub_field = readEmbeddedTypeContainerInner(pbf, pbf.readVarint() + pbf.pos);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -18,10 +18,10 @@ export function writeEmbeddedType(obj, pbf) {
 
 export function readEmbeddedTypeContainer(pbf, end = pbf.length) {
     const obj = {values: []};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.values.push(readEmbeddedTypeContainerInner(pbf, pbf.readVarint() + pbf.pos));
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -31,10 +31,10 @@ export function writeEmbeddedTypeContainer(obj, pbf) {
 
 export function readEmbeddedTypeContainerInner(pbf, end = pbf.length) {
     const obj = {value: ""};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.value = pbf.readString();
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }

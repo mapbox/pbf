@@ -29,17 +29,16 @@ function writeMessage(ctx, options) {
 
     if (!options.noRead) {
         const readName = `read${ctx._name}`;
-        const hasPackable = fields.some(f => f.repeated && willSupportPacked(ctx, f));
 
         code += `${writeFunctionExport(options, readName)}function ${readName}(pbf, end = pbf.length) {\n`;
         code += `    const obj = ${compileDest(ctx)};\n`;
-        code += '    while (pbf.pos < end) {\n';
-        code += `        const tag = pbf.readVarint(), field = tag >>> 3${hasPackable ? '; pbf.type = tag & 7' : ''};\n`;
+        code += '    let field;\n';
+        code += '    while ((field = pbf.nextField(end))) {\n';
 
         for (let i = 0; i < fields.length; i++) {
             code += `        ${i ? 'else ' : ''}if (field === ${fields[i].tag}) ${compileFieldRead(ctx, fields[i])}\n`;
         }
-        code += `        ${fields.length ? 'else ' : ''}pbf.skip(tag);\n`;
+        code += `        ${fields.length ? 'else ' : ''}pbf.skipField();\n`;
         code += '    }\n    return obj;\n}\n';
     }
 

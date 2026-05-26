@@ -1,15 +1,15 @@
 
 export function readTypeString(pbf, end = pbf.length) {
     const obj = {int: "0", long: "0", boolVal: false, float: "0", default_implicit: "0", default_explicit: "42"};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.int = pbf.readVarint(true).toString();
         else if (field === 2) obj.long = pbf.readVarint(true).toString();
         else if (field === 3) obj.boolVal = pbf.readBoolean();
         else if (field === 4) obj.float = pbf.readFloat().toString();
         else if (field === 5) obj.default_implicit = pbf.readVarint(true).toString();
         else if (field === 6) obj.default_explicit = pbf.readVarint(true).toString();
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -24,13 +24,13 @@ export function writeTypeString(obj, pbf) {
 
 export function readTypeNotString(pbf, end = pbf.length) {
     const obj = {int: 0, long: 0, boolVal: false, float: 0};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.int = pbf.readVarint(true);
         else if (field === 2) obj.long = pbf.readVarint(true);
         else if (field === 3) obj.boolVal = pbf.readBoolean();
         else if (field === 4) obj.float = pbf.readFloat();
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }

@@ -6,9 +6,9 @@ export const MessageType = {
 
 export function readCustomType(pbf, end = pbf.length) {
     const obj = {};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
-        pbf.skip(tag);
+    let field;
+    while ((field = pbf.nextField(end))) {
+        pbf.skipField();
     }
     return obj;
 }
@@ -17,8 +17,8 @@ export function writeCustomType(obj, pbf) {
 
 export function readEnvelope(pbf, end = pbf.length) {
     const obj = {type: 0, name: "", flag: false, weight: 0, id: 0, tags: [], numbers: [], bytes: undefined, custom: undefined, types: []};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3; pbf.type = tag & 7;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.type = pbf.readVarint();
         else if (field === 2) obj.name = pbf.readString();
         else if (field === 3) obj.flag = pbf.readBoolean();
@@ -29,7 +29,7 @@ export function readEnvelope(pbf, end = pbf.length) {
         else if (field === 8) obj.bytes = pbf.readBytes();
         else if (field === 9) obj.custom = readCustomType(pbf, pbf.readVarint() + pbf.pos);
         else if (field === 10) pbf.readPackedVarint(obj.types);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }

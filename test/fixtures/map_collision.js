@@ -1,13 +1,13 @@
 
 export function readEnvelope(pbf, end = pbf.length) {
     const obj = {kv: {}, kn: {}, sibling: undefined, flag: 0};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) { const {key, value} = readEnvelopeKvEntry$(pbf, pbf.readVarint() + pbf.pos); obj.kv[key] = value; }
         else if (field === 2) { const {key, value} = readEnvelopeKnEntry$(pbf, pbf.readVarint() + pbf.pos); obj.kn[key] = value; }
         else if (field === 3) obj.sibling = readEnvelopeKvEntry(pbf, pbf.readVarint() + pbf.pos);
         else if (field === 4) obj.flag = pbf.readVarint();
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -25,10 +25,10 @@ export const EnvelopeKnEntry = {
 
 export function readEnvelopeKvEntry(pbf, end = pbf.length) {
     const obj = {marker: 0};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.marker = pbf.readVarint(true);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -38,11 +38,11 @@ export function writeEnvelopeKvEntry(obj, pbf) {
 
 export function readEnvelopeKvEntry$(pbf, end = pbf.length) {
     const obj = {key: "", value: ""};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.key = pbf.readString();
         else if (field === 2) obj.value = pbf.readString();
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -53,11 +53,11 @@ export function writeEnvelopeKvEntry$(obj, pbf) {
 
 export function readEnvelopeKnEntry$(pbf, end = pbf.length) {
     const obj = {key: "", value: 0};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.key = pbf.readString();
         else if (field === 2) obj.value = pbf.readVarint(true);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }

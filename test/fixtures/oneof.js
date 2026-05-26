@@ -1,13 +1,13 @@
 
 export function readEnvelope(pbf, end = pbf.length) {
     const obj = {id: 0, int: 0, value: undefined, float: 0, string: ""};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.id = pbf.readVarint(true);
         else if (field === 2) { obj.int = pbf.readVarint(true); obj.value = "int"; }
         else if (field === 3) { obj.float = pbf.readFloat(); obj.value = "float"; }
         else if (field === 4) { obj.string = pbf.readString(); obj.value = "string"; }
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }

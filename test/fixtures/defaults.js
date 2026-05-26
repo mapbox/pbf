@@ -6,14 +6,14 @@ export const MessageType = {
 
 export function readEnvelope(pbf, end = pbf.length) {
     const obj = {type: 1, name: "test", flag: true, weight: 1.5, id: 1};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.type = pbf.readVarint();
         else if (field === 2) obj.name = pbf.readString();
         else if (field === 3) obj.flag = pbf.readBoolean();
         else if (field === 4) obj.weight = pbf.readFloat();
         else if (field === 5) obj.id = pbf.readVarint(true);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }

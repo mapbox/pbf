@@ -444,3 +444,41 @@ test('write a raw message > 0x10000000', () => {
     // Then the message itself. Verify that the first few bytes match the marker.
     assert.deepEqual(bytes.subarray(encodedSize.length, encodedSize.length + markerSize), encodedMarker);
 });
+
+test('nextField & skipField', () => {
+    // Encode three fields: varint #1 = 42, string #2 = "hi", varint #3 = 7.
+    const w = new PbfWriter();
+    w.writeVarintField(1, 42);
+    w.writeStringField(2, 'hi');
+    w.writeVarintField(3, 7);
+    const buf = w.finish();
+
+    // Reader that only knows field 1 and field 3 — field 2 must be skipped via skipField.
+    const pbf = new PbfReader(buf);
+    const seen = {};
+    let field;
+    while ((field = pbf.nextField())) {
+        if (field === 1) seen.a = pbf.readVarint();
+        else if (field === 3) seen.b = pbf.readVarint();
+        else pbf.skipField();
+    }
+    assert.deepEqual(seen, {a: 42, b: 7});
+    assert.equal(pbf.pos, buf.length);
+
+    // nextField returns 0 at end-of-message.
+    assert.equal(pbf.nextField(), 0);
+});
+
+test('nextField sets pbf.type for packed reads', () => {
+    // A packed varint field encodes as wire-type 2 (BYTES). readPackedVarint relies on
+    // pbf.type to distinguish packed vs unpacked encodings; nextField must set it.
+    const w = new PbfWriter();
+    w.writePackedVarint(1, [1, 2, 3]);
+    const buf = w.finish();
+
+    const pbf = new PbfReader(buf);
+    const field = pbf.nextField();
+    assert.equal(field, 1);
+    assert.equal(pbf.type, 2); // PBF_BYTES
+    assert.deepEqual(pbf.readPackedVarint(), [1, 2, 3]);
+});

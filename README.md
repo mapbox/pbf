@@ -61,16 +61,29 @@ const {readExample, writeExample} = compile(proto);
 #### Custom Reading
 
 ```js
-const data = new PbfReader(buffer).readFields(readData, {});
+const pbf = new PbfReader(buffer);
+const data = readData(pbf);
 
-function readData(tag, data, pbf) {
-    if (tag === 1) data.name = pbf.readString();
-    else if (tag === 2) data.version = pbf.readVarint();
-    else if (tag === 3) data.layer = pbf.readMessage(readLayer, {});
+function readData(pbf, end = pbf.length) {
+    const data = {};
+    let field;
+    while ((field = pbf.nextField(end))) {
+        if (field === 1) data.name = pbf.readString();
+        else if (field === 2) data.version = pbf.readVarint();
+        else if (field === 3) data.layer = readLayer(pbf, pbf.readVarint() + pbf.pos);
+        else pbf.skipField();
+    }
+    return data;
 }
-function readLayer(tag, layer, pbf) {
-    if (tag === 1) layer.name = pbf.readString();
-    else if (tag === 3) layer.size = pbf.readVarint();
+function readLayer(pbf, end) {
+    const layer = {};
+    let field;
+    while ((field = pbf.nextField(end))) {
+        if (field === 1) layer.name = pbf.readString();
+        else if (field === 3) layer.size = pbf.readVarint();
+        else pbf.skipField();
+    }
+    return layer;
 }
 ```
 
@@ -137,28 +150,22 @@ pbf.pos; // current offset for reading or writing
 
 #### Reading
 
-Read a sequence of fields:
+Loop over a message's fields with `nextField`, dispatch on the field number, and call `skipField()` for anything you don't recognize:
 
 ```js
-pbf.readFields((tag) => {
-    if (tag === 1) pbf.readVarint();
-    else if (tag === 2) pbf.readString();
-    else ...
-});
-```
-
-It optionally accepts an object that will be passed to the reading function for easier construction of decoded data,
-and also passes the `PbfReader` object as a third argument:
-
-```js
-const result = pbf.readFields(readField, {})
-
-function readField(tag, result, pbf) {
-    if (tag === 1) result.id = pbf.readVarint();
+let field;
+while ((field = pbf.nextField(end))) {
+    if (field === 1) obj.id = pbf.readVarint();
+    else if (field === 2) obj.name = pbf.readString();
+    else pbf.skipField();
 }
 ```
 
-To read an embedded message, use `pbf.readMessage(fn[, obj])` (in the same way as `read`).
+To read an embedded message, pass `pbf.readVarint() + pbf.pos` as `end` to a nested reader:
+
+```js
+const msg = readSubMessage(pbf, pbf.readVarint() + pbf.pos);
+```
 
 Read values:
 
@@ -168,18 +175,21 @@ const str = pbf.readString();
 const numbers = pbf.readPackedVarint();
 ```
 
-For lazy or partial decoding, simply save the position instead of reading a value,
-then later set it back to the saved value and read:
+For lazy or partial decoding, save the position and come back to it later:
 
 ```js
-const fooPos = -1;
-pbf.readFields((tag) => {
-    if (tag === 1) fooPos = pbf.pos;
-});
+let fooPos = -1;
+let field;
+while ((field = pbf.nextField())) {
+    if (field === 1) fooPos = pbf.pos;
+    pbf.skipField();
+}
 ...
 pbf.pos = fooPos;
-pbf.readMessage(readFoo);
+const foo = readFoo(pbf, pbf.readVarint() + pbf.pos);
 ```
+
+A callback-based `readFields(fn, obj, end)` is also available for backward compatibility, but new code should prefer the `nextField` loop — it's significantly faster.
 
 Scalar reading methods:
 
@@ -194,7 +204,9 @@ Scalar reading methods:
 * `readDouble()`
 * `readString()`
 * `readBytes()`
-* `skip(value)`
+* `nextField(end)` — returns the next field number, or `0` at end-of-message
+* `skipField()` — skips the current field
+* `skip(value)` — skips a field given its raw tag varint
 
 Packed reading methods:
 

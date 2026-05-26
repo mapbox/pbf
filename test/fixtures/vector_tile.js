@@ -1,10 +1,10 @@
 
 export function readTile(pbf, end = pbf.length) {
     const obj = {layers: []};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 3) obj.layers.push(readTileLayer(pbf, pbf.readVarint() + pbf.pos));
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -21,8 +21,8 @@ export const TileGeomType = {
 
 export function readTileValue(pbf, end = pbf.length) {
     const obj = {string_value: "", float_value: 0, double_value: 0, int_value: 0, uint_value: 0, sint_value: 0, bool_value: false};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.string_value = pbf.readString();
         else if (field === 2) obj.float_value = pbf.readFloat();
         else if (field === 3) obj.double_value = pbf.readDouble();
@@ -30,7 +30,7 @@ export function readTileValue(pbf, end = pbf.length) {
         else if (field === 5) obj.uint_value = pbf.readVarint();
         else if (field === 6) obj.sint_value = pbf.readSVarint();
         else if (field === 7) obj.bool_value = pbf.readBoolean();
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -46,13 +46,13 @@ export function writeTileValue(obj, pbf) {
 
 export function readTileFeature(pbf, end = pbf.length) {
     const obj = {id: 0, tags: [], type: 0, geometry: []};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3; pbf.type = tag & 7;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.id = pbf.readVarint();
         else if (field === 2) pbf.readPackedVarint(obj.tags);
         else if (field === 3) obj.type = pbf.readVarint();
         else if (field === 4) pbf.readPackedVarint(obj.geometry);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -65,15 +65,15 @@ export function writeTileFeature(obj, pbf) {
 
 export function readTileLayer(pbf, end = pbf.length) {
     const obj = {version: 1, name: "", features: [], keys: [], values: [], extent: 4096};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 15) obj.version = pbf.readVarint();
         else if (field === 1) obj.name = pbf.readString();
         else if (field === 2) obj.features.push(readTileFeature(pbf, pbf.readVarint() + pbf.pos));
         else if (field === 3) obj.keys.push(pbf.readString());
         else if (field === 4) obj.values.push(readTileValue(pbf, pbf.readVarint() + pbf.pos));
         else if (field === 5) obj.extent = pbf.readVarint();
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }

@@ -1,13 +1,13 @@
 
 export function readEnvelope(pbf, end = pbf.length) {
     const obj = {int: 0, uint: 0, long: 0, ulong: 0};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) obj.int = pbf.readVarint(true);
         else if (field === 2) obj.uint = pbf.readVarint();
         else if (field === 3) obj.long = pbf.readVarint(true);
         else if (field === 4) obj.ulong = pbf.readVarint();
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }

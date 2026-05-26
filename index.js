@@ -31,15 +31,11 @@ export class PbfReader {
      * @param {number} [end]
      */
     readFields(readField, result, end = this.length) {
-        while (this.pos < end) {
-            const val = this.readVarint(),
-                tag = val >> 3,
-                startPos = this.pos;
-
-            this.type = val & 0x7;
-            readField(tag, result, this);
-
-            if (this.pos === startPos) this.skip(val);
+        let field;
+        while ((field = this.nextField(end))) {
+            const startPos = this.pos;
+            readField(field, result, this);
+            if (this.pos === startPos) this.skipField();
         }
         return result;
     }
@@ -198,6 +194,22 @@ export class PbfReader {
     }
     readPackedEnd() {
         return this.type === PBF_BYTES ? this.readVarint() + this.pos : this.pos + 1;
+    }
+
+    /**
+     * Advance to the next field. Returns the field number, or 0 at end-of-message.
+     * @param {number} [end]
+     */
+    nextField(end = this.length) {
+        if (this.pos >= end) return 0;
+        const tag = this.readVarint();
+        this.type = tag & 0x7;
+        return tag >>> 3;
+    }
+
+    /** Skip the field most recently returned by `nextField`. */
+    skipField() {
+        this.skip(this.type);
     }
 
     /** @param {number} val */

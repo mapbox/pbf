@@ -1,11 +1,11 @@
 
 export function readNotPacked(pbf, end = pbf.length) {
     const obj = {value: [], types: []};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3; pbf.type = tag & 7;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) pbf.readPackedVarint(obj.value, true);
         else if (field === 2) pbf.readPackedVarint(obj.types, true);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -16,11 +16,11 @@ export function writeNotPacked(obj, pbf) {
 
 export function readFalsePacked(pbf, end = pbf.length) {
     const obj = {value: [], types: []};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3; pbf.type = tag & 7;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) pbf.readPackedVarint(obj.value, true);
         else if (field === 2) pbf.readPackedVarint(obj.types, true);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
@@ -31,11 +31,11 @@ export function writeFalsePacked(obj, pbf) {
 
 export function readPacked(pbf, end = pbf.length) {
     const obj = {value: [], types: []};
-    while (pbf.pos < end) {
-        const tag = pbf.readVarint(), field = tag >>> 3; pbf.type = tag & 7;
+    let field;
+    while ((field = pbf.nextField(end))) {
         if (field === 1) pbf.readPackedVarint(obj.value, true);
         else if (field === 2) pbf.readPackedVarint(obj.types, true);
-        else pbf.skip(tag);
+        else pbf.skipField();
     }
     return obj;
 }
