@@ -95,7 +95,7 @@ function isEnum(type) {
 }
 
 function getType(ctx, field) {
-    if (field.type === 'map') return ctx[`${capitalize(field.name)}Entry`];
+    if (field.type === 'map') return ctx._mapEntries[field.name];
     return field.type.split('.').reduce((ctx, name) => ctx && ctx[name], ctx);
 }
 
@@ -205,16 +205,21 @@ function validateIdentifier(name) {
     }
 }
 
-function buildContext(proto, parent) {
+function buildContext(proto, parent, mapEntryField) {
     const obj = Object.create(parent);
     obj._proto = proto;
     obj._children = [];
     obj._defaults = {};
+    obj._mapEntries = {};
 
     if (parent) {
-        validateIdentifier(proto.name);
-        parent[proto.name] = obj;
         obj._name = (parent._name ?? '') + proto.name;
+        if (mapEntryField) {
+            parent._mapEntries[mapEntryField.name] = obj;
+        } else {
+            validateIdentifier(proto.name);
+            parent[proto.name] = obj;
+        }
     }
 
     for (const field of proto.fields ?? []) {
@@ -226,7 +231,12 @@ function buildContext(proto, parent) {
     for (const e of proto.enums ?? []) obj._children.push(buildContext(e, obj));
     for (const m of proto.messages ?? []) obj._children.push(buildContext(m, obj));
     for (const f of proto.fields ?? []) {
-        if (f.type === 'map') obj._children.push(buildContext(getMapMessage(f), obj));
+        if (f.type !== 'map') continue;
+        const entryProto = getMapMessage(f);
+        // Disambiguate against sibling messages/enums with a `$` suffix — `$` is a valid
+        // JS identifier char but disallowed in protobuf identifiers, so it can't re-collide.
+        if (obj._children.some(c => c._proto.name === entryProto.name)) entryProto.name += '$';
+        obj._children.push(buildContext(entryProto, obj, f));
     }
 
     return obj;
