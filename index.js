@@ -18,7 +18,7 @@ export class PbfReader {
      */
     constructor(buf) {
         this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
-        this.dataView = new DataView(this.buf.buffer);
+        this.dataView = new DataView(this.buf.buffer, this.buf.byteOffset, this.buf.byteLength);
         this.pos = 0;
         this.type = 0;
         this._valueStart = -1;
@@ -225,7 +225,7 @@ export class PbfWriter {
      */
     constructor(buf = new Uint8Array(16)) {
         this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
-        this.dataView = new DataView(this.buf.buffer);
+        this.dataView = new DataView(this.buf.buffer, this.buf.byteOffset, this.buf.byteLength);
         this.pos = 0;
         this.length = this.buf.length;
     }
