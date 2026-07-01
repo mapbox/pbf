@@ -162,6 +162,33 @@ test('readDouble', () => {
     assert.equal(Math.round(buf.readDouble() * 1e10) / 1e10, 12345.6789012345);
 });
 
+test('reads fixed-width fields from a view with a non-zero byteOffset', () => {
+    const backing = new ArrayBuffer(64);
+    const offset = 16;
+    const view = new Uint8Array(backing, offset, 48);
+    const dv = new DataView(backing, offset);
+    dv.setFloat64(0, 12345.6789012345, true);
+    dv.setFloat32(8, 42.5, true);
+    dv.setUint32(12, 0xdeadbeef, true);
+
+    const reader = new PbfReader(view);
+    assert.equal(Math.round(reader.readDouble() * 1e10) / 1e10, 12345.6789012345);
+    assert.equal(reader.readFloat(), 42.5);
+    assert.equal(reader.readFixed32(), 0xdeadbeef);
+});
+
+test('writes fixed-width fields to a view with a non-zero byteOffset', () => {
+    const backing = new ArrayBuffer(64);
+    const writer = new PbfWriter(new Uint8Array(backing, 16, 48));
+    writer.writeDoubleField(1, 12345.6789012345);
+
+    const reader = new PbfReader(new Uint8Array(writer.finish()));
+    reader.readFields((tag) => {
+        assert.equal(tag, 1);
+        assert.equal(Math.round(reader.readDouble() * 1e10) / 1e10, 12345.6789012345);
+    });
+});
+
 test('readPacked and writePacked', () => {
     const testNumbers2 = testNumbers.slice(0, 10);
 
