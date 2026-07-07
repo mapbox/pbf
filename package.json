@@ -55,7 +55,7 @@
     "benchmark": "^2.1.4",
     "eslint": "^10.4.0",
     "eslint-config-mourner": "^4.1.0",
-    "protobufjs": "^8.4.2",
+    "protobufjs": "^8.7.0",
     "protocol-buffers": "^5.0.0",
     "rollup": "^4.60.4",
     "typescript": "^6.0.3"
