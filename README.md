@@ -13,10 +13,10 @@ and orders of magnitude smaller. Here's a result from a real-world benchmark on 
 
 |                  | decode            | encode            |
 |------------------|-------------------|-------------------|
-| **pbf**          | 200ms, 187 MB/s   | 188ms, 200 MB/s   |
-| protocol-buffers | 297ms, 126 MB/s   | 620ms,  60 MB/s   |
-| protobuf.js      | 226ms, 169 MB/s   | 510ms,  74 MB/s   |
-| JSON             | 488ms, 278 MB/s   | 267ms, 509 MB/s   |
+| **pbf**          | 200ms, 192 MB/s   | 188ms, 216 MB/s   |
+| protocol-buffers | 297ms, 124 MB/s   | 620ms,  61 MB/s   |
+| protobuf.js      | 226ms, 195 MB/s   | 510ms, 266 MB/s   |
+| JSON             | 488ms, 308 MB/s   | 267ms, 374 MB/s   |
 
 `JSON` throughput is measured against the 136 MB JSON payload, not the 37.5 MB pbf payload —
 on the same data, pbf is ~2× faster to decode and ~2.5× faster to encode, and produces output
