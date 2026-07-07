@@ -11,12 +11,12 @@ This library is fast — competitive with or faster than other JS protobuf imple
 while being an order of magnitude smaller. Here's a result from a real-world benchmark on Node v26
 (decoding and encoding 439 Mapbox vector tiles, 37.5 MB total; the equivalent JSON is 136 MB):
 
-|                  | decode            | encode            | size (minzip) |
-|------------------|-------------------|-------------------|------------------|
-| **pbf**          | 195ms, 192 MB/s   | 174ms, 216 MB/s   | 2.5 KB           |
-| protocol-buffers | 303ms, 124 MB/s   | 612ms,  61 MB/s   | 14.2 KB          |
-| protobuf.js      | 192ms, 195 MB/s   | 141ms, 266 MB/s   | 33.9 KB          |
-| JSON             | 441ms, 308 MB/s   | 363ms, 374 MB/s   | —                |
+|| decode | encode | size (minzip) |
+|---|---|---|---|
+| **pbf** | 195ms, 192 MB/s | 146ms, 257 MB/s | 2.6 KB |
+| [protocol-buffers](https://github.com/mafintosh/protocol-buffers) | 303ms, 124 MB/s | 612ms,  61 MB/s | 14.2 KB
+| [protobuf.js](https://github.com/protobufjs/protobuf.js/) | 192ms, 195 MB/s | 141ms, 266 MB/s | 33.9 KB |
+| JSON | 441ms, 308 MB/s | 363ms, 374 MB/s | — |
 
 `JSON` throughput is measured against the 136 MB JSON payload, not the 37.5 MB pbf payload —
 on the same data, pbf is ~2× faster to decode and ~2.5× faster to encode, and produces output

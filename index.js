@@ -655,11 +655,27 @@ function makeRoomForExtraLength(startPos, len, pbf) {
 }
 
 /**
+ * Packed varints often dominate encode time, so write the bytes inline
+ * through a local buffer pointer rather than calling writeVarint per element,
+ * falling back to writeVarint only for negatives or near the buffer's end.
  * @param {number[]} arr
  * @param {PbfWriter} pbf
  */
 function writePackedVarint(arr, pbf) {
-    for (let i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);
+    const n = arr.length;
+    let buf = pbf.buf, pos = pbf.pos, limit = pbf.length;
+    for (let i = 0; i < n; i++) {
+        let val = arr[i];
+        if (val < 0 || pos + 10 > limit) { // slow path: grows the buffer, handles 10-byte values
+            pbf.pos = pos;
+            pbf.writeVarint(val);
+            buf = pbf.buf; pos = pbf.pos; limit = pbf.length;
+            continue;
+        }
+        while (val > 0x7f) { buf[pos++] = (val % 0x80) | 0x80; val = Math.floor(val / 0x80); }
+        buf[pos++] = val;
+    }
+    pbf.pos = pos;
 }
 /**
  * @param {number[]} arr
