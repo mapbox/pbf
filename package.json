@@ -53,11 +53,14 @@
   "devDependencies": {
     "@rollup/plugin-terser": "^1.0.0",
     "benchmark": "^2.1.4",
-    "eslint": "^10.4.0",
-    "eslint-config-mourner": "^4.1.0",
+    "eslint": "^10.6.0",
+    "eslint-config-mourner": "^5.0.1",
     "protobufjs": "^8.7.0",
     "protocol-buffers": "^5.0.0",
-    "rollup": "^4.60.4",
+    "rollup": "^4.62.2",
     "typescript": "^6.0.3"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }
