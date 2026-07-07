@@ -3,20 +3,20 @@
 [![Node](https://github.com/mapbox/pbf/actions/workflows/node.yml/badge.svg)](https://github.com/mapbox/pbf/actions/workflows/node.yml)
 ![Bundle size](https://img.shields.io/bundlephobia/minzip/pbf)
 
-A low-level, fast, ultra-lightweight (3KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers), a compact binary format for structured data serialization. Works both in Node and the browser. Supports lazy decoding and detailed customization of the reading/writing code.
+A low-level, fast, ultra-lightweight (2.5KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers), a compact binary format for structured data serialization. Works both in Node and the browser. Supports lazy decoding and detailed customization of the reading/writing code.
 
 ## Performance
 
-This library is fast — competitive with or faster than other JS protobuf implementations,
-and orders of magnitude smaller. Here's a result from a real-world benchmark on Node v26
+This library is fast — competitive with or faster than other JS protobuf implementations —
+while being an order of magnitude smaller. Here's a result from a real-world benchmark on Node v26
 (decoding and encoding 439 Mapbox vector tiles, 37.5 MB total; the equivalent JSON is 136 MB):
 
-|                  | decode            | encode            |
-|------------------|-------------------|-------------------|
-| **pbf**          | 200ms, 192 MB/s   | 188ms, 216 MB/s   |
-| protocol-buffers | 297ms, 124 MB/s   | 620ms,  61 MB/s   |
-| protobuf.js      | 226ms, 195 MB/s   | 510ms, 266 MB/s   |
-| JSON             | 488ms, 308 MB/s   | 267ms, 374 MB/s   |
+|                  | decode            | encode            | size (minzip) |
+|------------------|-------------------|-------------------|------------------|
+| **pbf**          | 195ms, 192 MB/s   | 174ms, 216 MB/s   | 2.5 KB           |
+| protocol-buffers | 303ms, 124 MB/s   | 612ms,  61 MB/s   | 14.2 KB          |
+| protobuf.js      | 192ms, 195 MB/s   | 141ms, 266 MB/s   | 33.9 KB          |
+| JSON             | 441ms, 308 MB/s   | 363ms, 374 MB/s   | —                |
 
 `JSON` throughput is measured against the 136 MB JSON payload, not the 37.5 MB pbf payload —
 on the same data, pbf is ~2× faster to decode and ~2.5× faster to encode, and produces output
