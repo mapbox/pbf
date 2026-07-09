@@ -213,6 +213,15 @@ function validateIdentifier(name) {
     }
 }
 
+// Per protobuf spec a tag is an integer in [1, 2^29 - 1] (accepting numeric strings too, as .proto text parser emits them).
+// Validated to prevent code injection as Field tags are interpolated directly into generated JS
+function validateTag(tag) {
+    const n = typeof tag === 'string' ? Number(tag) : tag;
+    if (!Number.isInteger(n) || n < 1 || n > 0x1fffffff) {
+        throw new Error(`Invalid protobuf field tag: ${JSON.stringify(tag)}`);
+    }
+}
+
 function buildContext(proto, parent, mapEntryField) {
     const obj = Object.create(parent);
     obj._proto = proto;
@@ -233,6 +242,7 @@ function buildContext(proto, parent, mapEntryField) {
     for (const field of proto.fields ?? []) {
         validateIdentifier(field.name);
         if (field.oneof) validateIdentifier(field.oneof);
+        validateTag(field.tag);
     }
     for (const valueName of Object.keys(proto.values ?? {})) validateIdentifier(valueName);
 

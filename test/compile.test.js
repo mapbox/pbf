@@ -403,3 +403,42 @@ test('rejects proto schemas with invalid identifiers', () => {
 
     assert.equal(globalThis.__pbfPwned, undefined);
 });
+
+test('rejects proto schemas with invalid field tags', () => {
+    const makeProto = tag => ({
+        syntax: 3,
+        package: null,
+        imports: [],
+        enums: [],
+        messages: [{
+            name: 'Foo',
+            enums: [],
+            messages: [],
+            extensions: null,
+            fields: [{
+                name: 'a',
+                type: 'string',
+                tag,
+                map: null,
+                oneof: null,
+                required: false,
+                repeated: false,
+                options: {}
+            }]
+        }]
+    });
+
+    // code injection via a string tag interpolated into the generated source
+    assert.throws(() => compile(makeProto('(globalThis.__pbfTagPwned = true, 1)')), /Invalid protobuf field tag/);
+    assert.equal(globalThis.__pbfTagPwned, undefined);
+
+    // out-of-range and non-integer tags
+    assert.throws(() => compile(makeProto(0)), /Invalid protobuf field tag/);
+    assert.throws(() => compile(makeProto(-1)), /Invalid protobuf field tag/);
+    assert.throws(() => compile(makeProto(1.5)), /Invalid protobuf field tag/);
+    assert.throws(() => compile(makeProto(0x20000000)), /Invalid protobuf field tag/);
+
+    // valid numeric and numeric-string tags (the .proto text parser emits strings) still compile
+    assert.doesNotThrow(() => compile(makeProto(1)));
+    assert.doesNotThrow(() => compile(makeProto('2')));
+});
