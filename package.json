@@ -1,6 +1,6 @@
 {
   "name": "pbf",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "a low-level, lightweight protocol buffers implementation in JavaScript",
   "main": "index.js",
   "type": "module",
