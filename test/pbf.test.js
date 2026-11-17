@@ -342,6 +342,18 @@ test('writeString & readString longer', () => {
     assert.equal(new PbfReader(writer.finish()).readString(), str);
 });
 
+test('writeString & readString with supplementary-plane characters', () => {
+    // code points whose (cp - 0x10000) has bit 0x10000 set (planes 2, 4, ..., 16) were written 0x10000 too low
+    const chars = ['\u{10000}', '\u{1F5FF}', '\u{20000}', '\u{26F06}', '\u{2A6DF}', '\u{30000}', '\u{4FFFF}', '\u{10FFFF}'];
+    for (const ch of chars) {
+        const writer = new PbfWriter();
+        writer.writeString(ch);
+        const bytes = writer.finish();
+        assert.deepEqual(bytes.subarray(1), new TextEncoder().encode(ch), `bytes for U+${ch.codePointAt(0).toString(16)}`);
+        assert.equal(new PbfReader(bytes).readString(), ch);
+    }
+});
+
 test('more complicated utf8', () => {
     const writer = new PbfWriter();
     // crazy test from github.com/mathiasbynens/utf8.js
