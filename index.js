@@ -825,7 +825,7 @@ function writeUtf8(buf, str, pos) {
                     lead = c;
                     continue;
                 } else {
-                    c = lead - 0xD800 << 10 | c - 0xDC00 | 0x10000;
+                    c = (lead - 0xD800 << 10 | c - 0xDC00) + 0x10000;
                     lead = null;
                 }
             } else {
