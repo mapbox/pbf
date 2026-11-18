@@ -9,6 +9,7 @@
     ".": "./index.js",
     "./compile": "./compile.js"
   },
+  "sideEffects": false,
   "scripts": {
     "bench": "node bench/bench.js",
     "pretest": "eslint *.js compile.js test/*.js test/fixtures/*.js bench/*.js bin/pbf && tsc",
@@ -60,8 +61,5 @@
     "protocol-buffers": "^5.0.0",
     "rolldown": "^1.3.2",
     "typescript": "^7.0.2"
-  },
-  "allowScripts": {
-    "fsevents@2.3.3": true
   }
 }

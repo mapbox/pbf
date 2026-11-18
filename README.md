@@ -3,7 +3,7 @@
 [![Node](https://github.com/mapbox/pbf/actions/workflows/node.yml/badge.svg)](https://github.com/mapbox/pbf/actions/workflows/node.yml)
 [![minzipped size](https://img.shields.io/bundlejs/size/pbf?label=min%2Bgzip)](https://esm.run/pbf)
 
-A low-level, fast, ultra-lightweight (2.5KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers), a compact binary format for structured data serialization. Works both in Node and the browser. Supports lazy decoding and detailed customization of the reading/writing code.
+A low-level, fast, ultra-lightweight (2.6KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers), a compact binary format for structured data serialization. Works both in Node and the browser. Supports lazy decoding and detailed customization of the reading/writing code.
 
 ## Performance
 
@@ -52,10 +52,9 @@ Alternatively, you can compile a protobuf schema file directly in the code:
 
 ```js
 import {compile} from 'pbf/compile';
-import schema from 'protocol-buffers-schema';
+import resolve from 'resolve-protobuf-schema';
 
-const proto = schema.parse(fs.readFileSync('example.proto'));
-const {readExample, writeExample} = compile(proto);
+const {readExample, writeExample} = compile(resolve.sync('example.proto'));
 ```
 
 #### Custom Reading
@@ -129,14 +128,14 @@ Alternatively, there's a browser bundle exposing a `Pbf` global with `PbfReader`
 
 The library exposes two classes: `PbfReader` for decoding and `PbfWriter` for encoding. Splitting them lets bundlers tree-shake the half you don't use.
 
-Create a `PbfReader` from a `Buffer` or `Uint8Array`:
+Create a `PbfReader` from a `Uint8Array` (including a Node `Buffer`) or an `ArrayBuffer`:
 
 ```js
 // parse a pbf file from disk in Node
 const pbf = new PbfReader(fs.readFileSync('data.pbf'));
 
-// parse a pbf file in a browser after an ajax request with responseType="arraybuffer"
-const pbf = new PbfReader(new Uint8Array(xhr.response));
+// parse a pbf file fetched over the network
+const pbf = new PbfReader(await (await fetch(url)).arrayBuffer());
 ```
 
 Both classes expose the following properties:
@@ -220,7 +219,7 @@ Packed reading methods:
 
 #### Writing
 
-Create a `PbfWriter` (optionally with a pre-allocated `Buffer` or `Uint8Array`):
+Create a `PbfWriter` (optionally with a pre-allocated `Uint8Array` or `ArrayBuffer`):
 
 ```js
 const pbf = new PbfWriter();
