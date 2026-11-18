@@ -808,13 +808,30 @@ function readUtf8(buf, pos, end) {
 }
 
 /**
+ * ASCII fast path, kept small so V8 inlines it into writeString; the general encoder takes over from
+ * the first non-ASCII char.
  * @param {Uint8Array} buf
  * @param {string} str
  * @param {number} pos
  */
 function writeUtf8(buf, str, pos) {
+    for (let i = 0; i < str.length; i++) {
+        const c = str.charCodeAt(i);
+        if (c >= 0x80) return writeUtf8From(buf, str, pos, i);
+        buf[pos++] = c;
+    }
+    return pos;
+}
+
+/**
+ * @param {Uint8Array} buf
+ * @param {string} str
+ * @param {number} pos
+ * @param {number} i
+ */
+function writeUtf8From(buf, str, pos, i) {
     let lead;
-    for (let i = 0, c; i < str.length; i++) {
+    for (let c; i < str.length; i++) {
         c = str.charCodeAt(i); // code point
 
         if (c > 0xD7FF && c < 0xE000) {
