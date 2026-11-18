@@ -2,10 +2,12 @@
 const SHIFT_LEFT_32 = (1 << 16) * (1 << 16);
 const SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
 
-// Threshold chosen based on both benchmarking and knowledge about browser string
-// data structures (which currently switch structure types at 12 bytes or more)
+// TextDecoder has a high fixed cost per call, so short strings are faster to decode in JS. But strings over
+// 12 chars built in JS become memory-heavy V8 cons strings, so we use JS only below 12 bytes for strings
+// starting with ASCII and below 32 bytes for others (fewer chars per byte, and a costlier TextDecoder call).
 const TEXT_DECODER_MIN_LENGTH = 12;
-const utf8TextDecoder = typeof TextDecoder === 'undefined' ? null : new TextDecoder('utf-8');
+const TEXT_DECODER_MIN_LENGTH_NON_ASCII = 32;
+const utf8TextDecoder = new TextDecoder();
 
 const PBF_VARINT  = 0; // varint: int32, int64, uint32, uint64, sint32, sint64, bool, enum
 const PBF_FIXED64 = 1; // 64-bit: double, fixed64, sfixed64
@@ -117,7 +119,8 @@ export class PbfReader {
         const pos = this.pos;
         this.pos = end;
 
-        if (end - pos >= TEXT_DECODER_MIN_LENGTH && utf8TextDecoder) {
+        const len = end - pos;
+        if (len >= (this.buf[pos] < 0x80 ? TEXT_DECODER_MIN_LENGTH : TEXT_DECODER_MIN_LENGTH_NON_ASCII)) {
             // longer strings are fast with the built-in browser TextDecoder API
             return utf8TextDecoder.decode(this.buf.subarray(pos, end));
         }
@@ -140,7 +143,19 @@ export class PbfReader {
      */
     readPackedVarint(arr = [], isSigned) {
         const end = this.readPackedEnd();
-        while (this.pos < end) arr.push(this.readVarint(isSigned));
+        const buf = this.buf;
+        let pos = this.pos;
+        // 1–2 byte values dominate typical packed data (e.g. geometry deltas), so decode them inline
+        while (pos < end) {
+            const b0 = buf[pos];
+            if (b0 < 0x80) { arr.push(b0); pos++; continue; }
+            const b1 = buf[pos + 1];
+            if (b1 < 0x80) { arr.push((b0 & 0x7f) | (b1 << 7)); pos += 2; continue; }
+            this.pos = pos;
+            arr.push(this.readVarint(isSigned));
+            pos = this.pos;
+        }
+        this.pos = pos;
         return arr;
     }
     /** @param {number[]} [arr] */
@@ -305,11 +320,8 @@ export class PbfWriter {
         }
 
         this.realloc(4);
-
-        this.buf[this.pos++] =           val & 0x7f  | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
-        this.buf[this.pos++] = ((val >>>= 7) & 0x7f) | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
-        this.buf[this.pos++] = ((val >>>= 7) & 0x7f) | (val > 0x7f ? 0x80 : 0); if (val <= 0x7f) return;
-        this.buf[this.pos++] =   (val >>> 7) & 0x7f;
+        while (val > 0x7f) { this.buf[this.pos++] = val & 0x7f | 0x80; val >>>= 7; }
+        this.buf[this.pos++] = val;
     }
 
     /** @param {number} val */
@@ -647,7 +659,7 @@ function makeRoomForExtraLength(startPos, len, pbf) {
     const extraLen =
         len <= 0x3fff ? 1 :
         len <= 0x1fffff ? 2 :
-        len <= 0xfffffff ? 3 : Math.floor(Math.log(len) / (Math.LN2 * 7));
+        len <= 0xfffffff ? 3 : 4;
 
     // if 1 byte isn't enough for encoding message length, shift the data to the right
     pbf.realloc(extraLen);
@@ -734,76 +746,31 @@ function writePackedSFixed64(arr, pbf) {
     for (let i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]);
 }
 
-// Buffer code below from https://github.com/feross/buffer, MIT-licensed
-
 /**
+ * Decodes valid 1–3 byte UTF-8 sequences, handing anything else (invalid bytes, 4-byte chars) to TextDecoder.
  * @param {Uint8Array} buf
  * @param {number} pos
  * @param {number} end
  */
 function readUtf8(buf, pos, end) {
     let str = '';
-    let i = pos;
-
-    while (i < end) {
-        const b0 = buf[i];
-        let c = null; // codepoint
-        let bytesPerSequence =
-            b0 > 0xEF ? 4 :
-            b0 > 0xDF ? 3 :
-            b0 > 0xBF ? 2 : 1;
-
-        if (i + bytesPerSequence > end) break;
-
-        let b1, b2, b3;
-
-        if (bytesPerSequence === 1) {
-            if (b0 < 0x80) {
-                c = b0;
-            }
-        } else if (bytesPerSequence === 2) {
-            b1 = buf[i + 1];
-            if ((b1 & 0xC0) === 0x80) {
-                c = (b0 & 0x1F) << 0x6 | (b1 & 0x3F);
-                if (c <= 0x7F) {
-                    c = null;
-                }
-            }
-        } else if (bytesPerSequence === 3) {
-            b1 = buf[i + 1];
-            b2 = buf[i + 2];
-            if ((b1 & 0xC0) === 0x80 && (b2 & 0xC0) === 0x80) {
-                c = (b0 & 0xF) << 0xC | (b1 & 0x3F) << 0x6 | (b2 & 0x3F);
-                if (c <= 0x7FF || (c >= 0xD800 && c <= 0xDFFF)) {
-                    c = null;
-                }
-            }
-        } else if (bytesPerSequence === 4) {
-            b1 = buf[i + 1];
-            b2 = buf[i + 2];
-            b3 = buf[i + 3];
-            if ((b1 & 0xC0) === 0x80 && (b2 & 0xC0) === 0x80 && (b3 & 0xC0) === 0x80) {
-                c = (b0 & 0xF) << 0x12 | (b1 & 0x3F) << 0xC | (b2 & 0x3F) << 0x6 | (b3 & 0x3F);
-                if (c <= 0xFFFF || c >= 0x110000) {
-                    c = null;
-                }
+    for (let i = pos; i < end; i++) {
+        let c = buf[i];
+        if (c > 0x7f) {
+            const b1 = buf[i + 1] ^ 0x80;
+            const b2 = buf[i + 2] ^ 0x80;
+            if (c >= 0xc2 && c < 0xe0 && b1 < 0x40 && i + 1 < end) {
+                c = (c & 0x1f) << 6 | b1;
+                i++;
+            } else if ((c & 0xf0) === 0xe0 && b1 < 0x40 && b2 < 0x40 && i + 2 < end &&
+                (c = (c & 0xf) << 12 | b1 << 6 | b2) >= 0x800 && (c < 0xd800 || c > 0xdfff)) {
+                i += 2;
+            } else {
+                return utf8TextDecoder.decode(buf.subarray(pos, end));
             }
         }
-
-        if (c === null) {
-            c = 0xFFFD;
-            bytesPerSequence = 1;
-
-        } else if (c > 0xFFFF) {
-            c -= 0x10000;
-            str += String.fromCharCode(c >>> 10 & 0x3FF | 0xD800);
-            c = 0xDC00 | c & 0x3FF;
-        }
-
         str += String.fromCharCode(c);
-        i += bytesPerSequence;
     }
-
     return str;
 }
 
