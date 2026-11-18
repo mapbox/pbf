@@ -55,7 +55,6 @@
     "resolve-protobuf-schema": "^2.1.0"
   },
   "devDependencies": {
-    "benchmark": "^2.1.4",
     "eslint": "^10.15.0",
     "eslint-config-mourner": "^5.0.2",
     "protobufjs": "^8.8.1",
