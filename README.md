@@ -13,13 +13,13 @@ while being an order of magnitude smaller. Here's a result from a real-world ben
 
 || decode | encode | size (minzip) |
 |---|---|---|---|
-| **pbf** | 173ms, 217 MB/s | 123ms, 306 MB/s | 2.6 KB |
-| [protocol-buffers](https://github.com/mafintosh/protocol-buffers) | 274ms, 137 MB/s | 541ms,  69 MB/s | 14.2 KB
-| [protobuf.js](https://github.com/protobufjs/protobuf.js/) | 168ms, 224 MB/s | 116ms, 324 MB/s | 33.9 KB |
-| JSON | 410ms, 335 MB/s | 459ms, 299 MB/s | — |
+| **pbf** | 149ms, 252 MB/s | 122ms, 307 MB/s | 2.6 KB |
+| [protocol-buffers](https://github.com/mafintosh/protocol-buffers) | 275ms, 136 MB/s | 543ms,  69 MB/s | 14.2 KB
+| [protobuf.js](https://github.com/protobufjs/protobuf.js/) | 168ms, 223 MB/s | 118ms, 317 MB/s | 33.9 KB |
+| JSON | 415ms, 331 MB/s | 506ms, 271 MB/s | — |
 
 `JSON` throughput is measured against the 137 MB JSON payload, not the 37.5 MB pbf payload —
-on the same data, pbf is ~2.4× faster to decode and ~3.7× faster to encode, and produces output
+on the same data, pbf is ~2.8× faster to decode and ~4.1× faster to encode, and produces output
 roughly a quarter the size. Timings are for warmed-up code, with each library in a separate process;
 see `bench/bench-tiles.js`.
 
