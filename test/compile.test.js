@@ -6,19 +6,19 @@ import {resolve} from '../resolve.js';
 import {PbfReader, PbfWriter} from '../index.js';
 import {compile, compileRaw} from '../compile.js';
 
-test('compiles all proto files to proper js', () => {
+test('compiles all proto files to proper js and type declarations', () => {
     const files = fs.readdirSync(new URL('fixtures', import.meta.url));
 
     for (const path of files) {
         if (!path.endsWith('.proto')) continue;
         const proto = resolve(new URL(`fixtures/${path}`, import.meta.url));
-        const js = compileRaw(proto, {dev: true});
 
-        const jsPath = new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url);
-        if (process.env.UPDATE) fs.writeFileSync(jsPath, js);
-
-        const expectedJS = fs.readFileSync(jsPath, 'utf8');
-        assert.equal(js, expectedJS);
+        for (const [ext, dts] of [['.js', false], ['.d.ts', true]]) {
+            const code = compileRaw(proto, {dev: true, dts});
+            const outPath = new URL(`fixtures/${path}`.replace('.proto', ext), import.meta.url);
+            if (process.env.UPDATE) fs.writeFileSync(outPath, code);
+            assert.equal(code, fs.readFileSync(outPath, 'utf8'), `${path} → ${ext}`);
+        }
     }
 });
 

@@ -14,6 +14,13 @@ const PBF_FIXED64 = 1; // 64-bit: double, fixed64, sfixed64
 const PBF_BYTES   = 2; // length-delimited: string, bytes, embedded messages, packed repeated fields
 const PBF_FIXED32 = 5; // 32-bit: float, fixed32, sfixed32
 
+/**
+ * The type of objects accepted by write functions in generated code: any subset of fields, recursively.
+ * @template T
+ * @typedef {T extends Uint8Array ? T : T extends (infer U)[] ? DeepPartial<U>[] :
+ *     T extends object ? {[K in keyof T]?: DeepPartial<T[K]>} : T} DeepPartial
+ */
+
 export class PbfReader {
     /**
      * @param {Uint8Array | ArrayBuffer} buf

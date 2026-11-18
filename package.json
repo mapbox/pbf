@@ -13,7 +13,7 @@
   "sideEffects": false,
   "scripts": {
     "bench": "node bench/bench.js",
-    "pretest": "eslint *.js compile.js test/*.js test/fixtures/*.js bench/*.js bin/pbf && tsc",
+    "pretest": "eslint *.js compile.js test/*.js test/fixtures/*.js bench/*.js bin/pbf && tsc && tsc -p test/types",
     "test": "node --test test/*.test.js",
     "cov": "node --test --experimental-test-coverage test/*.test.js",
     "build": "rolldown -c",

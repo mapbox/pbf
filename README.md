@@ -302,13 +302,19 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 If installed globally, `pbf` provides a binary that compiles `proto` files into JavaScript modules. Usage:
 
 ```bash
-$ pbf <file.proto> [-I <include_dir>]... [--no-write] [--no-read] [--legacy]
+$ pbf <file.proto> [-I <include_dir>]... [--no-write] [--no-read] [--legacy] [--dts]
 ```
 
 Imports are looked up relative to the importing file, then in each `-I` (or `--proto_path`) directory,
 defaulting to the current one — like in `protoc`.
 The `--no-write` and `--no-read` switches remove corresponding code in the output.
 The `--legacy` switch makes it generate a CommonJS module instead of ESM.
+The `--dts` switch makes it generate TypeScript declarations for the module instead, to save next to it:
+
+```bash
+$ pbf example.proto > example.js
+$ pbf example.proto --dts > example.d.ts
+```
 
 `Pbf` will generate `read<Identifier>` and `write<Identifier>` functions for every message in the schema. For nested messages, their names will be concatenated — e.g. `Message` inside `Test` will produce `readTestMessage` and `writeTestMessage` functions.
 
@@ -317,3 +323,7 @@ The `--legacy` switch makes it generate a CommonJS module instead of ESM.
 * `write(obj, pbf)` - encodes an object into the given `PbfWriter` instance (usually empty).
 
 The resulting code is clean and simple, so it's meant to be customized.
+
+The declarations describe each message with an interface of the same name and each enum with a union of its values.
+Read functions return every field of a message, filled with defaults when missing (except for messages and `bytes`,
+which may be `undefined`), while write functions accept any subset of fields.
