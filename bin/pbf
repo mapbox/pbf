@@ -1,17 +1,28 @@
 #!/usr/bin/env node
 
+import {parseArgs} from 'util';
 import {resolve} from '../resolve.js';
 import {compileRaw} from '../compile.js';
 
-if (process.argv.length < 3) {
-    console.error('Usage: pbf [file.proto] [--no-read] [--no-write] [--legacy]');
+const {values, positionals} = parseArgs({
+    allowPositionals: true,
+    options: {
+        'proto_path': {type: 'string', short: 'I', multiple: true},
+        'no-read': {type: 'boolean'},
+        'no-write': {type: 'boolean'},
+        'legacy': {type: 'boolean'}
+    }
+});
+
+if (positionals.length !== 1) {
+    console.error('Usage: pbf file.proto [-I include_dir]... [--no-read] [--no-write] [--legacy]');
     process.exit(0);
 }
 
-const code = compileRaw(resolve(process.argv[2]), {
-    noRead: process.argv.indexOf('--no-read') >= 0,
-    noWrite: process.argv.indexOf('--no-write') >= 0,
-    legacy: process.argv.indexOf('--legacy') >= 0
+const code = compileRaw(resolve(positionals[0], {paths: values.proto_path}), {
+    noRead: values['no-read'],
+    noWrite: values['no-write'],
+    legacy: values.legacy
 });
 
 process.stdout.write(code);

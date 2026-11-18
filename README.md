@@ -58,6 +58,9 @@ import {resolve} from 'pbf/resolve';
 const {readExample, writeExample} = compile(resolve('example.proto'));
 ```
 
+`resolve` merges in all imported files, which it looks up the same way as the CLI does (see below); pass
+`{paths: ['include_dir', ...]}` as the second argument to set include directories.
+
 #### Custom Reading
 
 ```js
@@ -299,9 +302,11 @@ For an example of a real-world usage of the library, see [vector-tile-js](https:
 If installed globally, `pbf` provides a binary that compiles `proto` files into JavaScript modules. Usage:
 
 ```bash
-$ pbf <proto_path> [--no-write] [--no-read] [--legacy]
+$ pbf <file.proto> [-I <include_dir>]... [--no-write] [--no-read] [--legacy]
 ```
 
+Imports are looked up relative to the importing file, then in each `-I` (or `--proto_path`) directory,
+defaulting to the current one — like in `protoc`.
 The `--no-write` and `--no-read` switches remove corresponding code in the output.
 The `--legacy` switch makes it generate a CommonJS module instead of ESM.
 

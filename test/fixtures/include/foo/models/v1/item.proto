@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package foo.models.v1;
+
+import "foo/models/v1/common.proto";
+
+message Item {
+    Common common = 1;
+}

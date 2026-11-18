@@ -442,3 +442,19 @@ test('rejects proto schemas with invalid field tags', () => {
     assert.doesNotThrow(() => compile(makeProto(1)));
     assert.doesNotThrow(() => compile(makeProto('2')));
 });
+
+test('resolves imports against include paths, reading each file once', () => {
+    const file = new URL('fixtures/include/foo/models/v1/test.proto', import.meta.url);
+    const proto = resolve(file, {paths: [new URL('fixtures/include', import.meta.url)]});
+    assert.deepEqual(proto.messages.map(m => m.name), ['Test', 'Common', 'Item']);
+
+    const {readTest, writeTest} = compile(proto);
+    const pbf = new PbfWriter();
+    writeTest({common: {id: 1}, items: [{common: {id: 2}}]}, pbf);
+    assert.deepEqual(readTest(new PbfReader(pbf.finish())), {common: {id: 1}, items: [{common: {id: 2}}]});
+});
+
+test('throws on imports missing from include paths', () => {
+    const file = new URL('fixtures/include/foo/models/v1/test.proto', import.meta.url);
+    assert.throws(() => resolve(file, {paths: []}), /Import "foo\/models\/v1\/common.proto" in .*test.proto not found/);
+});

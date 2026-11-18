@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package foo.models.v1;
+
+import "foo/models/v1/common.proto";
+import "foo/models/v1/item.proto";
+
+message Test {
+    Common common = 1;
+    repeated Item items = 2;
+}

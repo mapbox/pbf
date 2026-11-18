@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package foo.models.v1;
+
+message Common {
+    int32 id = 1;
+}
