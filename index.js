@@ -813,7 +813,8 @@ function readUtf8(buf, pos, end) {
  * @param {number} pos
  */
 function writeUtf8(buf, str, pos) {
-    for (let i = 0, c, lead; i < str.length; i++) {
+    let lead;
+    for (let i = 0, c; i < str.length; i++) {
         c = str.charCodeAt(i); // code point
 
         if (c > 0xD7FF && c < 0xE000) {
@@ -829,7 +830,7 @@ function writeUtf8(buf, str, pos) {
                     lead = null;
                 }
             } else {
-                if (c > 0xDBFF || (i + 1 === str.length)) {
+                if (c > 0xDBFF) {
                     buf[pos++] = 0xEF;
                     buf[pos++] = 0xBF;
                     buf[pos++] = 0xBD;
@@ -861,6 +862,11 @@ function writeUtf8(buf, str, pos) {
             }
             buf[pos++] = c & 0x3F | 0x80;
         }
+    }
+    if (lead) {
+        buf[pos++] = 0xEF;
+        buf[pos++] = 0xBF;
+        buf[pos++] = 0xBD;
     }
     return pos;
 }

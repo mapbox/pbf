@@ -360,8 +360,21 @@ test('more complicated utf8', () => {
     const str = '\uDC00\uDC00\uDC00\uDC00A\uDC00𝌆\uDC00\uDEEE\uDFFF𐀀\uD800\uD800\uD800\uD800A' +
         '\uD800𝌆';
     writer.writeString(str);
-    const str2 = new PbfReader(writer.finish()).readString();
-    assert.deepEqual(new Uint8Array(str2), new Uint8Array(str));
+    const bytes = writer.finish();
+    const expected = new TextEncoder().encode(str);
+    assert.deepEqual(bytes.subarray(bytes.length - expected.length), expected);
+    assert.equal(new PbfReader(bytes).readString(), new TextDecoder().decode(expected));
+});
+
+test('writeString with lone surrogates', () => {
+    const strs = ['\uD800', '\uDC00', 'a\uD800', '\uD800a', '\uD800\uD800', 'a\uD800\uD800', '\uD800\uD800\uD800',
+        '\uDC00\uD800', '\uD800𐀀', '𐀀\uD800'];
+    for (const str of strs) {
+        const writer = new PbfWriter();
+        writer.writeString(str);
+        const bytes = writer.finish();
+        assert.deepEqual(bytes.subarray(1), new TextEncoder().encode(str), JSON.stringify(str));
+    }
 });
 
 test('readFields', () => {
