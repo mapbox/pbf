@@ -1,4 +1,5 @@
 import fs from 'fs';
+import {fileURLToPath} from 'url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {sync as resolve} from 'resolve-protobuf-schema';
@@ -11,7 +12,7 @@ test('compiles all proto files to proper js', () => {
 
     for (const path of files) {
         if (!path.endsWith('.proto')) continue;
-        const proto = resolve(new URL(`fixtures/${path}`, import.meta.url));
+        const proto = resolve(fileURLToPath(new URL(`fixtures/${path}`, import.meta.url)));
         const js = compileRaw(proto, {dev: true});
 
         const jsPath = new URL(`fixtures/${path}`.replace('.proto', '.js'), import.meta.url);

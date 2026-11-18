@@ -189,7 +189,16 @@ function isEnum(type) {
  */
 function getType(ctx, field) {
     if (field.type === 'map') return ctx._mapEntries[field.name];
-    return field.type.split('.').reduce((ctx, name) => ctx && ctx[name], ctx);
+
+    // The schema parser merges imported files into one flat scope and drops their packages, so a
+    // package-qualified name like `google.protobuf.Any` won't resolve as is; retry without the
+    // leading segments until it does.
+    const path = field.type.replace(/^\./, '').split('.');
+    for (let i = 0; i < path.length; i++) {
+        const type = path.slice(i).reduce((ctx, name) => ctx && ctx[name], ctx);
+        if (type) return type;
+    }
+    return undefined;
 }
 
 /** @param {string} s */
