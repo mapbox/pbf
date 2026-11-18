@@ -10,6 +10,7 @@
         "moduleResolution": "nodenext"
     },
     "files": [
-        "index.js"
+        "index.js",
+        "compile.js"
     ]
 }

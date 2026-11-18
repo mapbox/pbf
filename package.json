@@ -23,7 +23,8 @@
     "dist",
     "index.js",
     "compile.js",
-    "index.d.ts"
+    "index.d.ts",
+    "compile.d.ts"
   ],
   "types": "index.d.ts",
   "bin": {
