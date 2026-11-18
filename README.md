@@ -1,7 +1,7 @@
 # pbf
 
 [![Node](https://github.com/mapbox/pbf/actions/workflows/node.yml/badge.svg)](https://github.com/mapbox/pbf/actions/workflows/node.yml)
-![Bundle size](https://img.shields.io/bundlephobia/minzip/pbf)
+[![minzipped size](https://img.shields.io/bundlejs/size/pbf?label=min%2Bgzip)](https://esm.run/pbf)
 
 A low-level, fast, ultra-lightweight (2.5KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers), a compact binary format for structured data serialization. Works both in Node and the browser. Supports lazy decoding and detailed customization of the reading/writing code.
 
