@@ -4,4 +4,5 @@ dist
 node_modules
 index.d.ts
 compile.d.ts
+resolve.d.ts
 tile-cache

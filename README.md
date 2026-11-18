@@ -53,9 +53,9 @@ Alternatively, you can compile a protobuf schema file directly in the code:
 
 ```js
 import {compile} from 'pbf/compile';
-import resolve from 'resolve-protobuf-schema';
+import {resolve} from 'pbf/resolve';
 
-const {readExample, writeExample} = compile(resolve.sync('example.proto'));
+const {readExample, writeExample} = compile(resolve('example.proto'));
 ```
 
 #### Custom Reading

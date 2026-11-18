@@ -7,7 +7,8 @@
   "type": "module",
   "exports": {
     ".": "./index.js",
-    "./compile": "./compile.js"
+    "./compile": "./compile.js",
+    "./resolve": "./resolve.js"
   },
   "sideEffects": false,
   "scripts": {
@@ -23,8 +24,10 @@
     "dist",
     "index.js",
     "compile.js",
+    "resolve.js",
     "index.d.ts",
-    "compile.d.ts"
+    "compile.d.ts",
+    "resolve.d.ts"
   ],
   "types": "index.d.ts",
   "bin": {
@@ -52,9 +55,10 @@
   },
   "homepage": "https://github.com/mapbox/pbf",
   "dependencies": {
-    "resolve-protobuf-schema": "^2.1.0"
+    "protocol-buffers-schema": "^3.6.1"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
     "eslint": "^10.15.0",
     "eslint-config-mourner": "^5.0.2",
     "protobufjs": "^8.8.1",

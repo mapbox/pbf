@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import resolve from 'resolve-protobuf-schema';
+import {resolve} from '../resolve.js';
 import {compileRaw} from '../compile.js';
 
 if (process.argv.length < 3) {
@@ -8,7 +8,7 @@ if (process.argv.length < 3) {
     process.exit(0);
 }
 
-const code = compileRaw(resolve.sync(process.argv[2]), {
+const code = compileRaw(resolve(process.argv[2]), {
     noRead: process.argv.indexOf('--no-read') >= 0,
     noWrite: process.argv.indexOf('--no-write') >= 0,
     legacy: process.argv.indexOf('--legacy') >= 0

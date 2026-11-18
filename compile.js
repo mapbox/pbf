@@ -46,7 +46,7 @@ import pkg from './package.json' with {type: 'json'};
  */
 
 /**
- * Compiles a protobuf schema (as parsed by `resolve-protobuf-schema` or `protocol-buffers-schema`) into an
+ * Compiles a protobuf schema (as parsed by `pbf/resolve` or `protocol-buffers-schema`) into an
  * object with `read<Name>`/`write<Name>` functions for each message and a values object for each enum.
  * @param {ProtoSchema} proto
  * @returns {Record<string, any>}
