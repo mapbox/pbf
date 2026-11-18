@@ -7,12 +7,15 @@ import protobufjs from 'protobufjs';
 import {readTile, writeTile} from '../test/fixtures/vector_tile.js';
 import {PbfReader, PbfWriter} from '../index.js';
 
+// Run without arguments for the full table, or as `node bench/bench-tiles.js <lib> <decode|encode>` (lib being
+// a key of `libs` below) to measure a single row in one process, printing its {first, median} times as JSON.
+
 // Each library × operation runs in fresh processes so JIT state and GC pressure don't leak between them.
 // Within a process, the median pass after warmup is stable, but V8 heuristics can still land a whole process
 // in a slower mode (e.g. ~7% for protobuf.js decode in a quarter of runs), so we take the best of a few.
-const RUNS = 3;
+const RUNS = 1;
 const WARMUP = 3;
-const PASSES = 10;
+const PASSES = 5;
 
 const vtProtoPath = fileURLToPath(new URL('../test/fixtures/vector_tile.proto', import.meta.url));
 const urlTemplate = 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token={token}';
