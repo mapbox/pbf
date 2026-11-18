@@ -3,7 +3,7 @@
 [![Node](https://github.com/mapbox/pbf/actions/workflows/node.yml/badge.svg)](https://github.com/mapbox/pbf/actions/workflows/node.yml)
 [![minzipped size](https://img.shields.io/bundlejs/size/pbf?label=min%2Bgzip)](https://esm.run/pbf)
 
-A low-level, fast, ultra-lightweight (2.6KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://developers.google.com/protocol-buffers), a compact binary format for structured data serialization. Works both in Node and the browser. Supports lazy decoding and detailed customization of the reading/writing code.
+A low-level, fast, ultra-lightweight (2.5KB gzipped) JavaScript library for decoding and encoding [protocol buffers](https://protobuf.dev), a compact binary format for structured data serialization. Works both in Node and the browser. Supports lazy decoding and detailed customization of the reading/writing code.
 
 ## Performance
 
@@ -13,9 +13,9 @@ while being an order of magnitude smaller. Here's a result from a real-world ben
 
 || decode | encode | size (minzip) |
 |---|---|---|---|
-| **pbf** | 149ms, 252 MB/s | 122ms, 307 MB/s | 2.6 KB |
-| [protocol-buffers](https://github.com/mafintosh/protocol-buffers) | 275ms, 136 MB/s | 543ms,  69 MB/s | 14.2 KB
-| [protobuf.js](https://github.com/protobufjs/protobuf.js/) | 168ms, 223 MB/s | 118ms, 317 MB/s | 33.9 KB |
+| **pbf** | 149ms, 252 MB/s | 122ms, 307 MB/s | 2.5 KB |
+| [protocol-buffers](https://github.com/mafintosh/protocol-buffers) | 275ms, 136 MB/s | 543ms,  69 MB/s | 15.7 KB |
+| [protobuf.js](https://github.com/protobufjs/protobuf.js/) | 168ms, 223 MB/s | 118ms, 317 MB/s | 33.2 KB |
 | JSON | 415ms, 331 MB/s | 506ms, 271 MB/s | — |
 
 `JSON` throughput is measured against the 137 MB JSON payload, not the 37.5 MB pbf payload —
@@ -59,7 +59,9 @@ const {readExample, writeExample} = compile(resolve('example.proto'));
 ```
 
 `resolve` merges in all imported files, which it looks up the same way as the CLI does (see below); pass
-`{paths: ['include_dir', ...]}` as the second argument to set include directories.
+`{paths: ['include_dir', ...]}` as the second argument to set include directories. `resolve` reads from disk, so
+it's Node-only; to generate code as a string instead (e.g. in a build script), use `compileRaw(schema, options)`
+from `pbf/compile`, which takes the same options as the CLI (`noRead`, `noWrite`, `legacy`, `dts`).
 
 #### Custom Reading
 
@@ -82,7 +84,7 @@ function readLayer(pbf, end) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 1) layer.name = pbf.readString();
-        else if (field === 3) layer.size = pbf.readVarint();
+        else if (field === 2) layer.size = pbf.readVarint();
     }
     return layer;
 }
@@ -188,7 +190,7 @@ pbf.pos = fooPos;
 const foo = readFoo(pbf, pbf.readVarint() + pbf.pos);
 ```
 
-A callback-based `readFields(fn, obj, end)` is also available for backward compatibility, but new code should prefer the `nextField` loop — it's significantly faster.
+Callback-based `readFields(fn, obj, end)` and `readMessage(fn, obj)` are also available for backward compatibility, but new code should prefer the `nextField` loop — it's significantly faster.
 
 Scalar reading methods:
 
@@ -206,12 +208,12 @@ Scalar reading methods:
 
 Field iteration methods:
 
-* `nextField(end)` — returns the next field number, or `0` at end-of-message; skips the previous field's value if it wasn't consumed
-* `skip(value)` — skips a field given its raw tag varint
+* `nextField(end)` - returns the next field number, or `0` at end-of-message; skips the previous field's value if it wasn't consumed
+* `skip(value)` - skips a field given its raw tag varint
 
 Packed reading methods:
 
-* `readPackedVarint(arr, isSigned)` (appends read items to `arr`)
+* `readPackedVarint(arr, isSigned)` (appends read items to `arr`, or a new array if omitted, and returns it)
 * `readPackedSVarint(arr)`
 * `readPackedFixed32(arr)`
 * `readPackedFixed64(arr)`
@@ -242,8 +244,8 @@ Write an embedded message:
 pbf.writeMessage(1, writeObj, obj);
 
 function writeObj(obj, pbf) {
-    pbf.writeStringField(obj.name);
-    pbf.writeVarintField(obj.version);
+    pbf.writeStringField(1, obj.name);
+    pbf.writeVarintField(2, obj.version);
 }
 ```
 
@@ -263,18 +265,22 @@ Field writing methods:
 
 Packed field writing methods:
 
-* `writePackedVarint(tag, val)`
-* `writePackedSVarint(tag, val)`
-* `writePackedSFixed32(tag, val)`
-* `writePackedSFixed64(tag, val)`
-* `writePackedBoolean(tag, val)`
-* `writePackedFloat(tag, val)`
-* `writePackedDouble(tag, val)`
+* `writePackedVarint(tag, arr)`
+* `writePackedSVarint(tag, arr)`
+* `writePackedFixed32(tag, arr)`
+* `writePackedFixed64(tag, arr)`
+* `writePackedSFixed32(tag, arr)`
+* `writePackedSFixed64(tag, arr)`
+* `writePackedBoolean(tag, arr)`
+* `writePackedFloat(tag, arr)`
+* `writePackedDouble(tag, arr)`
 
 Scalar writing methods:
 
 * `writeVarint(val)`
 * `writeSVarint(val)`
+* `writeFixed32(val)`
+* `writeFixed64(val)`
 * `writeSFixed32(val)`
 * `writeSFixed64(val)`
 * `writeBoolean(val)`
@@ -292,14 +298,13 @@ Misc methods:
 
 * `realloc(minBytes)` - pad the underlying buffer size to accommodate the given number of bytes;
    note that the size increases exponentially, so it won't necessarily equal the size of data written
-* `finish()` - make the current buffer ready for reading and return the data as a buffer slice
+* `finish()` - return the written data as a `Uint8Array` view into the underlying buffer (not a copy)
 
 For an example of a real-world usage of the library, see [vector-tile-js](https://github.com/mapbox/vector-tile-js).
 
-
 ## Proto Schema to JavaScript
 
-If installed globally, `pbf` provides a binary that compiles `proto` files into JavaScript modules. Usage:
+`pbf` comes with a binary (run it with `npx pbf` or install the package globally) that compiles `proto` files into JavaScript modules. Usage:
 
 ```bash
 $ pbf <file.proto> [-I <include_dir>]... [--no-write] [--no-read] [--legacy] [--dts]
@@ -316,11 +321,13 @@ $ pbf example.proto > example.js
 $ pbf example.proto --dts > example.d.ts
 ```
 
-`Pbf` will generate `read<Identifier>` and `write<Identifier>` functions for every message in the schema. For nested messages, their names will be concatenated — e.g. `Message` inside `Test` will produce `readTestMessage` and `writeTestMessage` functions.
+It generates a pair of functions for every message in the schema:
 
+* `read<Message>(pbf)` - decodes an object from the given `PbfReader` instance.
+* `write<Message>(obj, pbf)` - encodes an object into the given `PbfWriter` instance (usually empty).
 
-* `read(pbf)` - decodes an object from the given `PbfReader` instance.
-* `write(obj, pbf)` - encodes an object into the given `PbfWriter` instance (usually empty).
+For nested messages, their names are concatenated — e.g. `Message` inside `Test` produces `readTestMessage` and
+`writeTestMessage`.
 
 The resulting code is clean and simple, so it's meant to be customized.
 
