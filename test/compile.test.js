@@ -258,6 +258,66 @@ test('merges repeated occurrences of a singular embedded message', () => {
     assert.deepEqual(readEnvelope(new PbfReader(pbf.finish())), {child: {a: 1, b: 2}});
 });
 
+const intField = (name, tag, oneof = null) => ({name, type: 'int32', tag, map: null, oneof, repeated: false, options: {}});
+
+test('does not merge a oneof message after another oneof member was set', () => {
+    const proto = {
+        syntax: 3,
+        messages: [{
+            name: 'Child',
+            enums: [],
+            messages: [],
+            fields: [intField('a', 1), intField('b', 2)]
+        }, {
+            name: 'Envelope',
+            enums: [],
+            messages: [],
+            fields: [{...intField('x', 1, 'kind'), type: 'Child'}, intField('y', 2, 'kind')]
+        }]
+    };
+    const {readEnvelope, writeChild} = compile(proto);
+
+    const pbf = new PbfWriter();
+    pbf.writeMessage(1, writeChild, {a: 1});
+    pbf.writeVarintField(2, 5);
+    pbf.writeMessage(1, writeChild, {b: 2});
+
+    const result = readEnvelope(new PbfReader(pbf.finish()));
+    assert.equal(result.kind, 'x');
+    assert.deepEqual(result.x, {a: 0, b: 2});
+});
+
+test('merges repeated message values within a map entry', () => {
+    const proto = {
+        syntax: 3,
+        messages: [{
+            name: 'Child',
+            enums: [],
+            messages: [],
+            fields: [intField('a', 1), intField('b', 2)]
+        }, {
+            name: 'Envelope',
+            enums: [],
+            messages: [],
+            fields: [{name: 'kv', type: 'map', tag: 1, map: {from: 'string', to: 'Child'}, oneof: null, repeated: false, options: {}}]
+        }]
+    };
+    const {readEnvelope, writeChild} = compile(proto);
+
+    const pbf = new PbfWriter();
+    pbf.writeMessage(1, (_, p) => {
+        p.writeStringField(1, 'k');
+        p.writeMessage(2, writeChild, {a: 1});
+        p.writeMessage(2, writeChild, {b: 2});
+    });
+    pbf.writeMessage(1, (_, p) => {
+        p.writeStringField(1, 'k2');
+        p.writeMessage(2, writeChild, {a: 3});
+    });
+
+    assert.deepEqual(readEnvelope(new PbfReader(pbf.finish())), {kv: {k: {a: 1, b: 2}, k2: {a: 3, b: 0}}});
+});
+
 test('does not write undefined or null values', () => {
     const proto = resolve(new URL('fixtures/embedded_type.proto', import.meta.url));
     const {writeEmbeddedType} = compile(proto);

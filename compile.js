@@ -347,7 +347,10 @@ function fieldShouldUseStringAsNumber(field) {
  */
 function compileScalarFieldRead(ctx, field, target) {
     const sub = getSubMessage(ctx, field);
-    if (sub) return `read${sub._name}(pbf, pbf.readVarint() + pbf.pos${target ? `, ${target}` : ''})`;
+    if (sub) {
+        const merge = target && sub._proto.fields?.length;
+        return `read${sub._name}(pbf, pbf.readVarint() + pbf.pos${merge ? `, ${target}` : ''})`;
+    }
 
     const {m, signed} = getMethod(ctx, field);
     let suffix = `(${signed ? 'true' : ''})`;
@@ -374,7 +377,9 @@ function compileFieldRead(ctx, field) {
     if (repeated && willSupportPacked(ctx, field)) {
         body = compilePackedRead(ctx, field);
     } else {
-        const target = repeated || type === 'map' ? null : `obj.${name}`;
+        // merge into the existing value, unless a different member of the same oneof was set since
+        const target = repeated || type === 'map' ? null :
+            oneof ? `obj.${oneof} === ${JSON.stringify(name)} ? obj.${name} : undefined` : `obj.${name}`;
         const scalar = compileScalarFieldRead(ctx, field, target);
         if (type === 'map') body = `const {key, value} = ${scalar}; obj.${name}[key] = value`;
         else if (repeated) body = `obj.${name}.push(${scalar})`;
