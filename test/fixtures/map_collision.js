@@ -5,7 +5,7 @@ export function readEnvelope(pbf, end) {
     while ((field = pbf.nextField(end))) {
         if (field === 1) { const {key, value} = readEnvelopeKvEntry$(pbf, pbf.readVarint() + pbf.pos); obj.kv[key] = value; }
         else if (field === 2) { const {key, value} = readEnvelopeKnEntry$(pbf, pbf.readVarint() + pbf.pos); obj.kn[key] = value; }
-        else if (field === 3) obj.sibling = readEnvelopeKvEntry(pbf, pbf.readVarint() + pbf.pos);
+        else if (field === 3) obj.sibling = readEnvelopeKvEntry(pbf, pbf.readVarint() + pbf.pos, obj.sibling);
         else if (field === 4) obj.flag = pbf.readVarint();
     }
     return obj;
@@ -22,8 +22,7 @@ export const EnvelopeKnEntry = {
     "ONE": 1
 };
 
-export function readEnvelopeKvEntry(pbf, end) {
-    const obj = {marker: 0};
+export function readEnvelopeKvEntry(pbf, end, obj = {marker: 0}) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 1) obj.marker = pbf.readVarint(true);

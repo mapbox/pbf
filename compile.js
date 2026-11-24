@@ -41,6 +41,7 @@ import pkg from './package.json' with {type: 'json'};
  *     _children: Context[],
  *     _defaults: Record<string, any>,
  *     _mapEntries: Record<string, Context>,
+ *     _mergeable: boolean,
  *     _name?: string,
  *     [name: string]: any
  * }} Context
@@ -95,11 +96,12 @@ function writeMessage(ctx, options) {
     if (!options.noRead) {
         const readName = `read${ctx._name}`;
 
-        code += `${writeFunctionExport(options, readName)}function ${readName}(pbf, end) {\n`;
+        const mergeable = ctx._mergeable && fields.length > 0;
+        code += `${writeFunctionExport(options, readName)}function ${readName}(pbf, end${mergeable ? `, obj = ${compileDest(ctx)}` : ''}) {\n`;
         if (fields.length === 0) {
             code += '    pbf.pos = end;\n    return {};\n';
         } else {
-            code += `    const obj = ${compileDest(ctx)};\n`;
+            if (!mergeable) code += `    const obj = ${compileDest(ctx)};\n`;
             code += '    let field;\n';
             code += '    while ((field = pbf.nextField(end))) {\n';
 
@@ -135,7 +137,9 @@ function compileFieldWriteLine(ctx, field) {
     if (field.repeated && !isPacked(field)) {
         body = `for (const item of ${v}) ${compileFieldWrite(ctx, field, 'item')}`;
     } else if (field.type === 'map') {
-        body = `for (const key of Object.keys(${v})) ${compileFieldWrite(ctx, field, `{key, value: ${v}[key]}`)}`;
+        const keyType = /** @type {{from: string}} */ (field.map).from;
+        const key = keyType === 'bool' ? 'key: key === \'true\'' : 'key';
+        body = `for (const key of Object.keys(${v})) ${compileFieldWrite(ctx, field, `{${key}, value: ${v}[key]}`)}`;
     } else {
         body = compileFieldWrite(ctx, field, v);
     }
@@ -339,10 +343,11 @@ function fieldShouldUseStringAsNumber(field) {
 /**
  * @param {Context} ctx
  * @param {ProtoField} field
+ * @param {string | null} [target]
  */
-function compileScalarFieldRead(ctx, field) {
+function compileScalarFieldRead(ctx, field, target) {
     const sub = getSubMessage(ctx, field);
-    if (sub) return `read${sub._name}(pbf, pbf.readVarint() + pbf.pos)`;
+    if (sub) return `read${sub._name}(pbf, pbf.readVarint() + pbf.pos${target ? `, ${target}` : ''})`;
 
     const {m, signed} = getMethod(ctx, field);
     let suffix = `(${signed ? 'true' : ''})`;
@@ -369,7 +374,8 @@ function compileFieldRead(ctx, field) {
     if (repeated && willSupportPacked(ctx, field)) {
         body = compilePackedRead(ctx, field);
     } else {
-        const scalar = compileScalarFieldRead(ctx, field);
+        const target = repeated || type === 'map' ? null : `obj.${name}`;
+        const scalar = compileScalarFieldRead(ctx, field, target);
         if (type === 'map') body = `const {key, value} = ${scalar}; obj.${name}[key] = value`;
         else if (repeated) body = `obj.${name}.push(${scalar})`;
         else body = `obj.${name} = ${scalar}`;
@@ -445,6 +451,7 @@ function buildContext(proto, parent, mapEntryField) {
     obj._children = [];
     obj._defaults = {};
     obj._mapEntries = {};
+    obj._mergeable = false;
 
     if (parent) {
         obj._name = (parent._name ?? '') + proto.name;
@@ -540,6 +547,10 @@ function buildDefaults(ctx, syntax) {
     for (const field of ctx._proto.fields ?? []) {
         setPackedOption(ctx, field, syntax);
         setDefaultValue(ctx, field, syntax);
+        if (!field.repeated && field.type !== 'map') {
+            const type = getSubMessage(ctx, field);
+            if (type) type._mergeable = true;
+        }
     }
     return ctx;
 }

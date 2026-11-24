@@ -3,9 +3,9 @@ export function readEnvelope(pbf, end) {
     const obj = {payload: undefined, absolute_payload: undefined, inner: undefined};
     let field;
     while ((field = pbf.nextField(end))) {
-        if (field === 1) obj.payload = readAny(pbf, pbf.readVarint() + pbf.pos);
-        else if (field === 2) obj.absolute_payload = readAny(pbf, pbf.readVarint() + pbf.pos);
-        else if (field === 3) obj.inner = readEnvelopeInner(pbf, pbf.readVarint() + pbf.pos);
+        if (field === 1) obj.payload = readAny(pbf, pbf.readVarint() + pbf.pos, obj.payload);
+        else if (field === 2) obj.absolute_payload = readAny(pbf, pbf.readVarint() + pbf.pos, obj.absolute_payload);
+        else if (field === 3) obj.inner = readEnvelopeInner(pbf, pbf.readVarint() + pbf.pos, obj.inner);
     }
     return obj;
 }
@@ -15,8 +15,7 @@ export function writeEnvelope(obj, pbf) {
     if (obj.inner) pbf.writeMessage(3, writeEnvelopeInner, obj.inner);
 }
 
-export function readEnvelopeInner(pbf, end) {
-    const obj = {value: ""};
+export function readEnvelopeInner(pbf, end, obj = {value: ""}) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 1) obj.value = pbf.readString();
@@ -27,8 +26,7 @@ export function writeEnvelopeInner(obj, pbf) {
     if (obj.value) pbf.writeStringField(1, obj.value);
 }
 
-export function readAny(pbf, end) {
-    const obj = {type_url: "", value: undefined};
+export function readAny(pbf, end, obj = {type_url: "", value: undefined}) {
     let field;
     while ((field = pbf.nextField(end))) {
         if (field === 1) obj.type_url = pbf.readString();
