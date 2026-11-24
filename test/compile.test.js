@@ -190,6 +190,74 @@ test('compiles maps', () => {
     assert.deepEqual(original, decompressed);
 });
 
+test('round-trips boolean map keys', () => {
+    const proto = {
+        syntax: 3,
+        messages: [{
+            name: 'Envelope',
+            enums: [],
+            messages: [],
+            fields: [{
+                name: 'flags',
+                type: 'map',
+                tag: 1,
+                map: {from: 'bool', to: 'bool'},
+                oneof: null,
+                repeated: false,
+                options: {}
+            }]
+        }]
+    };
+    const {readEnvelope, writeEnvelope} = compile(proto);
+
+    const original = {flags: {true: true, false: false}};
+    const pbf = new PbfWriter();
+    writeEnvelope(original, pbf);
+
+    assert.deepEqual(readEnvelope(new PbfReader(pbf.finish())), original);
+});
+
+test('merges repeated occurrences of a singular embedded message', () => {
+    const field = (name, tag) => ({
+        name,
+        type: 'int32',
+        tag,
+        map: null,
+        oneof: null,
+        repeated: false,
+        options: {}
+    });
+    const proto = {
+        syntax: 2,
+        messages: [{
+            name: 'Child',
+            enums: [],
+            messages: [],
+            fields: [field('a', 1), field('b', 2)]
+        }, {
+            name: 'Envelope',
+            enums: [],
+            messages: [],
+            fields: [{
+                name: 'child',
+                type: 'Child',
+                tag: 1,
+                map: null,
+                oneof: null,
+                repeated: false,
+                options: {}
+            }]
+        }]
+    };
+    const {readEnvelope, writeChild} = compile(proto);
+
+    const pbf = new PbfWriter();
+    pbf.writeMessage(1, writeChild, {a: 1});
+    pbf.writeMessage(1, writeChild, {b: 2});
+
+    assert.deepEqual(readEnvelope(new PbfReader(pbf.finish())), {child: {a: 1, b: 2}});
+});
+
 test('does not write undefined or null values', () => {
     const proto = resolve(new URL('fixtures/embedded_type.proto', import.meta.url));
     const {writeEmbeddedType} = compile(proto);
