@@ -114,7 +114,7 @@ export class PbfReader {
 
     readSVarint() {
         const num = this.readVarint();
-        return num % 2 === 1 ? (num + 1) / -2 : num / 2; // zigzag encoding
+        return num & 1 ? (num + 1) / -2 : num / 2; // zigzag encoding
     }
 
     readBoolean() {
