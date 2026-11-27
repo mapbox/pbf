@@ -115,6 +115,21 @@ test('readSVarint & writeSVarint', () => {
     }
 });
 
+test('readSVarint around the 32-bit boundaries', () => {
+    const values = [-1, 1, -2, 2, 2 ** 31 - 1, -(2 ** 31), 2 ** 31, -(2 ** 31) - 1, 2 ** 32, -(2 ** 32), 2 ** 52, -(2 ** 52)];
+    const writer = new PbfWriter();
+    for (const value of values) writer.writeSVarint(value);
+    const reader = new PbfReader(writer.finish());
+    for (const value of values) assert.equal(reader.readSVarint(), value);
+    assert.equal(reader.pos, reader.length);
+});
+
+test('readSVarint returns positive zero', () => {
+    const writer = new PbfWriter();
+    writer.writeSVarint(0);
+    assert.ok(Object.is(new PbfReader(writer.finish()).readSVarint(), 0));
+});
+
 test('writeVarint throws error on a number that is too big', () => {
     const buf = new PbfWriter();
 
